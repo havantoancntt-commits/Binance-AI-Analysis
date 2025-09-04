@@ -163,11 +163,18 @@ const App: React.FC = () => {
         );
       case AppStatus.Error:
         return (
-          <div className="flex flex-col items-center justify-center min-h-[600px] glassmorphism rounded-xl p-8">
-            <h3 className="text-2xl font-bold text-red-400">Đã xảy ra lỗi</h3>
-            <p className="mt-2 text-red-300 text-center">{error}</p>
+          <div className="flex flex-col items-center justify-center min-h-[600px] glassmorphism rounded-xl p-8 text-center animate-fade-in">
+            <XCircleIcon className="w-16 h-16 text-red-500/80 mx-auto" />
+            <h3 className="text-2xl font-bold text-red-400 mt-4">Rất tiếc, đã xảy ra lỗi</h3>
+            <div className="mt-2 text-red-300 bg-red-500/10 p-3 rounded-lg max-w-lg">
+                <p>{error}</p>
+            </div>
             {analyzedCoin && (
-              <button onClick={handleRetry} className="mt-6 px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors">
+              <button 
+                onClick={handleRetry} 
+                className="mt-6 flex items-center gap-2 px-6 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors"
+              >
+                <ArrowPathIcon className="w-5 h-5" />
                 Thử lại cho {analyzedCoin}
               </button>
             )}

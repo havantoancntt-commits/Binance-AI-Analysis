@@ -33,14 +33,20 @@ export const fetchHistoricalData = async (coinPair: string, days: number = 365):
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({})); // Catch cases where body is not JSON
-      throw new Error(errorData.msg || `API request failed with status ${response.status}`);
+        if (response.status === 400 || response.status === 404) {
+            throw new Error(`Cặp giao dịch '${coinPair}' không hợp lệ hoặc không được tìm thấy trên Binance. Vui lòng kiểm tra lại.`);
+        }
+        if (response.status === 429) {
+            throw new Error('Bạn đã đạt đến giới hạn yêu cầu API của Binance. Vui lòng đợi một lát rồi thử lại.');
+        }
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.msg || `Yêu cầu API Binance thất bại với trạng thái ${response.status}`);
     }
 
     const data: any[] = await response.json();
     
     if (!Array.isArray(data) || data.length === 0) {
-      throw new Error(`No historical data returned for symbol ${symbol}.`);
+      throw new Error(`Không có đủ dữ liệu lịch sử cho cặp ${coinPair} để phân tích.`);
     }
 
     // Map the Binance API response to the PriceDataPoint format used by the app
@@ -53,14 +59,7 @@ export const fetchHistoricalData = async (coinPair: string, days: number = 365):
     return priceData;
   } catch (error: any) {
     console.error(`Error fetching historical data for ${coinPair}:`, error);
-    
-    // Provide user-friendly error messages in Vietnamese
-    if (error.message.includes('Invalid symbol') || error.message.includes('400')) {
-        throw new Error(`Cặp ${coinPair} không hợp lệ hoặc không được tìm thấy trên Binance.`);
-    }
-     if (error.message.includes('No historical data')) {
-        throw new Error(`Không có đủ dữ liệu lịch sử cho cặp ${coinPair} để phân tích.`);
-    }
-    throw new Error(`Không thể lấy dữ liệu từ Binance. Vui lòng kiểm tra kết nối mạng và thử lại.`);
+    // Re-throw the specific error from the try block or a generic one
+    throw new Error(error.message || `Không thể lấy dữ liệu từ Binance. Vui lòng kiểm tra kết nối mạng và thử lại.`);
   }
 };

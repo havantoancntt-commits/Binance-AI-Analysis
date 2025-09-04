@@ -4,9 +4,9 @@ import type { PriceDataPoint, AnalysisResult } from '../types';
 // IMPORTANT: This key is managed externally and assumed to be available in the environment.
 const API_KEY = process.env.API_KEY;
 if (!API_KEY) {
-  console.error("API_KEY environment variable not set.");
+  throw new Error("BIẾN MÔI TRƯỜNG API_KEY CHƯA ĐƯỢC CẤU HÌNH. Vui lòng thiết lập khóa API trong cài đặt Vercel của bạn.");
 }
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
+const ai = new GoogleGenAI({ apiKey: API_KEY });
 
 
 const getAnalysisPrompt = (coinPair: string, priceData: PriceDataPoint[]): string => {
@@ -130,10 +130,6 @@ const analysisSchema = {
 
 
 export const getAIAnalysis = async (coinPair: string, priceData: PriceDataPoint[]): Promise<AnalysisResult> => {
-  if (!API_KEY) {
-    throw new Error("API key is not configured. Please set the API_KEY environment variable.");
-  }
-  
   try {
     const prompt = getAnalysisPrompt(coinPair, priceData);
     const response = await ai.models.generateContent({
@@ -149,13 +145,17 @@ export const getAIAnalysis = async (coinPair: string, priceData: PriceDataPoint[
     const text = response.text.trim();
     const parsedJson = JSON.parse(text);
 
+    // A simple validation to ensure the core structure is present
     if (!parsedJson.supportLevels || !parsedJson.recommendation || !parsedJson.takeProfitLevels || !parsedJson.detailedAnalysis?.bullCase) {
-      throw new Error("Invalid or incomplete JSON structure received from API.");
+      throw new Error("Cấu trúc JSON không hợp lệ hoặc không đầy đủ nhận được từ API.");
     }
 
     return parsedJson as AnalysisResult;
   } catch (error) {
     console.error("Error fetching AI analysis:", error);
+    if (error instanceof Error && error.message.includes('JSON')) {
+        throw new Error("Đã xảy ra lỗi khi xử lý phản hồi từ AI. Vui lòng thử lại.");
+    }
     throw new Error("Không thể nhận phân tích từ AI. Vui lòng thử lại sau.");
   }
 };
