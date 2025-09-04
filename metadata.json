@@ -1,0 +1,5 @@
+{
+  "name": "Binance Coin AI Analyzer",
+  "description": "An AI-powered application for technical analysis of Binance cryptocurrency pairs. It provides key trading levels such as support, resistance, buy/sell points, take-profit, and stop-loss targets, complemented by professional-grade charting.",
+  "requestFramePermissions": []
+}
