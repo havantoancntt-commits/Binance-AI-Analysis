@@ -1,12 +1,27 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import type { PriceDataPoint, AnalysisResult } from '../types';
 
-// IMPORTANT: This key is managed externally and assumed to be available in the environment.
-const API_KEY = process.env.API_KEY;
-if (!API_KEY) {
-  throw new Error("BIẾN MÔI TRƯỜNG API_KEY CHƯA ĐƯỢC CẤU HÌNH. Vui lòng thiết lập khóa API trong cài đặt Vercel của bạn.");
-}
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+// Lazily initialized singleton to avoid module-level errors in browser environments.
+let ai: GoogleGenAI | null = null;
+
+const initializeAiClient = (): GoogleGenAI => {
+    if (ai) {
+        return ai;
+    }
+
+    // IMPORTANT: This key is managed externally and assumed to be available in the environment.
+    // This check is now safe for browsers where `process` is not defined.
+    const API_KEY = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : undefined;
+
+    if (!API_KEY) {
+        // This error is now thrown at runtime and can be caught by the UI logic.
+        throw new Error("BIẾN MÔI TRƯỜNG API_KEY CHƯA ĐƯỢC CẤU HÌNH. Vui lòng thiết lập khóa API trong cài đặt Vercel của bạn.");
+    }
+
+    ai = new GoogleGenAI({ apiKey: API_KEY });
+    return ai;
+};
 
 
 const getAnalysisPrompt = (coinPair: string, priceData: PriceDataPoint[]): string => {
@@ -131,8 +146,9 @@ const analysisSchema = {
 
 export const getAIAnalysis = async (coinPair: string, priceData: PriceDataPoint[]): Promise<AnalysisResult> => {
   try {
+    const aiClient = initializeAiClient();
     const prompt = getAnalysisPrompt(coinPair, priceData);
-    const response = await ai.models.generateContent({
+    const response = await aiClient.models.generateContent({
       model: "gemini-2.5-flash",
       contents: prompt,
       config: {
@@ -153,9 +169,8 @@ export const getAIAnalysis = async (coinPair: string, priceData: PriceDataPoint[
     return parsedJson as AnalysisResult;
   } catch (error) {
     console.error("Error fetching AI analysis:", error);
-    if (error instanceof Error && error.message.includes('JSON')) {
-        throw new Error("Đã xảy ra lỗi khi xử lý phản hồi từ AI. Vui lòng thử lại.");
-    }
-    throw new Error("Không thể nhận phân tích từ AI. Vui lòng thử lại sau.");
+    // Re-throw the original error to be handled by the UI component.
+    // This gives the UI the most specific error message possible.
+    throw error;
   }
 };
