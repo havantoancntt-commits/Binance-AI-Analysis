@@ -9,10 +9,21 @@ const initializeAiClient = (): GoogleGenAI => {
         return ai;
     }
 
-    // The API key is managed externally and is assumed to be available in the
-    // environment as `process.env.API_KEY`. The build system is responsible
-    // for replacing this variable with the actual key.
-    ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const apiKey = process.env.API_KEY;
+
+    // The API key is managed externally. In a browser environment, a build tool
+    // (like Vite or Webpack) is responsible for replacing `process.env.API_KEY`
+    // with the actual key during the build process. If this is not happening,
+    // the application will fail.
+    if (!apiKey) {
+      // This error is more descriptive than the one from the SDK and helps the developer
+      // understand that this is an environment configuration issue.
+      throw new Error(
+        'Lỗi Cấu Hình API Key: Không tìm thấy khóa API. Vui lòng đảm bảo rằng biến môi trường API_KEY đã được thiết lập trong cài đặt triển khai của bạn (ví dụ: Vercel) và được công cụ build thay thế chính xác.'
+      );
+    }
+    
+    ai = new GoogleGenAI({ apiKey });
     return ai;
 };
 
