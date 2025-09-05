@@ -19,7 +19,7 @@ const initializeAiClient = (): GoogleGenAI => {
       // This error is more descriptive than the one from the SDK and helps the developer
       // understand that this is an environment configuration issue.
       throw new Error(
-        'Lỗi Cấu Hình API Key: Không tìm thấy khóa API. Vui lòng đảm bảo rằng biến môi trường API_KEY đã được thiết lập trong cài đặt triển khai của bạn (ví dụ: Vercel) và được công cụ build thay thế chính xác.'
+        'Lỗi Cấu Hình API Key: Không tìm thấy khóa API của Google. Ứng dụng này lấy khóa API từ một biến môi trường (API_KEY) đã được cấu hình sẵn. Vui lòng không nhập hoặc dán khóa API vào ứng dụng. Thay vào đó, hãy đảm bảo rằng biến môi trường API_KEY đã được thiết lập chính xác trong môi trường triển khai của bạn.'
       );
     }
     
