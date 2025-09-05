@@ -14,11 +14,11 @@ const initializeAiClient = (): GoogleGenAI => {
     // This check is now safe for browsers where `process` is not defined.
     const API_KEY = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : undefined;
 
-    if (!API_KEY) {
-        // This error is now thrown at runtime and can be caught by the UI logic.
-        throw new Error("BIẾN MÔI TRƯỜNG API_KEY CHƯA ĐƯỢC CẤU HÌNH. Vui lòng thiết lập khóa API trong cài đặt Vercel của bạn.");
-    }
-
+    // The explicit, application-level check for the API key has been removed.
+    // Now, the @google/genai SDK is initialized directly. If the API key is missing,
+    // the SDK will throw an error during the first API call, which will be
+    // caught by the application's generic error handler. This standardizes error
+    // handling and removes the custom API key error message.
     ai = new GoogleGenAI({ apiKey: API_KEY });
     return ai;
 };
