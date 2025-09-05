@@ -9,17 +9,17 @@ const initializeAiClient = (): GoogleGenAI => {
         return ai;
     }
 
-    const apiKey = process.env.API_KEY;
+    const apiKey = process.env.GOOGLEAPIKEY;
 
     // The API key is managed externally. In a browser environment, a build tool
-    // (like Vite or Webpack) is responsible for replacing `process.env.API_KEY`
+    // (like Vite or Webpack) is responsible for replacing `process.env.GOOGLEAPIKEY`
     // with the actual key during the build process. If this is not happening,
     // the application will fail.
     if (!apiKey) {
       // This error is more descriptive than the one from the SDK and helps the developer
       // understand that this is an environment configuration issue.
       throw new Error(
-          'Thiếu API Key. Vui lòng đảm bảo biến môi trường `API_KEY` được đặt chính xác trong môi trường triển khai của bạn (ví dụ: Vercel). Key của bạn nên được đặt trong trường "Value", và tên biến là "API_KEY".'
+          'Thiếu API Key. Vui lòng đảm bảo biến môi trường `GOOGLEAPIKEY` được đặt chính xác trong môi trường triển khai của bạn (ví dụ: Vercel). Key của bạn nên được đặt trong trường "Value", và tên biến là "GOOGLEAPIKEY".'
       );
     }
     
