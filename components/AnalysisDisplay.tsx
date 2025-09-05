@@ -4,7 +4,8 @@ import {
     ArrowTrendingUpIcon, ArrowTrendingDownIcon, ArrowsRightLeftIcon, ShieldCheckIcon, 
     RocketLaunchIcon, HandRaisedIcon, ArrowDownCircleIcon, LightBulbIcon, 
     ChartBarSquareIcon, DocumentArrowDownIcon, PhotoIcon, 
-    InformationCircleIcon, TableCellsIcon, PencilSquareIcon 
+    InformationCircleIcon, TableCellsIcon, PencilSquareIcon,
+    ClipboardIcon, CheckIcon
 } from './Icons';
 
 declare var html2pdf: any;
@@ -72,10 +73,24 @@ type Tab = 'overview' | 'setup' | 'notes';
 const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair }) => {
   const [isExporting, setIsExporting] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('overview');
+  const [bullCopied, setBullCopied] = useState(false);
+  const [bearCopied, setBearCopied] = useState(false);
 
   if (!analysis || !coinPair) return null;
   
   const formatPriceRange = (from: number, to: number) => `$${Math.min(from, to).toLocaleString()} - $${Math.max(from, to).toLocaleString()}`;
+
+  const handleCopyToClipboard = (text: string, type: 'bull' | 'bear') => {
+    navigator.clipboard.writeText(text).then(() => {
+        if (type === 'bull') {
+            setBullCopied(true);
+            setTimeout(() => setBullCopied(false), 2000);
+        } else {
+            setBearCopied(true);
+            setTimeout(() => setBearCopied(false), 2000);
+        }
+    });
+  };
   
   const handleExport = (asImage: boolean) => {
     setIsExporting(true);
@@ -113,6 +128,8 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair })
 
   const TabButton: React.FC<{tabId: Tab; title: string; icon: React.ReactNode}> = ({tabId, title, icon}) => (
     <button
+        role="tab"
+        aria-selected={activeTab === tabId}
         onClick={() => setActiveTab(tabId)}
         className={`relative flex items-center gap-2 px-4 py-3 font-semibold rounded-t-lg transition-all duration-300 focus:outline-none ${activeTab === tabId ? 'text-cyan-400' : 'text-gray-400 hover:text-white'}`}
     >
@@ -143,7 +160,7 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair })
         </header>
       </div>
 
-      <nav className="border-b border-gray-700 px-6 flex space-x-2">
+      <nav role="tablist" aria-label="Chi tiết phân tích" className="border-b border-gray-700 px-6 flex space-x-2">
         <TabButton tabId="overview" title="Tổng Quan" icon={<InformationCircleIcon className="w-5 h-5"/>}/>
         <TabButton tabId="setup" title="Thiết Lập Giao Dịch" icon={<TableCellsIcon className="w-5 h-5"/>}/>
         <TabButton tabId="notes" title="Ghi Chú Chuyên Sâu" icon={<PencilSquareIcon className="w-5 h-5"/>}/>
@@ -193,17 +210,31 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair })
 
         {activeTab === 'notes' && (
             <div className="space-y-6 animate-fade-in">
-              <div>
+              <div className="relative">
                   <h4 className="text-lg font-bold text-green-400 mb-2">Trường hợp Tăng giá (Bull Case)</h4>
-                  <blockquote className="bg-gray-900/50 p-4 rounded-lg border-l-4 border-green-500 text-gray-300 leading-relaxed">
+                  <blockquote className="bg-gray-900/50 p-4 rounded-lg border-l-4 border-green-500 text-gray-300 leading-relaxed pr-12">
                       {analysis.detailedAnalysis.bullCase}
                   </blockquote>
+                  <button
+                    onClick={() => handleCopyToClipboard(analysis.detailedAnalysis.bullCase, 'bull')}
+                    className="absolute top-1/2 -translate-y-1/2 right-2 p-2 text-gray-400 rounded-full hover:bg-gray-700 hover:text-white transition-colors"
+                    aria-label="Sao chép trường hợp tăng giá"
+                  >
+                    {bullCopied ? <CheckIcon className="w-5 h-5 text-green-400" /> : <ClipboardIcon className="w-5 h-5" />}
+                  </button>
               </div>
-               <div>
+               <div className="relative">
                   <h4 className="text-lg font-bold text-red-400 mb-2">Trường hợp Giảm giá (Bear Case)</h4>
-                  <blockquote className="bg-gray-900/50 p-4 rounded-lg border-l-4 border-red-500 text-gray-300 leading-relaxed">
+                  <blockquote className="bg-gray-900/50 p-4 rounded-lg border-l-4 border-red-500 text-gray-300 leading-relaxed pr-12">
                       {analysis.detailedAnalysis.bearCase}
                   </blockquote>
+                   <button
+                    onClick={() => handleCopyToClipboard(analysis.detailedAnalysis.bearCase, 'bear')}
+                    className="absolute top-1/2 -translate-y-1/2 right-2 p-2 text-gray-400 rounded-full hover:bg-gray-700 hover:text-white transition-colors"
+                    aria-label="Sao chép trường hợp giảm giá"
+                  >
+                    {bearCopied ? <CheckIcon className="w-5 h-5 text-green-400" /> : <ClipboardIcon className="w-5 h-5" />}
+                  </button>
               </div>
             </div>
         )}
