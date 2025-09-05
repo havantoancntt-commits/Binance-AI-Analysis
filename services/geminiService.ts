@@ -1,32 +1,4 @@
-import { GoogleGenAI, Type } from "@google/genai";
 import type { PriceDataPoint, AnalysisResult } from '../types';
-
-// Lazily initialized singleton.
-let ai: GoogleGenAI | null = null;
-
-const initializeAiClient = (): GoogleGenAI => {
-    if (ai) {
-        return ai;
-    }
-
-    const apiKey = process.env.API_KEY;
-
-    // The API key is managed externally. In a browser environment, a build tool
-    // (like Vite or Webpack) is responsible for replacing `process.env.API_KEY`
-    // with the actual key during the build process. If this is not happening,
-    // the application will fail.
-    if (!apiKey) {
-      // This error is more descriptive than the one from the SDK and helps the developer
-      // understand that this is an environment configuration issue.
-      throw new Error(
-          'Thiếu API Key. Vui lòng đảm bảo biến môi trường `API_KEY` được đặt chính xác trong môi trường triển khai của bạn (ví dụ: Vercel). Key của bạn nên được đặt trong trường "Value", và tên biến là "API_KEY".'
-      );
-    }
-    
-    ai = new GoogleGenAI({ apiKey });
-    return ai;
-};
-
 
 const getAnalysisPrompt = (coinPair: string, priceData: PriceDataPoint[]): string => {
   const latestPrice = priceData.length > 0 ? priceData[priceData.length - 1].price : 'N/A';
@@ -65,114 +37,34 @@ const getAnalysisPrompt = (coinPair: string, priceData: PriceDataPoint[]): strin
   `;
 };
 
-const analysisSchema = {
-  type: Type.OBJECT,
-  properties: {
-    supportLevels: {
-      type: Type.ARRAY,
-      description: "Hai mức giá hỗ trợ chính.",
-      items: { type: Type.NUMBER },
-    },
-    resistanceLevels: {
-      type: Type.ARRAY,
-      description: "Hai mức giá kháng cự chính.",
-      items: { type: Type.NUMBER },
-    },
-    buyZone: {
-      type: Type.OBJECT,
-      description: "Một phạm vi giá được đề xuất để vào lệnh.",
-      properties: {
-        from: { type: Type.NUMBER },
-        to: { type: Type.NUMBER },
-      },
-    },
-    takeProfitLevels: {
-      type: Type.ARRAY,
-      description: "Ba mức giá chốt lời được đề xuất.",
-      items: { type: Type.NUMBER },
-    },
-    stopLoss: {
-      type: Type.NUMBER,
-      description: "Một mức giá dừng lỗ được đề xuất.",
-    },
-    shortTermTrend: {
-        type: Type.STRING,
-        description: "Xu hướng trung hạn được dự đoán.",
-        enum: ['Uptrend', 'Downtrend', 'Sideways'],
-    },
-    confidenceScore: {
-        type: Type.NUMBER,
-        description: "Điểm tin cậy từ 0 đến 100 cho phân tích.",
-    },
-    confidenceReason: {
-        type: Type.STRING,
-        description: "Lý do ngắn gọn cho điểm tin cậy.",
-    },
-    marketDriver: {
-        type: Type.STRING,
-        description: "Động lực kỹ thuật chính của thị trường.",
-    },
-    summary: {
-        type: Type.STRING,
-        description: "Tóm tắt rất ngắn gọn về tâm lý thị trường.",
-    },
-    recommendation: {
-      type: Type.OBJECT,
-      description: "Khuyến nghị giao dịch cuối cùng với tín hiệu và lý do.",
-      properties: {
-        signal: {
-          type: Type.STRING,
-          enum: ['Strong Buy', 'Buy', 'Hold', 'Sell', 'Strong Sell', 'Avoid'],
-        },
-        reason: { type: Type.STRING },
-      },
-      required: ['signal', 'reason'],
-    },
-    detailedAnalysis: {
-      type: Type.OBJECT,
-      description: "Phân tích chi tiết về các kịch bản có thể xảy ra.",
-      properties: {
-          bullCase: { 
-              type: Type.STRING,
-              description: "Kịch bản và các yếu tố hỗ trợ cho xu hướng tăng giá."
-          },
-          bearCase: { 
-              type: Type.STRING,
-              description: "Kịch bản, rủi ro và các yếu tố hỗ trợ cho xu hướng giảm giá."
-          },
-      },
-      required: ['bullCase', 'bearCase'],
-    }
-  },
-  required: ['supportLevels', 'resistanceLevels', 'buyZone', 'takeProfitLevels', 'stopLoss', 'shortTermTrend', 'confidenceScore', 'confidenceReason', 'marketDriver', 'summary', 'recommendation', 'detailedAnalysis'],
-};
-
-
 export const getAIAnalysis = async (coinPair: string, priceData: PriceDataPoint[]): Promise<AnalysisResult> => {
   try {
-    const aiClient = initializeAiClient();
     const prompt = getAnalysisPrompt(coinPair, priceData);
-    const response = await aiClient.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: prompt,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: analysisSchema,
-        temperature: 0.2, 
-      },
+
+    const apiResponse = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
     });
 
-    const text = response.text.trim();
-    const parsedJson = JSON.parse(text);
-
-    // A simple validation to ensure the core structure is present
-    if (!parsedJson.supportLevels || !parsedJson.recommendation || !parsedJson.takeProfitLevels || !parsedJson.detailedAnalysis?.bullCase) {
-      throw new Error("Cấu trúc JSON không hợp lệ hoặc không đầy đủ nhận được từ API.");
+    if (!apiResponse.ok) {
+        const errorData = await apiResponse.json().catch(() => ({ error: 'Phản hồi không hợp lệ từ máy chủ.' }));
+        // Provide a user-friendly error from the backend's response
+        throw new Error(errorData.error || 'Lỗi giao tiếp với máy chủ phân tích.');
     }
 
-    return parsedJson as AnalysisResult;
+    const analysisResult: AnalysisResult = await apiResponse.json();
+
+    // A simple validation to ensure the core structure is present
+    if (!analysisResult.supportLevels || !analysisResult.recommendation || !analysisResult.detailedAnalysis) {
+      throw new Error("Cấu trúc dữ liệu phân tích không hợp lệ nhận được từ máy chủ.");
+    }
+
+    return analysisResult;
   } catch (error) {
-    console.error("Error fetching AI analysis:", error);
+    console.error("Error fetching AI analysis via proxy:", error);
     // Re-throw the original error to be handled by the UI component.
     // This gives the UI the most specific error message possible.
     throw error;
