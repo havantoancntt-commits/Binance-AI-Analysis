@@ -61,4 +61,4 @@ const DonationCallout: React.FC = () => {
   );
 };
 
-export default DonationCallout;
+export default React.memo(DonationCallout);

@@ -91,4 +91,4 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ news, isLoading }) => {
   );
 };
 
-export default NewsFeed;
+export default React.memo(NewsFeed);

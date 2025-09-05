@@ -1,6 +1,4 @@
-
-
-import React, { useState, useCallback, useEffect, useRef } from 'react';
+import React, { useReducer, useCallback, useEffect, useRef } from 'react';
 import type { PriceDataPoint, AnalysisResult, TickerData, NewsArticle } from './types';
 import { AppStatus } from './types';
 import { getAIAnalysis } from './services/geminiService';
@@ -13,21 +11,121 @@ import Ticker from './components/Ticker';
 import DonationCallout from './components/PriceAlert';
 import NewsFeed from './components/NewsFeed';
 import { COIN_PAIRS } from './constants';
-import { XCircleIcon, ArrowPathIcon, CpuChipIcon, KeyIcon } from './components/Icons';
+import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
+
+// State management with useReducer for robustness
+interface AppState {
+  status: AppStatus;
+  coinInput: string;
+  analyzedCoin: string | null;
+  priceData: PriceDataPoint[];
+  analysis: AnalysisResult | null;
+  tickerData: TickerData | null;
+  news: NewsArticle[];
+  isNewsLoading: boolean;
+  error: string | null;
+  loadingMessage: string;
+}
+
+type AppAction =
+  | { type: 'ANALYZE'; payload: string }
+  | { type: 'SET_LOADING_MESSAGE'; payload: string }
+  | { type: 'FETCH_SUCCESS'; payload: { priceData: PriceDataPoint[]; analysis: AnalysisResult | null; news: NewsArticle[] } }
+  | { type: 'FETCH_ERROR'; payload: string }
+  | { type: 'UPDATE_TICKER'; payload: TickerData | null }
+  | { type: 'UPDATE_NEWS_LOADING'; payload: boolean }
+  | { type: 'SET_COIN_INPUT'; payload: string }
+  | { type: 'RESET' };
+
+const initialState: AppState = {
+  status: AppStatus.Idle,
+  coinInput: '',
+  analyzedCoin: null,
+  priceData: [],
+  analysis: null,
+  tickerData: null,
+  news: [],
+  isNewsLoading: false,
+  error: null,
+  loadingMessage: '',
+};
+
+function appReducer(state: AppState, action: AppAction): AppState {
+  switch (action.type) {
+    case 'ANALYZE':
+      return {
+        ...initialState,
+        status: AppStatus.Loading,
+        analyzedCoin: action.payload,
+        coinInput: action.payload,
+      };
+    case 'SET_LOADING_MESSAGE':
+      return { ...state, loadingMessage: action.payload };
+    case 'FETCH_SUCCESS':
+      return {
+        ...state,
+        status: AppStatus.Success,
+        priceData: action.payload.priceData,
+        analysis: action.payload.analysis,
+        news: action.payload.news,
+        isNewsLoading: false,
+      };
+    case 'FETCH_ERROR':
+      return {
+        ...state,
+        status: AppStatus.Error,
+        error: action.payload,
+        priceData: [], // Clear data on error
+        isNewsLoading: false,
+      };
+    case 'UPDATE_TICKER':
+      return { ...state, tickerData: action.payload };
+    case 'UPDATE_NEWS_LOADING':
+      return { ...state, isNewsLoading: action.payload };
+    case 'SET_COIN_INPUT':
+      return { ...state, coinInput: action.payload, error: state.status !== AppStatus.Idle ? state.error : null };
+    case 'RESET':
+      return { ...initialState };
+    default:
+      return state;
+  }
+}
 
 const App: React.FC = () => {
-  const [coinInput, setCoinInput] = useState<string>('');
-  const [analyzedCoin, setAnalyzedCoin] = useState<string | null>(null);
-  const [priceData, setPriceData] = useState<PriceDataPoint[]>([]);
-  const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
-  const [tickerData, setTickerData] = useState<TickerData | null>(null);
-  const [news, setNews] = useState<NewsArticle[]>([]);
-  const [isNewsLoading, setIsNewsLoading] = useState<boolean>(false);
-  const [status, setStatus] = useState<AppStatus>(AppStatus.Idle);
-  const [error, setError] = useState<string | null>(null);
-  const [loadingMessage, setLoadingMessage] = useState('');
+  const [state, dispatch] = useReducer(appReducer, initialState);
+  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, news, isNewsLoading, error, loadingMessage } = state;
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Effect for handling the analysis data fetching lifecycle
+  useEffect(() => {
+    if (status !== AppStatus.Loading || !analyzedCoin) return;
+
+    const analyzeCoin = async () => {
+      try {
+        dispatch({ type: 'UPDATE_NEWS_LOADING', payload: true });
+        const baseCoin = analyzedCoin.split('/')[0];
+        const newsPromise = fetchNews(baseCoin);
+        
+        const historicalData = await fetchHistoricalData(analyzedCoin, 365);
+        
+        const fetchedNews = await newsPromise;
+        
+        let aiAnalysis = null;
+        if (historicalData.length > 0) {
+          aiAnalysis = await getAIAnalysis(analyzedCoin, historicalData);
+        }
+        
+        dispatch({ type: 'FETCH_SUCCESS', payload: { priceData: historicalData, analysis: aiAnalysis, news: fetchedNews } });
+      } catch (err: any) {
+        console.error(err);
+        dispatch({ type: 'FETCH_ERROR', payload: err.message || 'Đã xảy ra lỗi không xác định.' });
+      }
+    };
+
+    analyzeCoin();
+  }, [status, analyzedCoin]);
+
+  // Effect for dynamic loading messages
   useEffect(() => {
     if (status === AppStatus.Loading) {
       const messages = [
@@ -38,11 +136,11 @@ const App: React.FC = () => {
         `Tạo báo cáo phân tích...`,
       ];
       let messageIndex = 0;
-      setLoadingMessage(messages[messageIndex]);
+      dispatch({ type: 'SET_LOADING_MESSAGE', payload: messages[messageIndex] });
       const interval = setInterval(() => {
         messageIndex++;
         if (messageIndex < messages.length) {
-          setLoadingMessage(messages[messageIndex]);
+          dispatch({ type: 'SET_LOADING_MESSAGE', payload: messages[messageIndex] });
         } else {
           clearInterval(interval);
         }
@@ -51,6 +149,7 @@ const App: React.FC = () => {
     }
   }, [status, analyzedCoin]);
 
+  // Effect for WebSocket connection for the ticker
   useEffect(() => {
     if (!analyzedCoin) {
       return;
@@ -62,11 +161,14 @@ const App: React.FC = () => {
     ws.onopen = () => console.log(`WebSocket connected for ${symbol}`);
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      setTickerData({
-        price: parseFloat(data.c).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }),
-        change: parseFloat(data.p).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4, signDisplay: 'always' }),
-        changePercent: `${parseFloat(data.P).toFixed(2)}%`,
-        isPositive: parseFloat(data.p) >= 0,
+      dispatch({
+        type: 'UPDATE_TICKER',
+        payload: {
+          price: parseFloat(data.c).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }),
+          change: parseFloat(data.p).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4, signDisplay: 'always' }),
+          changePercent: `${parseFloat(data.P).toFixed(2)}%`,
+          isPositive: parseFloat(data.p) >= 0,
+        },
       });
     };
     ws.onerror = (error) => console.error("WebSocket Error: ", error);
@@ -78,77 +180,35 @@ const App: React.FC = () => {
       }
     };
   }, [analyzedCoin]);
-
-  const handleAnalysis = useCallback(async (coin: string) => {
+  
+  const handleAnalysisRequest = useCallback((coin: string) => {
     if (!coin) return;
-    setStatus(AppStatus.Loading);
-    setError(null);
-    setAnalysis(null);
-    setPriceData([]);
-    setTickerData(null);
-    setNews([]);
-    setAnalyzedCoin(coin);
-
-    try {
-      const baseCoin = coin.split('/')[0];
-      setIsNewsLoading(true);
-      const newsPromise = fetchNews(baseCoin);
-      
-      const historicalData = await fetchHistoricalData(coin, 365);
-      setPriceData(historicalData);
-      
-      const fetchedNews = await newsPromise;
-      setNews(fetchedNews);
-      setIsNewsLoading(false);
-      
-      if (historicalData.length > 0) {
-        const aiAnalysis = await getAIAnalysis(coin, historicalData);
-        setAnalysis(aiAnalysis);
-      } else {
-        setAnalysis(null);
-      }
-      
-      setStatus(AppStatus.Success);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || 'Đã xảy ra lỗi không xác định.');
-      setStatus(AppStatus.Error);
-      setPriceData([]);
-      setIsNewsLoading(false);
-    }
-  }, []);
-
-  const handleFormSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const formattedCoin = coinInput.trim().toUpperCase().replace(/[^A-Z0-9/]/g, '');
-    if (!formattedCoin.includes('/')) {
-        setError("Định dạng cặp coin không hợp lệ. Vui lòng sử dụng 'COIN/QUOTE', ví dụ: BTC/USDT.");
+    const formattedCoin = coin.trim().toUpperCase().replace(/[^A-Z0-9/]/g, '');
+     if (!formattedCoin.includes('/')) {
+        dispatch({ type: 'FETCH_ERROR', payload: "Định dạng cặp coin không hợp lệ. Vui lòng sử dụng 'COIN/QUOTE', ví dụ: BTC/USDT." });
         return;
     }
-    setCoinInput(formattedCoin);
-    await handleAnalysis(formattedCoin);
+    dispatch({ type: 'ANALYZE', payload: formattedCoin });
+  }, []);
+
+  const handleFormSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    handleAnalysisRequest(coinInput);
   };
   
   const handleRetry = () => {
     if (analyzedCoin) {
-      handleAnalysis(analyzedCoin);
+      handleAnalysisRequest(analyzedCoin);
     }
   };
   
   const handleClearInput = () => {
-    setCoinInput('');
+    dispatch({ type: 'SET_COIN_INPUT', payload: '' });
     inputRef.current?.focus();
   };
 
   const handleReset = () => {
-    setStatus(AppStatus.Idle);
-    setAnalyzedCoin(null);
-    setPriceData([]);
-    setAnalysis(null);
-    setTickerData(null);
-    setError(null);
-    setNews([]);
-    setCoinInput('');
+    dispatch({ type: 'RESET' });
     inputRef.current?.focus();
   };
 
@@ -206,41 +266,23 @@ const App: React.FC = () => {
       default:
         return (
           <div className="flex flex-col items-center justify-center min-h-[600px] text-center space-y-8">
-            {/* Main Welcome Card */}
             <div className="glassmorphism p-8 rounded-xl max-w-2xl w-full animate-fade-in">
                 <CpuChipIcon className="w-16 h-16 mx-auto text-cyan-400/70" />
                 <h2 className="text-3xl font-bold text-gray-100 mt-4">Chào mừng bạn đến với AI Analyzer</h2>
                 <p className="text-gray-400 mt-2 max-w-md mx-auto">
-                    Chọn một cặp tiền điện tử phổ biến hoặc nhập một cặp tùy chỉnh để nhận phân tích kỹ thuật chi tiết.
+                    Chọn một cặp tiền điện tử phổ biến hoặc nhập một cặp tùy chỉnh để nhận phân tích kỹ thuật chi tiết do AI cung cấp.
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mt-8">
                     {COIN_PAIRS.slice(0, 6).map(pair => (
                         <button 
                             key={pair}
-                            onClick={() => { setCoinInput(pair); handleAnalysis(pair); }}
+                            onClick={() => handleAnalysisRequest(pair)}
                             className="px-4 py-3 font-semibold text-cyan-300 bg-gray-900/50 rounded-lg border border-gray-700 hover:bg-gray-800 hover:text-white hover:border-cyan-500 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-cyan-500"
                         >
                             {pair}
                         </button>
                     ))}
                 </div>
-            </div>
-
-            {/* API Key Setup Guide */}
-            <div className="glassmorphism p-6 rounded-xl max-w-2xl w-full animate-fade-in border border-yellow-500/30">
-              <div className="flex items-center gap-3 mb-4">
-                <KeyIcon className="w-6 h-6 text-yellow-400"/>
-                <h3 className="text-xl font-bold text-yellow-300">Hướng dẫn Cài đặt API Key</h3>
-              </div>
-              <div className="text-left text-gray-300 space-y-2 text-sm">
-                <p>Để ứng dụng hoạt động, bạn cần cung cấp API Key của Google AI Studio dưới dạng một biến môi trường trên nền tảng hosting của bạn (ví dụ: Vercel, Netlify).</p>
-                <p className="font-semibold">Khi thêm biến môi trường:</p>
-                <ul className="list-disc list-inside pl-4 bg-gray-900/50 p-3 rounded-md">
-                  <li>Trong trường <strong className="text-cyan-400">Key</strong> (hoặc Name), nhập chính xác: <code className="bg-gray-700 px-2 py-1 rounded-md text-white">API_KEY</code></li>
-                  <li>Trong trường <strong className="text-cyan-400">Value</strong> (hoặc Secret), dán khóa API của bạn vào.</li>
-                </ul>
-                <p>Lỗi bạn gặp trên Vercel có thể là do bạn đã dán API Key vào sai trường <strong className="text-cyan-400">Key</strong>.</p>
-              </div>
             </div>
           </div>
         );
@@ -266,7 +308,7 @@ const App: React.FC = () => {
                           ref={inputRef}
                           type="text"
                           value={coinInput}
-                          onChange={(e) => setCoinInput(e.target.value)}
+                          onChange={(e) => dispatch({ type: 'SET_COIN_INPUT', payload: e.target.value })}
                           placeholder="Nhập cặp coin (ví dụ: BTC/USDT)"
                           className="w-full bg-gray-700 text-gray-100 placeholder-gray-400 px-4 py-3 rounded-lg border-2 border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all pr-10"
                           aria-label="Cặp coin"
@@ -297,7 +339,7 @@ const App: React.FC = () => {
         </div>
         )}
 
-        { (status === AppStatus.Success || status === AppStatus.Error) &&
+        { (status === AppStatus.Success || (status === AppStatus.Error && analyzedCoin)) &&
             <div className="text-center mb-8">
                 <button
                     type="button"

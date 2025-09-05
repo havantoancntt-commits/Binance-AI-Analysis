@@ -17,4 +17,4 @@ const Disclaimer: React.FC = () => {
   );
 };
 
-export default Disclaimer;
+export default React.memo(Disclaimer);

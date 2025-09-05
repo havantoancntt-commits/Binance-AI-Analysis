@@ -64,4 +64,4 @@ const Ticker: React.FC<TickerProps> = ({ coinPair, tickerData }) => {
   );
 };
 
-export default Ticker;
+export default React.memo(Ticker);

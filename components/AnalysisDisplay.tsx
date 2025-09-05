@@ -243,4 +243,4 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair })
   );
 };
 
-export default AnalysisDisplay;
+export default React.memo(AnalysisDisplay);

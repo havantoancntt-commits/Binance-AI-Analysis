@@ -117,4 +117,4 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis }) => {
   );
 };
 
-export default PriceChart;
+export default React.memo(PriceChart);
