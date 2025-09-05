@@ -1,8 +1,7 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import type { PriceDataPoint, AnalysisResult } from '../types';
 
-// Lazily initialized singleton to avoid module-level errors in browser environments.
+// Lazily initialized singleton.
 let ai: GoogleGenAI | null = null;
 
 const initializeAiClient = (): GoogleGenAI => {
@@ -10,16 +9,10 @@ const initializeAiClient = (): GoogleGenAI => {
         return ai;
     }
 
-    // IMPORTANT: This key is managed externally and assumed to be available in the environment.
-    // This check is now safe for browsers where `process` is not defined.
-    const API_KEY = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : undefined;
-
-    // The explicit, application-level check for the API key has been removed.
-    // Now, the @google/genai SDK is initialized directly. If the API key is missing,
-    // the SDK will throw an error during the first API call, which will be
-    // caught by the application's generic error handler. This standardizes error
-    // handling and removes the custom API key error message.
-    ai = new GoogleGenAI({ apiKey: API_KEY });
+    // The API key is managed externally and is assumed to be available in the
+    // environment as `process.env.API_KEY`. The build system is responsible
+    // for replacing this variable with the actual key.
+    ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     return ai;
 };
 
