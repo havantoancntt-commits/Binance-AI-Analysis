@@ -13,7 +13,7 @@ import Ticker from './components/Ticker';
 import DonationCallout from './components/PriceAlert';
 import NewsFeed from './components/NewsFeed';
 import { COIN_PAIRS } from './constants';
-import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
+import { XCircleIcon, ArrowPathIcon, CpuChipIcon, KeyIcon } from './components/Icons';
 
 const App: React.FC = () => {
   const [coinInput, setCoinInput] = useState<string>('');
@@ -167,7 +167,7 @@ const App: React.FC = () => {
             <XCircleIcon className="w-16 h-16 text-red-500/80 mx-auto" />
             <h3 className="text-2xl font-bold text-red-400 mt-4">Rất tiếc, đã xảy ra lỗi</h3>
             <div className="mt-2 text-red-300 bg-red-500/10 p-3 rounded-lg max-w-lg">
-                <p>{error}</p>
+                <p className="whitespace-pre-wrap">{error}</p>
             </div>
             {analyzedCoin && (
               <button 
@@ -205,7 +205,8 @@ const App: React.FC = () => {
       case AppStatus.Idle:
       default:
         return (
-          <div className="flex flex-col items-center justify-center min-h-[600px] text-center">
+          <div className="flex flex-col items-center justify-center min-h-[600px] text-center space-y-8">
+            {/* Main Welcome Card */}
             <div className="glassmorphism p-8 rounded-xl max-w-2xl w-full animate-fade-in">
                 <CpuChipIcon className="w-16 h-16 mx-auto text-cyan-400/70" />
                 <h2 className="text-3xl font-bold text-gray-100 mt-4">Chào mừng bạn đến với AI Analyzer</h2>
@@ -223,6 +224,23 @@ const App: React.FC = () => {
                         </button>
                     ))}
                 </div>
+            </div>
+
+            {/* API Key Setup Guide */}
+            <div className="glassmorphism p-6 rounded-xl max-w-2xl w-full animate-fade-in border border-yellow-500/30">
+              <div className="flex items-center gap-3 mb-4">
+                <KeyIcon className="w-6 h-6 text-yellow-400"/>
+                <h3 className="text-xl font-bold text-yellow-300">Hướng dẫn Cài đặt API Key</h3>
+              </div>
+              <div className="text-left text-gray-300 space-y-2 text-sm">
+                <p>Để ứng dụng hoạt động, bạn cần cung cấp API Key của Google AI Studio dưới dạng một biến môi trường trên nền tảng hosting của bạn (ví dụ: Vercel, Netlify).</p>
+                <p className="font-semibold">Khi thêm biến môi trường:</p>
+                <ul className="list-disc list-inside pl-4 bg-gray-900/50 p-3 rounded-md">
+                  <li>Trong trường <strong className="text-cyan-400">Key</strong> (hoặc Name), nhập chính xác: <code className="bg-gray-700 px-2 py-1 rounded-md text-white">API_KEY</code></li>
+                  <li>Trong trường <strong className="text-cyan-400">Value</strong> (hoặc Secret), dán khóa API của bạn vào.</li>
+                </ul>
+                <p>Lỗi bạn gặp trên Vercel có thể là do bạn đã dán API Key vào sai trường <strong className="text-cyan-400">Key</strong>.</p>
+              </div>
             </div>
           </div>
         );
