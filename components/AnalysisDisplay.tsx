@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+// FIX: The 'useRef' hook was used without being imported, causing a compilation error.
+import React, { useState, useEffect, useRef } from 'react';
 import type { AnalysisResult, Recommendation } from '../types';
+import AnalysisDisplaySkeleton from './AnalysisDisplaySkeleton';
 import { 
     ArrowTrendingUpIcon, ArrowTrendingDownIcon, ArrowsRightLeftIcon, ShieldCheckIcon, 
     RocketLaunchIcon, HandRaisedIcon, ArrowDownCircleIcon, LightBulbIcon, 
@@ -13,6 +15,7 @@ declare var html2pdf: any;
 interface AnalysisDisplayProps {
   analysis: AnalysisResult | null;
   coinPair: string | null;
+  isLoading: boolean;
 }
 
 const InfoCard: React.FC<{ title: string; value: string | number; colorClass: string; isPrice?: boolean; }> = ({ title, value, colorClass, isPrice = true }) => (
@@ -68,13 +71,23 @@ const StatCard: React.FC<{ title: string; children: React.ReactNode; icon: React
     </div>
 );
 
-type Tab = 'overview' | 'setup' | 'notes';
+type Tab = 'overview' | 'setup' | 'notes' | 'exporting';
 
-const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair }) => {
+const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, isLoading }) => {
   const [isExporting, setIsExporting] = useState(false);
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [bullCopied, setBullCopied] = useState(false);
   const [bearCopied, setBearCopied] = useState(false);
+  const exportContainerRef = useRef<HTMLDivElement>(null);
+
+  // Reset to overview tab when coin pair changes
+  useEffect(() => {
+    setActiveTab('overview');
+  }, [coinPair]);
+  
+  if (isLoading) {
+    return <AnalysisDisplaySkeleton />;
+  }
 
   if (!analysis || !coinPair) return null;
   
@@ -92,14 +105,18 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair })
     });
   };
   
-  const handleExport = (asImage: boolean) => {
+  const handleExport = async (asImage: boolean) => {
+    if (!exportContainerRef.current) return;
     setIsExporting(true);
-    const element = document.getElementById('analysis-report');
-    if (!element) {
-        setIsExporting(false);
-        return;
-    }
     
+    // Temporarily switch to a "mode" that renders all content for export
+    const originalTab = activeTab;
+    setActiveTab('exporting');
+    
+    // Allow React to re-render with all content visible
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    const element = exportContainerRef.current;
     const date = new Date().toISOString().split('T')[0];
     const filename = `Analysis-${coinPair.replace('/', '-')}-${date}`;
     
@@ -113,16 +130,22 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair })
 
     const pdfPromise = html2pdf().set(opt).from(element);
     
-    if (asImage) {
-        pdfPromise.toCanvas().then((canvas: any) => {
+    try {
+        if (asImage) {
+            const canvas = await pdfPromise.toCanvas();
             const link = document.createElement('a');
             link.download = `${filename}.png`;
             link.href = canvas.toDataURL('image/png', 1.0);
             link.click();
-            setIsExporting(false);
-        }).catch(() => setIsExporting(false));
-    } else {
-        pdfPromise.save().finally(() => setIsExporting(false));
+        } else {
+            await pdfPromise.save();
+        }
+    } catch (error) {
+        console.error("Export failed:", error);
+    } finally {
+        // Restore the original tab state and finish exporting
+        setActiveTab(originalTab);
+        setIsExporting(false);
     }
   };
 
@@ -139,9 +162,81 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair })
     </button>
   );
 
+  const renderOverview = () => (
+    <div className="space-y-8">
+        <RecommendationCard recommendation={analysis.recommendation} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <StatCard title="Độ Tin Cậy" icon={<ShieldCheckIcon className="w-5 h-5" />}>
+            <div className="text-3xl font-bold text-yellow-300">{`${analysis.confidenceScore}%`}</div>
+            <p className="text-xs text-gray-400 mt-1">{analysis.confidenceReason}</p>
+          </StatCard>
+          <StatCard title="Xu Hướng" icon={<ChartBarSquareIcon className="w-5 h-5" />}>
+            <TrendIndicator trend={analysis.shortTermTrend} />
+          </StatCard>
+        </div>
+        <StatCard title="Động Lực Chính" icon={<LightBulbIcon className="w-5 h-5"/>}>
+            <p className="text-purple-400 font-bold text-lg">{analysis.marketDriver}</p>
+        </StatCard>
+    </div>
+  );
+
+  const renderSetup = () => (
+    <div className="space-y-8">
+        <div className="bg-gradient-to-br from-cyan-900/70 to-gray-900/50 rounded-lg p-6 shadow-inner border border-cyan-500/30 text-center">
+            <div className="text-gray-300 text-md mb-2">Vùng Mua Khuyến Nghị</div>
+            <div className="text-4xl font-black text-cyan-300 py-2 tracking-wider">
+                {formatPriceRange(analysis.buyZone.from, analysis.buyZone.to)}
+            </div>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+            <InfoCard title="Chốt Lời 1" value={analysis.takeProfitLevels[0]} colorClass="text-teal-300" />
+            <InfoCard title="Chốt Lời 2" value={analysis.takeProfitLevels[1]} colorClass="text-teal-300" />
+            <InfoCard title="Mục tiêu Lớn" value={analysis.takeProfitLevels[2]} colorClass="text-teal-200 font-black" />
+            <InfoCard title="Cắt Lỗ" value={analysis.stopLoss} colorClass="text-orange-400" />
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+            <InfoCard title="Hỗ Trợ 1" value={analysis.supportLevels[0]} colorClass="text-green-400" />
+            <InfoCard title="Hỗ Trợ 2" value={analysis.supportLevels[1]} colorClass="text-green-400" />
+            <InfoCard title="Kháng Cự 1" value={analysis.resistanceLevels[0]} colorClass="text-red-400" />
+            <InfoCard title="Kháng Cự 2" value={analysis.resistanceLevels[1]} colorClass="text-red-400" />
+        </div>
+    </div>
+  );
+
+  const renderNotes = () => (
+    <div className="space-y-6">
+        <div className="relative">
+            <h4 className="text-lg font-bold text-green-400 mb-2">Trường hợp Tăng giá (Bull Case)</h4>
+            <blockquote className="bg-gray-900/50 p-4 rounded-lg border-l-4 border-green-500 text-gray-300 leading-relaxed pr-12">
+                {analysis.detailedAnalysis.bullCase}
+            </blockquote>
+            <button
+              onClick={() => handleCopyToClipboard(analysis.detailedAnalysis.bullCase, 'bull')}
+              className="absolute top-1/2 -translate-y-1/2 right-2 p-2 text-gray-400 rounded-full hover:bg-gray-700 hover:text-white transition-colors"
+              aria-label="Sao chép trường hợp tăng giá"
+            >
+              {bullCopied ? <CheckIcon className="w-5 h-5 text-green-400" /> : <ClipboardIcon className="w-5 h-5" />}
+            </button>
+        </div>
+        <div className="relative">
+            <h4 className="text-lg font-bold text-red-400 mb-2">Trường hợp Giảm giá (Bear Case)</h4>
+            <blockquote className="bg-gray-900/50 p-4 rounded-lg border-l-4 border-red-500 text-gray-300 leading-relaxed pr-12">
+                {analysis.detailedAnalysis.bearCase}
+            </blockquote>
+            <button
+              onClick={() => handleCopyToClipboard(analysis.detailedAnalysis.bearCase, 'bear')}
+              className="absolute top-1/2 -translate-y-1/2 right-2 p-2 text-gray-400 rounded-full hover:bg-gray-700 hover:text-white transition-colors"
+              aria-label="Sao chép trường hợp giảm giá"
+            >
+              {bearCopied ? <CheckIcon className="w-5 h-5 text-green-400" /> : <ClipboardIcon className="w-5 h-5" />}
+            </button>
+        </div>
+    </div>
+  );
+
   return (
-    <div id="analysis-report" className="glassmorphism rounded-lg shadow-2xl animate-fade-in w-full">
-      <div className="p-6 rounded-t-lg">
+    <div className="glassmorphism rounded-lg shadow-2xl animate-fade-in w-full">
+      <div id="analysis-report" className="p-6 rounded-t-lg">
         <header className="flex flex-col sm:flex-row justify-between items-start gap-4">
           <div>
               <h2 className="text-3xl font-bold text-white">Phân tích {coinPair}</h2>
@@ -160,82 +255,31 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair })
         </header>
       </div>
 
-      <nav role="tablist" aria-label="Chi tiết phân tích" className="border-b border-gray-700 px-6 flex space-x-2">
-        <TabButton tabId="overview" title="Tổng Quan" icon={<InformationCircleIcon className="w-5 h-5"/>}/>
-        <TabButton tabId="setup" title="Thiết Lập Giao Dịch" icon={<TableCellsIcon className="w-5 h-5"/>}/>
-        <TabButton tabId="notes" title="Ghi Chú Chuyên Sâu" icon={<PencilSquareIcon className="w-5 h-5"/>}/>
-      </nav>
+      {activeTab !== 'exporting' && (
+        <nav role="tablist" aria-label="Chi tiết phân tích" className="border-b border-gray-700 px-6 flex space-x-2">
+          <TabButton tabId="overview" title="Tổng Quan" icon={<InformationCircleIcon className="w-5 h-5"/>}/>
+          <TabButton tabId="setup" title="Thiết Lập Giao Dịch" icon={<TableCellsIcon className="w-5 h-5"/>}/>
+          <TabButton tabId="notes" title="Ghi Chú Chuyên Sâu" icon={<PencilSquareIcon className="w-5 h-5"/>}/>
+        </nav>
+      )}
 
-      <div className="p-6 rounded-b-lg bg-gray-900/30">
-        {activeTab === 'overview' && (
-          <div className="space-y-8 animate-fade-in">
-            <RecommendationCard recommendation={analysis.recommendation} />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <StatCard title="Độ Tin Cậy" icon={<ShieldCheckIcon className="w-5 h-5" />}>
-                <div className="text-3xl font-bold text-yellow-300">{`${analysis.confidenceScore}%`}</div>
-                <p className="text-xs text-gray-400 mt-1">{analysis.confidenceReason}</p>
-              </StatCard>
-              <StatCard title="Xu Hướng" icon={<ChartBarSquareIcon className="w-5 h-5" />}>
-                <TrendIndicator trend={analysis.shortTermTrend} />
-              </StatCard>
-            </div>
-             <StatCard title="Động Lực Chính" icon={<LightBulbIcon className="w-5 h-5"/>}>
-                 <p className="text-purple-400 font-bold text-lg">{analysis.marketDriver}</p>
-             </StatCard>
-          </div>
-        )}
-        
-        {activeTab === 'setup' && (
-            <div className="space-y-8 animate-fade-in">
-                <div className="bg-gradient-to-br from-cyan-900/70 to-gray-900/50 rounded-lg p-6 shadow-inner border border-cyan-500/30 text-center">
-                    <div className="text-gray-300 text-md mb-2">Vùng Mua Khuyến Nghị</div>
-                    <div className="text-4xl font-black text-cyan-300 py-2 tracking-wider">
-                        {formatPriceRange(analysis.buyZone.from, analysis.buyZone.to)}
-                    </div>
-                </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-                    <InfoCard title="Chốt Lời 1" value={analysis.takeProfitLevels[0]} colorClass="text-teal-300" />
-                    <InfoCard title="Chốt Lời 2" value={analysis.takeProfitLevels[1]} colorClass="text-teal-300" />
-                    <InfoCard title="Mục tiêu Lớn" value={analysis.takeProfitLevels[2]} colorClass="text-teal-200 font-black" />
-                    <InfoCard title="Cắt Lỗ" value={analysis.stopLoss} colorClass="text-orange-400" />
-                </div>
-                 <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-                    <InfoCard title="Hỗ Trợ 1" value={analysis.supportLevels[0]} colorClass="text-green-400" />
-                    <InfoCard title="Hỗ Trợ 2" value={analysis.supportLevels[1]} colorClass="text-green-400" />
-                    <InfoCard title="Kháng Cự 1" value={analysis.resistanceLevels[0]} colorClass="text-red-400" />
-                    <InfoCard title="Kháng Cự 2" value={analysis.resistanceLevels[1]} colorClass="text-red-400" />
-                </div>
+      <div ref={exportContainerRef} className="p-6 rounded-b-lg bg-gray-900/30">
+        {(activeTab === 'overview' || activeTab === 'exporting') && (
+            <div className={`animate-fade-in ${activeTab === 'exporting' ? 'space-y-8 mb-8' : ''}`}>
+                {activeTab === 'exporting' && <h3 className="text-xl font-bold text-cyan-400 border-b border-gray-700 pb-2 mb-4">Tổng Quan</h3>}
+                {renderOverview()}
             </div>
         )}
-
-        {activeTab === 'notes' && (
-            <div className="space-y-6 animate-fade-in">
-              <div className="relative">
-                  <h4 className="text-lg font-bold text-green-400 mb-2">Trường hợp Tăng giá (Bull Case)</h4>
-                  <blockquote className="bg-gray-900/50 p-4 rounded-lg border-l-4 border-green-500 text-gray-300 leading-relaxed pr-12">
-                      {analysis.detailedAnalysis.bullCase}
-                  </blockquote>
-                  <button
-                    onClick={() => handleCopyToClipboard(analysis.detailedAnalysis.bullCase, 'bull')}
-                    className="absolute top-1/2 -translate-y-1/2 right-2 p-2 text-gray-400 rounded-full hover:bg-gray-700 hover:text-white transition-colors"
-                    aria-label="Sao chép trường hợp tăng giá"
-                  >
-                    {bullCopied ? <CheckIcon className="w-5 h-5 text-green-400" /> : <ClipboardIcon className="w-5 h-5" />}
-                  </button>
-              </div>
-               <div className="relative">
-                  <h4 className="text-lg font-bold text-red-400 mb-2">Trường hợp Giảm giá (Bear Case)</h4>
-                  <blockquote className="bg-gray-900/50 p-4 rounded-lg border-l-4 border-red-500 text-gray-300 leading-relaxed pr-12">
-                      {analysis.detailedAnalysis.bearCase}
-                  </blockquote>
-                   <button
-                    onClick={() => handleCopyToClipboard(analysis.detailedAnalysis.bearCase, 'bear')}
-                    className="absolute top-1/2 -translate-y-1/2 right-2 p-2 text-gray-400 rounded-full hover:bg-gray-700 hover:text-white transition-colors"
-                    aria-label="Sao chép trường hợp giảm giá"
-                  >
-                    {bearCopied ? <CheckIcon className="w-5 h-5 text-green-400" /> : <ClipboardIcon className="w-5 h-5" />}
-                  </button>
-              </div>
+        {(activeTab === 'setup' || activeTab === 'exporting') && (
+            <div className={`animate-fade-in ${activeTab === 'exporting' ? 'space-y-8 mb-8' : ''}`}>
+                {activeTab === 'exporting' && <h3 className="text-xl font-bold text-cyan-400 border-b border-gray-700 pb-2 mb-4">Thiết Lập Giao Dịch</h3>}
+                {renderSetup()}
+            </div>
+        )}
+        {(activeTab === 'notes' || activeTab === 'exporting') && (
+            <div className="animate-fade-in">
+                {activeTab === 'exporting' && <h3 className="text-xl font-bold text-cyan-400 border-b border-gray-700 pb-2 mb-4">Ghi Chú Chuyên Sâu</h3>}
+                {renderNotes()}
             </div>
         )}
       </div>

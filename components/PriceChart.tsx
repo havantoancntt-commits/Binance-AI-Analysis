@@ -1,10 +1,13 @@
 import React, { useRef, useEffect } from 'react';
 import { ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ReferenceArea } from 'recharts';
-import type { PriceDataPoint, AnalysisResult } from '../types';
+import type { PriceDataPoint, AnalysisResult, Timeframe } from '../types';
 
 interface PriceChartProps {
   priceData: PriceDataPoint[];
   analysis: AnalysisResult | null;
+  timeframe: Timeframe;
+  onTimeframeChange: (timeframe: Timeframe) => void;
+  isChartLoading: boolean;
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -23,8 +26,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 };
 
 
-const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis }) => {
+const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe, onTimeframeChange, isChartLoading }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const timeframes: Timeframe[] = ['1D', '7D', '1M', '1Y'];
 
   useEffect(() => {
     if (analysis && chartContainerRef.current) {
@@ -43,22 +47,22 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis }) => {
     }
   }, [analysis]);
 
-  if (priceData.length === 0) {
-    return <div className="flex items-center justify-center h-full text-gray-500">Không có dữ liệu biểu đồ.</div>;
-  }
-  
-  const priceDomain: [number, number] = [
-    Math.min(...priceData.map(p => p.price)) * 0.98,
-    Math.max(...priceData.map(p => p.price)) * 1.02,
-  ];
-  
-  const volumeDomain: [number, number] = [
-    0,
-    Math.max(...priceData.map(p => p.volume)) * 2.5, // Give volume bars some room
-  ];
+  const renderChartContent = () => {
+    if (priceData.length === 0 && !isChartLoading) {
+        return <div className="flex items-center justify-center h-full text-gray-500">Không có dữ liệu biểu đồ.</div>;
+    }
 
-  return (
-    <div ref={chartContainerRef} className="glassmorphism p-4 rounded-lg shadow-2xl h-full w-full">
+    const priceDomain: [number, number] = [
+        Math.min(...priceData.map(p => p.price)) * 0.98,
+        Math.max(...priceData.map(p => p.price)) * 1.02,
+    ];
+    
+    const volumeDomain: [number, number] = [
+        0,
+        Math.max(...priceData.map(p => p.volume)) * 2.5, // Give volume bars some room
+    ];
+
+    return (
         <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
                 data={priceData}
@@ -113,6 +117,33 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis }) => {
 
             </ComposedChart>
         </ResponsiveContainer>
+    );
+  }
+
+
+  return (
+    <div ref={chartContainerRef} className="glassmorphism p-4 rounded-lg shadow-2xl h-full w-full flex flex-col relative">
+        {isChartLoading && (
+          <div className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
+          </div>
+        )}
+        <div className="flex justify-end items-center mb-2 space-x-1">
+          {timeframes.map((tf) => (
+            <button
+              key={tf}
+              onClick={() => onTimeframeChange(tf)}
+              disabled={isChartLoading}
+              className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed
+                ${timeframe === tf ? 'bg-cyan-600 text-white' : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700'}`}
+            >
+              {tf}
+            </button>
+          ))}
+        </div>
+        <div className="flex-grow w-full h-full">
+            {renderChartContent()}
+        </div>
     </div>
   );
 };

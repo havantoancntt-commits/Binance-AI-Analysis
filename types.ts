@@ -53,3 +53,5 @@ export interface NewsArticle {
   url: string;
   imageUrl: string;
 }
+
+export type Timeframe = '1D' | '7D' | '1M' | '1Y';
