@@ -268,6 +268,9 @@ const App: React.FC = () => {
       case AppStatus.Success:
         return (
           <div className="space-y-8 animate-fade-in">
+            <div className="p-4 glassmorphism rounded-xl">
+                <Ticker coinPair={analyzedCoin} tickerData={tickerData} />
+            </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 h-[400px] sm:h-[500px] lg:h-[600px]">
                 <PriceChart 
@@ -317,7 +320,10 @@ const App: React.FC = () => {
         <div className="p-4 glassmorphism rounded-xl max-w-4xl mx-auto sticky top-4 z-40 shadow-2xl">
             {analyzedCoin && (status === AppStatus.Success || status === AppStatus.Loading) ? (
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                    <Ticker coinPair={analyzedCoin} tickerData={tickerData} />
+                    <div>
+                        <span className="text-gray-400 text-sm">Đang xem phân tích cho</span>
+                        <h2 className="text-2xl font-bold text-white">{analyzedCoin}</h2>
+                    </div>
                     <button
                         type="button"
                         onClick={handleReset}

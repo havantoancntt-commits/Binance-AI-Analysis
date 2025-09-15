@@ -39,7 +39,7 @@ const Ticker: React.FC<TickerProps> = ({ coinPair, tickerData }) => {
   const Icon = tickerData?.isPositive ? ArrowTrendingUpIcon : ArrowTrendingDownIcon;
 
   return (
-    <div className="p-4 flex flex-col sm:flex-row justify-between items-center gap-4 animate-fade-in">
+    <div className="flex flex-col sm:flex-row justify-between items-center gap-4 w-full">
       <div className="flex items-center gap-3">
         <h2 className="text-2xl font-bold text-white">{coinPair}</h2>
       </div>
