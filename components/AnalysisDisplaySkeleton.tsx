@@ -23,10 +23,16 @@ const AnalysisDisplaySkeleton: React.FC = () => (
         {/* Content Skeleton */}
         <div className="space-y-6">
             <Box className="h-28 w-full" />
+            <div className="grid grid-cols-3 gap-4">
+                <Box className="h-16 w-full" />
+                <Box className="h-16 w-full" />
+                <Box className="h-16 w-full" />
+            </div>
             <div className="grid grid-cols-2 gap-6">
                 <Box className="h-24 w-full" />
                 <Box className="h-24 w-full" />
             </div>
+            <Box className="h-20 w-full" />
             <Box className="h-16 w-full" />
         </div>
     </div>

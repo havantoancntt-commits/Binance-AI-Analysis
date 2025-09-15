@@ -8,7 +8,7 @@ import PriceChart from './components/PriceChart';
 import AnalysisDisplay from './components/AnalysisDisplay';
 import Disclaimer from './components/Disclaimer';
 import Ticker from './components/Ticker';
-import DonationCallout from './components/PriceAlert';
+import SupportProject from './components/PriceAlert';
 import NewsFeed from './components/NewsFeed';
 import DashboardSkeleton from './components/DashboardSkeleton';
 import { COIN_PAIRS } from './constants';
@@ -268,8 +268,8 @@ const App: React.FC = () => {
       case AppStatus.Success:
         return (
           <div className="space-y-8 animate-fade-in">
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-              <div className="lg:col-span-3 h-[400px] sm:h-[500px] lg:h-[600px]">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 h-[400px] sm:h-[500px] lg:h-[600px]">
                 <PriceChart 
                   priceData={priceData} 
                   analysis={analysis}
@@ -278,17 +278,13 @@ const App: React.FC = () => {
                   isChartLoading={isChartLoading}
                 />
               </div>
-              <div className="lg:col-span-2">
+              <div className="lg:col-span-1">
                 <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
               </div>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
-                <div className="lg:col-span-3">
-                    <NewsFeed news={news} isLoading={isNewsLoading} />
-                </div>
-                <div className="lg:col-span-2">
-                    <DonationCallout />
-                </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <NewsFeed news={news} isLoading={isNewsLoading} />
+                <SupportProject />
             </div>
           </div>
         );

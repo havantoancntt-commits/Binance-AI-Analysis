@@ -8,8 +8,8 @@ const getAnalysisPrompt = (coinPair, priceData) => {
   const dataSnippet = priceData.slice(-60).map(p => `Date: ${p.date}, Price: ${p.price}, Volume: ${p.volume}`).join('; ');
 
   return `
-    Bạn là một nhà phân tích định lượng chuyên nghiệp tại một quỹ phòng hộ hàng đầu, chuyên về chiến lược giao dịch swing dài hạn trên thị trường tiền điện tử.
-    Phân tích của bạn phải cực kỳ chính xác, dựa trên dữ liệu và không chứa cảm tính. Bạn không đưa ra lời khuyên tài chính.
+    Bạn là một nhà phân tích định lượng cấp cao tại một quỹ phòng hộ hàng đầu, chuyên về chiến lược giao dịch swing dài hạn trên thị trường tiền điện tử.
+    Phân tích của bạn phải cực kỳ chính xác, dựa trên dữ liệu, và mang tính chuyên nghiệp của cấp độ tổ chức. Bạn không đưa ra lời khuyên tài chính.
     Nhiệm vụ của bạn là thực hiện phân tích kỹ thuật toàn diện cho cặp tiền ${coinPair} từ góc độ dài hạn (vài tuần đến vài tháng), tập trung vào cấu trúc thị trường, các vùng thanh khoản quan trọng và quản lý rủi ro.
 
     Trong phân tích của mình, hãy suy luận và kết hợp các chỉ báo kỹ thuật nâng cao như các mức Fibonacci retracement, dải Bollinger, các vùng hỗ trợ/kháng cự dựa trên khối lượng giao dịch (Volume Profile), cùng với các chỉ báo cổ điển như MA, RSI và MACD.
@@ -33,6 +33,7 @@ const getAnalysisPrompt = (coinPair, priceData) => {
     12. Một phân tích chi tiết, cân bằng bao gồm hai phần:
         - bullCase: Giải thích kịch bản tăng giá (2-3 câu). Điều gì cần xảy ra để giá tăng?
         - bearCase: Giải thích kịch bản giảm giá (2-3 câu). Rủi ro chính là gì và điều gì sẽ làm mất hiệu lực của luận điểm tăng giá?
+    13. Tâm lý thị trường hiện tại dựa trên hành động giá gần đây ('Extreme Fear', 'Fear', 'Neutral', 'Greed', 'Extreme Greed').
 
     YÊU CẦU NGHIÊM NGẶT: Toàn bộ nội dung văn bản trong phản hồi JSON của bạn PHẢI được viết hoàn toàn bằng tiếng Việt.
 
@@ -70,9 +71,14 @@ const analysisSchema = {
                 bearCase: { type: Type.STRING, description: "Kịch bản, rủi ro và các yếu tố hỗ trợ cho xu hướng giảm giá." },
             },
             required: ['bullCase', 'bearCase'],
+        },
+        marketSentiment: {
+            type: Type.STRING,
+            description: "Tâm lý thị trường hiện tại dựa trên hành động giá.",
+            enum: ['Extreme Fear', 'Fear', 'Neutral', 'Greed', 'Extreme Greed']
         }
     },
-    required: ['supportLevels', 'resistanceLevels', 'buyZone', 'takeProfitLevels', 'stopLoss', 'shortTermTrend', 'confidenceScore', 'confidenceReason', 'marketDriver', 'summary', 'recommendation', 'detailedAnalysis'],
+    required: ['supportLevels', 'resistanceLevels', 'buyZone', 'takeProfitLevels', 'stopLoss', 'shortTermTrend', 'confidenceScore', 'confidenceReason', 'marketDriver', 'summary', 'recommendation', 'detailedAnalysis', 'marketSentiment'],
 };
 
 export default async function handler(request, response) {

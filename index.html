@@ -11,19 +11,25 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+      :root {
+        --background-start-rgb: 13, 17, 23;
+        --background-end-rgb: 22, 27, 34;
+        --accent-color: #2dd4bf;
+      }
+
       body {
-        background-color: #0D1117;
-        background-image: linear-gradient(to bottom right, #1e293b, #0D1117, #0D1117);
+        background-color: rgb(var(--background-start-rgb));
+        background-image: linear-gradient(to bottom right, rgb(var(--background-end-rgb)), rgb(var(--background-start-rgb)), rgb(var(--background-start-rgb)));
         font-family: 'Inter', sans-serif;
         overscroll-behavior: none; /* Prevents pull-to-refresh */
       }
       
-      /* Glassmorphism effect for cards */
+      /* Refined glassmorphism effect */
       .glassmorphism {
-        background: rgba(22, 27, 34, 0.7);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(22, 27, 34, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       /* Custom scrollbar for a more modern look */

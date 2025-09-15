@@ -29,6 +29,7 @@ export interface AnalysisResult {
     bullCase: string;
     bearCase: string;
   };
+  marketSentiment: 'Extreme Fear' | 'Fear' | 'Neutral' | 'Greed' | 'Extreme Greed';
 }
 
 export enum AppStatus {

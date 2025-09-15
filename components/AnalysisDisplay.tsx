@@ -7,7 +7,7 @@ import {
     RocketLaunchIcon, HandRaisedIcon, ArrowDownCircleIcon, LightBulbIcon, 
     ChartBarSquareIcon, DocumentArrowDownIcon, PhotoIcon, 
     InformationCircleIcon, TableCellsIcon, PencilSquareIcon,
-    ClipboardIcon, CheckIcon
+    ClipboardIcon, CheckIcon, SparklesIcon
 } from './Icons';
 
 declare var html2pdf: any;
@@ -71,6 +71,41 @@ const StatCard: React.FC<{ title: string; children: React.ReactNode; icon: React
     </div>
 );
 
+const KeyMetricCard: React.FC<{ title: string; value: string; color: string; }> = ({ title, value, color }) => (
+    <div className="bg-gray-900/50 p-4 rounded-lg text-center border border-gray-700">
+        <div className="text-sm text-gray-400 font-semibold uppercase tracking-wider">{title}</div>
+        <div className={`text-2xl font-bold mt-1 ${color}`}>{value}</div>
+    </div>
+);
+
+
+const SentimentIndicator: React.FC<{ sentiment: AnalysisResult['marketSentiment'] }> = ({ sentiment }) => {
+    const sentimentConfig = {
+        'Extreme Fear': { text: 'Sợ hãi tột độ', color: 'text-red-500', bgColor: 'bg-red-500/20', value: 10 },
+        'Fear': { text: 'Sợ hãi', color: 'text-orange-400', bgColor: 'bg-orange-400/20', value: 30 },
+        'Neutral': { text: 'Trung lập', color: 'text-yellow-400', bgColor: 'bg-yellow-400/20', value: 50 },
+        'Greed': { text: 'Tham lam', color: 'text-green-400', bgColor: 'bg-green-400/20', value: 70 },
+        'Extreme Greed': { text: 'Tham lam tột độ', color: 'text-emerald-400', bgColor: 'bg-emerald-400/20', value: 90 },
+    };
+    const config = sentimentConfig[sentiment] || sentimentConfig['Neutral'];
+    return (
+        <StatCard title="Tâm Lý Thị Trường" icon={<SparklesIcon className="w-5 h-5" />}>
+            <div className="relative h-20 flex flex-col justify-end">
+                <div className="w-full bg-gray-700/50 rounded-full h-2.5">
+                    <div
+                        className={`h-2.5 rounded-full transition-all duration-1000 ease-out ${config.bgColor.replace('bg-', '')}`}
+                        style={{ width: `${config.value}%`, backgroundImage: `linear-gradient(to right, ${config.bgColor.replace('bg-','').split('/')[0]}, ${config.color.replace('text-', '')})` }}
+                    ></div>
+                </div>
+                <div className={`absolute bottom-5 font-bold text-lg ${config.color}`} style={{ left: `calc(${config.value}% - 2.5rem)` }}>
+                    {config.text}
+                </div>
+            </div>
+        </StatCard>
+    );
+};
+
+
 type Tab = 'overview' | 'setup' | 'notes' | 'exporting';
 
 const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, isLoading }) => {
@@ -80,7 +115,6 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
   const [bearCopied, setBearCopied] = useState(false);
   const exportContainerRef = useRef<HTMLDivElement>(null);
 
-  // Reset to overview tab when coin pair changes
   useEffect(() => {
     setActiveTab('overview');
   }, [coinPair]);
@@ -91,7 +125,8 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
 
   if (!analysis || !coinPair) return null;
   
-  const formatPriceRange = (from: number, to: number) => `$${Math.min(from, to).toLocaleString()} - $${Math.max(from, to).toLocaleString()}`;
+  const formatPrice = (price: number) => `$${price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
+  const formatPriceRange = (from: number, to: number) => `${formatPrice(Math.min(from, to))} - ${formatPrice(Math.max(from, to))}`;
 
   const handleCopyToClipboard = (text: string, type: 'bull' | 'bear') => {
     navigator.clipboard.writeText(text).then(() => {
@@ -109,11 +144,9 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
     if (!exportContainerRef.current) return;
     setIsExporting(true);
     
-    // Temporarily switch to a "mode" that renders all content for export
     const originalTab = activeTab;
     setActiveTab('exporting');
     
-    // Allow React to re-render with all content visible
     await new Promise(resolve => setTimeout(resolve, 50));
 
     const element = exportContainerRef.current;
@@ -143,7 +176,6 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
     } catch (error) {
         console.error("Export failed:", error);
     } finally {
-        // Restore the original tab state and finish exporting
         setActiveTab(originalTab);
         setIsExporting(false);
     }
@@ -163,8 +195,15 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
   );
 
   const renderOverview = () => (
-    <div className="space-y-8">
+    <div className="space-y-6">
         <RecommendationCard recommendation={analysis.recommendation} />
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <KeyMetricCard title="Vùng Mua" value={formatPriceRange(analysis.buyZone.from, analysis.buyZone.to)} color="text-cyan-300" />
+            <KeyMetricCard title="Chốt Lời 1" value={formatPrice(analysis.takeProfitLevels[0])} color="text-teal-300" />
+            <KeyMetricCard title="Cắt Lỗ" value={formatPrice(analysis.stopLoss)} color="text-orange-400" />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <StatCard title="Độ Tin Cậy" icon={<ShieldCheckIcon className="w-5 h-5" />}>
             <div className="text-3xl font-bold text-yellow-300">{`${analysis.confidenceScore}%`}</div>
@@ -174,6 +213,7 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
             <TrendIndicator trend={analysis.shortTermTrend} />
           </StatCard>
         </div>
+        <SentimentIndicator sentiment={analysis.marketSentiment} />
         <StatCard title="Động Lực Chính" icon={<LightBulbIcon className="w-5 h-5"/>}>
             <p className="text-purple-400 font-bold text-lg">{analysis.marketDriver}</p>
         </StatCard>
@@ -181,20 +221,20 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
   );
 
   const renderSetup = () => (
-    <div className="space-y-8">
+    <div className="space-y-6">
         <div className="bg-gradient-to-br from-cyan-900/70 to-gray-900/50 rounded-lg p-6 shadow-inner border border-cyan-500/30 text-center">
             <div className="text-gray-300 text-md mb-2">Vùng Mua Khuyến Nghị</div>
             <div className="text-4xl font-black text-cyan-300 py-2 tracking-wider">
                 {formatPriceRange(analysis.buyZone.from, analysis.buyZone.to)}
             </div>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <InfoCard title="Chốt Lời 1" value={analysis.takeProfitLevels[0]} colorClass="text-teal-300" />
             <InfoCard title="Chốt Lời 2" value={analysis.takeProfitLevels[1]} colorClass="text-teal-300" />
             <InfoCard title="Mục tiêu Lớn" value={analysis.takeProfitLevels[2]} colorClass="text-teal-200 font-black" />
             <InfoCard title="Cắt Lỗ" value={analysis.stopLoss} colorClass="text-orange-400" />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <InfoCard title="Hỗ Trợ 1" value={analysis.supportLevels[0]} colorClass="text-green-400" />
             <InfoCard title="Hỗ Trợ 2" value={analysis.supportLevels[1]} colorClass="text-green-400" />
             <InfoCard title="Kháng Cự 1" value={analysis.resistanceLevels[0]} colorClass="text-red-400" />
