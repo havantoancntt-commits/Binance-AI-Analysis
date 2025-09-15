@@ -1,5 +1,5 @@
-import React, { useRef, useEffect } from 'react';
-import { ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ReferenceArea } from 'recharts';
+import React, { useRef, useEffect, useMemo } from 'react';
+import { ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ReferenceArea, Scatter } from 'recharts';
 import type { PriceDataPoint, AnalysisResult, Timeframe } from '../types';
 
 interface PriceChartProps {
@@ -25,6 +25,59 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+interface CustomSignalShapeProps {
+  cx?: number;
+  cy?: number;
+  payload?: {
+    type: 'buy' | 'sell';
+    label: string;
+  };
+}
+
+const CustomSignalShape: React.FC<CustomSignalShapeProps> = (props) => {
+    const { cx, cy, payload } = props;
+    if (!cx || !cy || !payload) return null;
+
+    const isBuy = payload.type === 'buy';
+    const bgColor = isBuy ? 'rgba(74, 222, 128, 0.9)' : 'rgba(248, 113, 113, 0.9)';
+    const strokeColor = isBuy ? '#4ade80' : '#f87171';
+    
+    // Position the label above the circle dot
+    const labelYPosition = cy - 20;
+
+    return (
+        <g>
+            <foreignObject x={cx - 25} y={labelYPosition - 15} width="50" height="28" style={{ overflow: 'visible' }}>
+                {/* FIX: The 'xmlns' attribute is not valid for a React div element. */}
+                <div 
+                    style={{
+                        backgroundColor: bgColor,
+                        borderRadius: '6px',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '2px 8px',
+                        fontSize: '12px',
+                        fontWeight: 'bold',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.4)',
+                        border: `1px solid ${isBuy ? 'rgba(130, 255, 180, 0.7)' : 'rgba(255, 130, 130, 0.7)'}`,
+                        textAlign: 'center'
+                    }}>
+                    {payload.label}
+                </div>
+            </foreignObject>
+            {/* Pointer triangle */}
+            <polygon 
+              points={`${cx},${labelYPosition + 13} ${cx - 5},${labelYPosition + 8} ${cx + 5},${labelYPosition + 8}`} 
+              fill={bgColor} 
+            />
+            {/* Circle on the exact data point */}
+            <circle cx={cx} cy={cy} r="4" fill={strokeColor} stroke="#0D1117" strokeWidth="2" />
+        </g>
+    );
+};
+
 
 const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe, onTimeframeChange, isChartLoading }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -34,7 +87,6 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe,
     if (analysis && chartContainerRef.current) {
       const element = chartContainerRef.current;
       element.classList.remove('animate-chart-shake');
-      //
       void element.offsetWidth;
       element.classList.add('animate-chart-shake');
 
@@ -46,6 +98,37 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe,
       return () => clearTimeout(animationTimeout);
     }
   }, [analysis]);
+
+  const signalPoints = useMemo(() => {
+    if (!analysis || priceData.length < 2) return [];
+
+    const points = [];
+    const recentData = priceData.slice(-90);
+
+    // --- Intelligent Buy Signal Logic ---
+    const buyZoneTop = analysis.buyZone.to;
+    const buyCandidates = recentData.filter(p => p.price <= buyZoneTop * 1.05); // Price is within 5% above the buy zone
+    if (buyCandidates.length > 0) {
+        const buyPoint = buyCandidates.reduce((min, p) => p.price < min.price ? p : min, buyCandidates[0]);
+        points.push({ ...buyPoint, type: 'buy', label: 'MUA' });
+    }
+
+    // --- Intelligent Sell Signal Logic ---
+    if (analysis.takeProfitLevels.length > 0) {
+        const firstTakeProfit = analysis.takeProfitLevels[0];
+        // Price has to be at least 95% of the take-profit level
+        const sellCandidates = recentData.filter(p => p.price >= firstTakeProfit * 0.95);
+        if (sellCandidates.length > 0) {
+            const sellPoint = sellCandidates.reduce((max, p) => p.price > max.price ? p : max, sellCandidates[0]);
+            points.push({ ...sellPoint, type: 'sell', label: 'BÁN' });
+        }
+    }
+    
+    // Ensure no duplicate points on the same date (can happen if low/high is the same point)
+    const uniquePoints = Array.from(new Map(points.map(p => [p.date, p])).values());
+    return uniquePoints;
+  }, [analysis, priceData]);
+
 
   const renderChartContent = () => {
     if (priceData.length === 0 && !isChartLoading) {
@@ -66,7 +149,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe,
         <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
                 data={priceData}
-                margin={{ top: 5, right: 100, left: 20, bottom: 5 }}
+                margin={{ top: 30, right: 100, left: 20, bottom: 5 }}
             >
                 <defs>
                     <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
@@ -112,6 +195,10 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe,
                     
                     {/* Stop Loss */}
                     <ReferenceLine yAxisId="left" y={analysis.stopLoss} label={{ value: 'Cắt lỗ', position: 'right', fill: '#FC8181', fontSize: 12, fontWeight: 'bold', dy: -5 }} stroke="#E53E3E" strokeWidth={2}/>
+                    
+                    {/* Buy/Sell Signals */}
+                    {/* FIX: The 'zIndex' prop is not valid for the Scatter component. SVG rendering order naturally places it on top. */}
+                    <Scatter yAxisId="left" data={signalPoints} shape={<CustomSignalShape />} />
                     </>
                 )}
 

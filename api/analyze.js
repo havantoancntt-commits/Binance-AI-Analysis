@@ -108,6 +108,7 @@ export default async function handler(request, response) {
                 responseMimeType: "application/json",
                 responseSchema: analysisSchema,
                 temperature: 0.2,
+                thinkingConfig: { thinkingBudget: 0 },
             }
         });
 
