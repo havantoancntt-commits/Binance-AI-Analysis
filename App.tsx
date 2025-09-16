@@ -1,4 +1,3 @@
-
 import React, { useReducer, useCallback, useEffect, useRef } from 'react';
 import type { PriceDataPoint, AnalysisResult, TickerData } from './types';
 import { AppStatus } from './types';
@@ -11,6 +10,7 @@ import Disclaimer from './components/Disclaimer';
 import SupportProject from './components/SupportProject';
 import DashboardSkeleton from './components/DashboardSkeleton';
 import BinanceReferral from './components/BinanceReferral';
+import MotivationalTicker from './components/MotivationalTicker';
 
 import { COIN_PAIRS } from './constants';
 import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
@@ -262,6 +262,7 @@ const App: React.FC = () => {
            <p className="text-gray-400 mt-2">
                Nhận thông tin chi tiết về thị trường tức thì. Bắt đầu bằng cách chọn một cặp phổ biến hoặc nhập một cặp tùy chỉnh ở trên.
            </p>
+           <MotivationalTicker />
         </div>
         <div className="mt-8 max-w-2xl mx-auto">
           <SupportProject />
