@@ -6,39 +6,38 @@ import { GoogleGenAI, Type } from "@google/genai";
 
 const getAnalysisPrompt = (coinPair, priceData) => {
   const latestPrice = priceData.length > 0 ? priceData[priceData.length - 1].price : 'N/A';
-  const dataSnippet = priceData.slice(-60).map(p => `Date: ${p.date}, Price: ${p.price}, Volume: ${p.volume}`).join('; ');
+  const dataSnippet = priceData.slice(-60).map(p => `Date: ${p.date}, Price: ${p.price.toFixed(4)}, Vol: ${p.volume.toExponential(2)}`).join('; ');
 
   return `
-    Bạn là một nhà phân tích định lượng cấp cao tại một quỹ phòng hộ hàng đầu, chuyên về chiến lược giao dịch swing dài hạn trên thị trường tiền điện tử.
-    Phân tích của bạn phải cực kỳ chính xác, dựa trên dữ liệu, và mang tính chuyên nghiệp của cấp độ tổ chức. Bạn không đưa ra lời khuyên tài chính.
-    Nhiệm vụ của bạn là thực hiện phân tích kỹ thuật toàn diện cho cặp tiền ${coinPair} từ góc độ dài hạn (vài tuần đến vài tháng), tập trung vào cấu trúc thị trường, các vùng thanh khoản quan trọng và quản lý rủi ro.
+    **ROLE & CONTEXT:** You are a senior quantitative analyst at a top-tier hedge fund, specializing in long-term swing trading strategies for cryptocurrencies. Your analysis must be data-driven, precise, and institutional-grade. This is not financial advice.
 
-    Trong phân tích của mình, hãy suy luận và kết hợp các chỉ báo kỹ thuật nâng cao như các mức Fibonacci retracement, dải Bollinger, các vùng hỗ trợ/kháng cự dựa trên khối lượng giao dịch (Volume Profile), cùng với các chỉ báo cổ điển như MA, RSI và MACD.
+    **TASK:** Perform a comprehensive technical analysis for ${coinPair} with a long-term perspective (weeks to months). Focus on market structure, key liquidity zones, and risk management. Incorporate advanced indicators like Fibonacci retracements, volume-based support/resistance, and Bollinger Bands, alongside classic indicators (MA, RSI, MACD).
 
-    Giá hiện tại là khoảng ${latestPrice}.
-    Đây là dữ liệu hành động giá gần đây (60 ngày qua, từ cũ nhất đến mới nhất): ${dataSnippet}
-    Hãy coi trọng dữ liệu gần đây này để xác định xu hướng ngắn hạn, nhưng hãy sử dụng toàn bộ dữ liệu 365 ngày để xác định các mức hỗ trợ/kháng cự chính.
+    **DATA:**
+    *   **Current Price:** Approx. ${latestPrice}.
+    *   **Recent Price Action (last 60 days):** ${dataSnippet}. Use this for short-term trend context.
+    *   **Full Dataset (365 days):** Use the entire provided dataset to identify major support/resistance levels.
 
-    Dựa trên TOÀN BỘ dữ liệu lịch sử được cung cấp (365 ngày), hãy thực hiện phân tích giao dịch swing dài hạn. Xác định những điều sau:
-    1.  Hai mức hỗ trợ chính dưới mức giá hiện tại.
-    2.  Hai mức kháng cự chính trên mức giá hiện tại.
-    3.  Một vùng mua/vào lệnh tối ưu, nơi có sự hội tụ của nhiều yếu tố kỹ thuật.
-    4.  Ba mục tiêu chốt lời thực tế.
-    5.  Một mức dừng lỗ quan trọng duy nhất.
-    6.  Xu hướng trung hạn có khả năng xảy ra (Uptrend, Downtrend, hoặc Sideways).
-    7.  Điểm số tự tin (từ 0 đến 100) cho toàn bộ phân tích.
-    8.  Lý do ngắn gọn cho điểm số tự tin.
-    9.  Động lực chính của thị trường (ví dụ: "Sự phá vỡ vùng tích lũy với khối lượng lớn", "Giá đang kiểm tra lại đường MA 200", "Phân kỳ giảm giá RSI trên khung ngày").
-    10. Một câu tóm tắt chuyên nghiệp về cấu trúc thị trường hiện tại.
-    11. Một khuyến nghị giao dịch rõ ràng với một tín hiệu cụ thể ('Strong Buy', 'Buy', 'Hold', 'Sell', 'Strong Sell', 'Avoid') và lý do.
-    12. Một phân tích chi tiết, cân bằng bao gồm hai phần:
-        - bullCase: Giải thích kịch bản tăng giá (2-3 câu). Điều gì cần xảy ra để giá tăng?
-        - bearCase: Giải thích kịch bản giảm giá (2-3 câu). Rủi ro chính là gì và điều gì sẽ làm mất hiệu lực của luận điểm tăng giá?
-    13. Tâm lý thị trường hiện tại dựa trên hành động giá gần đây ('Extreme Fear', 'Fear', 'Neutral', 'Greed', 'Extreme Greed').
+    **ANALYSIS REQUIREMENTS (Based on the FULL 365-day dataset):**
+    1.  **Support Levels:** Two primary support levels below the current price.
+    2.  **Resistance Levels:** Two primary resistance levels above the current price.
+    3.  **Optimal Buy Zone:** A price range for entry, justified by technical confluence.
+    4.  **Take-Profit Targets:** Three realistic take-profit levels.
+    5.  **Stop-Loss:** A single, critical stop-loss level.
+    6.  **Mid-Term Trend:** The most likely trend (Uptrend, Downtrend, Sideways).
+    7.  **Confidence Score:** A 0-100 score for the overall analysis.
+    8.  **Confidence Rationale:** A brief reason for the score.
+    9.  **Primary Market Driver:** The key technical factor currently in play (e.g., "Breakout from volume-heavy accumulation zone," "Retesting the 200-day MA," "Daily RSI bearish divergence").
+    10. **Market Structure Summary:** A single professional sentence summarizing the current market structure.
+    11. **Trade Recommendation:** A clear signal ('Strong Buy', 'Buy', 'Hold', 'Sell', 'Strong Sell', 'Avoid') with its core reason.
+    12. **Detailed Scenarios:**
+        *   **bullCase:** A 2-3 sentence bullish scenario. What needs to happen for the price to rise?
+        *   **bearCase:** A 2-3 sentence bearish scenario. What are the key risks?
+    13. **Market Sentiment:** The current sentiment based on price action ('Extreme Fear', 'Fear', 'Neutral', 'Greed', 'Extreme Greed').
 
-    YÊU CẦU NGHIÊM NGẶT: Toàn bộ nội dung văn bản trong phản hồi JSON của bạn PHẢI được viết hoàn toàn bằng tiếng Việt.
-
-    Cung cấp phản hồi độc quyền ở định dạng JSON có cấu trúc được xác định trong schema. Không thêm bất kỳ văn bản nào trước hoặc sau đối tượng JSON.
+    **CRITICAL OUTPUT INSTRUCTIONS:**
+    *   **Language:** The entire text content in your JSON response MUST be in Vietnamese.
+    *   **Format:** Respond ONLY with a JSON object that strictly adheres to the provided schema. Do not include any text before or after the JSON object.
   `;
 };
 

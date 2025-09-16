@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 const Box: React.FC<{ className?: string }> = ({ className = '' }) => (

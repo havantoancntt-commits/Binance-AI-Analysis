@@ -1,3 +1,4 @@
+
 import React, { useReducer, useCallback, useEffect, useRef } from 'react';
 import type { PriceDataPoint, AnalysisResult, TickerData, NewsArticle, Timeframe } from './types';
 import { AppStatus } from './types';
@@ -286,12 +287,19 @@ const App: React.FC = () => {
         return <DashboardSkeleton />;
       case AppStatus.Error:
         return (
-          <div className="flex flex-col items-center justify-center min-h-[600px] glassmorphism rounded-xl p-8 text-center animate-fade-in">
-            <XCircleIcon className="w-16 h-16 text-red-500/80 mx-auto" />
-            <h3 className="text-2xl font-bold text-red-400 mt-4">Rất tiếc, đã xảy ra lỗi</h3>
-            <div className="mt-2 text-red-300 bg-red-500/10 p-3 rounded-lg max-w-lg">
-                <p className="whitespace-pre-wrap">{error}</p>
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
+             <div className="lg:col-span-2">
+                <div className="flex flex-col items-center justify-center h-full glassmorphism rounded-xl p-8 text-center">
+                    <XCircleIcon className="w-16 h-16 text-red-500/80 mx-auto" />
+                    <h3 className="text-2xl font-bold text-red-400 mt-4">Rất tiếc, đã xảy ra lỗi</h3>
+                    <div className="mt-2 text-red-300 bg-red-500/10 p-3 rounded-lg max-w-lg">
+                        <p className="whitespace-pre-wrap">{error}</p>
+                    </div>
+                </div>
+             </div>
+             <div className="lg:col-span-1 space-y-8">
+                <SupportProject />
+             </div>
           </div>
         );
       case AppStatus.Success:
@@ -347,7 +355,7 @@ const App: React.FC = () => {
         </header>
         
         <div className="p-4 glassmorphism rounded-xl max-w-4xl mx-auto sticky top-4 z-40 shadow-2xl">
-            {analyzedCoin && (status === AppStatus.Success || status === AppStatus.Loading) ? (
+            {analyzedCoin && (status === AppStatus.Success || status === AppStatus.Loading || status === AppStatus.Error) ? (
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
                         <span className="text-gray-400 text-sm">Đang xem phân tích cho</span>
