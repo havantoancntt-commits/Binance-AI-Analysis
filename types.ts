@@ -57,6 +57,7 @@ export interface NewsArticle {
 
 export type Timeframe = '1D' | '7D' | '1M' | '1Y';
 
+// FIX: Add DelistingCoin type for the delisting watchlist feature.
 export interface DelistingCoin {
   coinPair: string;
   delistingDate: string;

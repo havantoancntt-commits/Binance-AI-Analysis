@@ -5,22 +5,16 @@ const Box: React.FC<{ className?: string }> = ({ className = '' }) => (
 );
 
 const DashboardSkeleton: React.FC = () => (
-    <div className="animate-pulse animate-fade-in" aria-label="Đang tải nội dung">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            <div className="lg:col-span-2 h-[400px] sm:h-[500px] lg:h-[600px]">
-                <Box className="w-full h-full" />
-            </div>
-            <div className="lg:col-span-1 h-[600px]">
-                 <Box className="w-full h-full" />
-            </div>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-pulse animate-fade-in" aria-label="Đang tải nội dung">
+        {/* Left & Center Column Skeleton */}
+        <div className="lg:col-span-2 space-y-8">
+            <Box className="h-[400px] sm:h-[500px] lg:h-[600px]" />
+            <Box className="h-[400px]" /> {/* For NewsFeed */}
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-            <div className="h-[400px]">
-                <Box className="w-full h-full" />
-            </div>
-            <div className="h-[400px]">
-                <Box className="w-full h-full" />
-            </div>
+        {/* Right Column Skeleton */}
+        <div className="lg:col-span-1 space-y-8">
+            <Box className="h-[600px]" /> {/* For AnalysisDisplay */}
+            <Box className="h-[250px]" /> {/* For SupportProject */}
         </div>
     </div>
 );
