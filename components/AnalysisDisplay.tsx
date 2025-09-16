@@ -1,12 +1,11 @@
-// FIX: The 'useRef' hook was used without being imported, causing a compilation error.
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import type { AnalysisResult, Recommendation } from '../types';
 import AnalysisDisplaySkeleton from './AnalysisDisplaySkeleton';
 import { 
     ArrowTrendingUpIcon, ArrowTrendingDownIcon, ArrowsRightLeftIcon, ShieldCheckIcon, 
     RocketLaunchIcon, HandRaisedIcon, ArrowDownCircleIcon, LightBulbIcon, 
     ChartBarSquareIcon, DocumentArrowDownIcon, PhotoIcon, 
-    ClipboardIcon, CheckIcon, SparklesIcon
+    ClipboardIcon, CheckIcon, SparklesIcon, TableCellsIcon, PencilSquareIcon
 } from './Icons';
 
 declare var html2pdf: any;
@@ -16,6 +15,8 @@ interface AnalysisDisplayProps {
   coinPair: string | null;
   isLoading: boolean;
 }
+
+type AnalysisTab = 'overview' | 'setup' | 'deep';
 
 const TrendIndicator: React.FC<{ trend: AnalysisResult['shortTermTrend'] }> = ({ trend }) => {
     let icon, text, color;
@@ -107,7 +108,6 @@ const TradingSetupDetails: React.FC<{analysis: AnalysisResult}> = ({ analysis })
 
     return (
         <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-700">
-            <h3 className="text-md font-semibold text-gray-300 uppercase tracking-wider mb-4">Thiết Lập Giao Dịch</h3>
             <div className="space-y-3">
                 {setupItems.map(item => (
                     <div key={item.label} className="flex justify-between items-center text-sm">
@@ -120,11 +120,23 @@ const TradingSetupDetails: React.FC<{analysis: AnalysisResult}> = ({ analysis })
     );
 };
 
+const TabButton: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; children: React.ReactNode }> = ({ active, onClick, icon, children }) => (
+    <button
+        onClick={onClick}
+        className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-t-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500
+            ${active ? 'bg-gray-800/60 text-white' : 'bg-transparent text-gray-400 hover:bg-gray-800/30 hover:text-gray-200'}`}
+    >
+        {icon}
+        {children}
+    </button>
+);
+
 
 const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, isLoading }) => {
   const [isExporting, setIsExporting] = useState(false);
   const [bullCopied, setBullCopied] = useState(false);
   const [bearCopied, setBearCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState<AnalysisTab>('overview');
   const exportContainerRef = useRef<HTMLDivElement>(null);
   
   if (isLoading) {
@@ -149,7 +161,6 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
     if (!exportContainerRef.current) return;
     setIsExporting(true);
     
-    // Allow the UI to update to the "exporting" state
     await new Promise(resolve => setTimeout(resolve, 50));
 
     const element = exportContainerRef.current;
@@ -182,60 +193,48 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
         setIsExporting(false);
     }
   };
-
-  return (
-    <div className="glassmorphism rounded-lg shadow-2xl animate-fade-in w-full h-full">
-      <div id="analysis-report" ref={exportContainerRef}>
-        <div className="p-6 bg-gray-900/30 rounded-lg">
-            <header className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-6 border-b border-gray-700">
-            <div>
-                <h2 className="text-3xl font-bold text-white">Phân tích {coinPair}</h2>
-                <p className="text-gray-400 mt-1">{analysis.summary}</p>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-                <button onClick={() => handleExport(false)} disabled={isExporting} className="p-2 text-gray-300 bg-gray-800/50 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-wait" aria-label="Lưu PDF">
-                    <DocumentArrowDownIcon className="w-5 h-5" />
-                </button>
-                <button onClick={() => handleExport(true)} disabled={isExporting} className="p-2 text-gray-300 bg-gray-800/50 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-wait" aria-label="Lưu ảnh">
-                    <PhotoIcon className="w-5 h-5" />
-                </button>
-            </div>
-            </header>
-
-            <main className="mt-6 space-y-6">
-                <RecommendationCard recommendation={analysis.recommendation} />
-                
-                <TradingSetupDetails analysis={analysis} />
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <StatCard title="Độ Tin Cậy" icon={<ShieldCheckIcon className="w-5 h-5" />}>
-                        <div className="text-3xl font-bold text-yellow-300">{`${analysis.confidenceScore}%`}</div>
-                        <p className="text-xs text-gray-400 mt-1">{analysis.confidenceReason}</p>
-                    </StatCard>
-                    <StatCard title="Xu Hướng" icon={<ChartBarSquareIcon className="w-5 h-5" />}>
-                        <TrendIndicator trend={analysis.shortTermTrend} />
-                    </StatCard>
+  
+  const renderTabContent = () => {
+    switch (activeTab) {
+        case 'overview':
+            return (
+                <div className="space-y-6 animate-fade-in">
+                    <RecommendationCard recommendation={analysis.recommendation} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <StatCard title="Độ Tin Cậy" icon={<ShieldCheckIcon className="w-5 h-5" />}>
+                            <div className="text-3xl font-bold text-yellow-300">{`${analysis.confidenceScore}%`}</div>
+                            <p className="text-xs text-gray-400 mt-1">{analysis.confidenceReason}</p>
+                        </StatCard>
+                        <StatCard title="Xu Hướng" icon={<ChartBarSquareIcon className="w-5 h-5" />}>
+                            <TrendIndicator trend={analysis.shortTermTrend} />
+                        </StatCard>
+                    </div>
+                    <SentimentIndicator sentiment={analysis.marketSentiment} />
                 </div>
-                
-                <SentimentIndicator sentiment={analysis.marketSentiment} />
-                
-                <StatCard title="Động Lực Chính" icon={<LightBulbIcon className="w-5 h-5"/>}>
-                    <p className="text-purple-400 font-bold text-lg">{analysis.marketDriver}</p>
-                </StatCard>
-                
-                <div className="space-y-6">
-                    <h3 className="text-md font-semibold text-gray-300 uppercase tracking-wider">Phân Tích Chuyên Sâu</h3>
+            );
+        case 'setup':
+            return (
+                 <div className="space-y-6 animate-fade-in">
+                    <TradingSetupDetails analysis={analysis} />
+                </div>
+            );
+        case 'deep':
+            return (
+                <div className="space-y-6 animate-fade-in">
+                    <StatCard title="Động Lực Chính" icon={<LightBulbIcon className="w-5 h-5"/>}>
+                        <p className="text-purple-400 font-bold text-lg">{analysis.marketDriver}</p>
+                    </StatCard>
                     <div className="relative">
                         <h4 className="text-lg font-bold text-green-400 mb-2">Trường hợp Tăng giá (Bull Case)</h4>
                         <blockquote className="bg-gray-900/50 p-4 rounded-lg border-l-4 border-green-500 text-gray-300 leading-relaxed pr-12">
                             {analysis.detailedAnalysis.bullCase}
                         </blockquote>
                         <button
-                        onClick={() => handleCopyToClipboard(analysis.detailedAnalysis.bullCase, 'bull')}
-                        className="absolute top-1/2 -translate-y-1/2 right-2 p-2 text-gray-400 rounded-full hover:bg-gray-700 hover:text-white transition-colors"
-                        aria-label="Sao chép trường hợp tăng giá"
+                            onClick={() => handleCopyToClipboard(analysis.detailedAnalysis.bullCase, 'bull')}
+                            className="absolute top-1/2 -translate-y-1/2 right-2 p-2 text-gray-400 rounded-full hover:bg-gray-700 hover:text-white transition-colors"
+                            aria-label="Sao chép trường hợp tăng giá"
                         >
-                        {bullCopied ? <CheckIcon className="w-5 h-5 text-green-400" /> : <ClipboardIcon className="w-5 h-5" />}
+                            {bullCopied ? <CheckIcon className="w-5 h-5 text-green-400" /> : <ClipboardIcon className="w-5 h-5" />}
                         </button>
                     </div>
                     <div className="relative">
@@ -244,14 +243,47 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
                             {analysis.detailedAnalysis.bearCase}
                         </blockquote>
                         <button
-                        onClick={() => handleCopyToClipboard(analysis.detailedAnalysis.bearCase, 'bear')}
-                        className="absolute top-1/2 -translate-y-1/2 right-2 p-2 text-gray-400 rounded-full hover:bg-gray-700 hover:text-white transition-colors"
-                        aria-label="Sao chép trường hợp giảm giá"
+                            onClick={() => handleCopyToClipboard(analysis.detailedAnalysis.bearCase, 'bear')}
+                            className="absolute top-1/2 -translate-y-1/2 right-2 p-2 text-gray-400 rounded-full hover:bg-gray-700 hover:text-white transition-colors"
+                            aria-label="Sao chép trường hợp giảm giá"
                         >
-                        {bearCopied ? <CheckIcon className="w-5 h-5 text-green-400" /> : <ClipboardIcon className="w-5 h-5" />}
+                            {bearCopied ? <CheckIcon className="w-5 h-5 text-green-400" /> : <ClipboardIcon className="w-5 h-5" />}
                         </button>
                     </div>
                 </div>
+            );
+    }
+  };
+
+  return (
+    <div className="glassmorphism rounded-lg shadow-2xl animate-fade-in w-full h-full flex flex-col">
+      <div id="analysis-report" ref={exportContainerRef} className="flex-grow flex flex-col">
+        <div className="p-6 flex-grow flex flex-col">
+            <header className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-4">
+                <div>
+                    <h2 className="text-3xl font-bold text-white">Phân tích {coinPair}</h2>
+                    <p className="text-gray-400 mt-1">{analysis.summary}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                    <button onClick={() => handleExport(false)} disabled={isExporting} className="p-2 text-gray-300 bg-gray-800/50 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-wait" aria-label="Lưu PDF">
+                        <DocumentArrowDownIcon className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => handleExport(true)} disabled={isExporting} className="p-2 text-gray-300 bg-gray-800/50 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-wait" aria-label="Lưu ảnh">
+                        <PhotoIcon className="w-5 h-5" />
+                    </button>
+                </div>
+            </header>
+
+            <div className="border-b border-gray-700 mb-6">
+                <nav className="flex space-x-2" aria-label="Tabs">
+                    <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} icon={<ChartBarSquareIcon className="w-5 h-5" />}>Tổng quan</TabButton>
+                    <TabButton active={activeTab === 'setup'} onClick={() => setActiveTab('setup')} icon={<TableCellsIcon className="w-5 h-5" />}>Thiết lập Giao dịch</TabButton>
+                    <TabButton active={activeTab === 'deep'} onClick={() => setActiveTab('deep')} icon={<PencilSquareIcon className="w-5 h-5" />}>Phân tích Sâu</TabButton>
+                </nav>
+            </div>
+
+            <main className="flex-grow">
+                {renderTabContent()}
             </main>
         </div>
       </div>

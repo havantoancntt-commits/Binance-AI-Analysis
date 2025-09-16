@@ -1,6 +1,7 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ReferenceArea, Scatter } from 'recharts';
-import type { PriceDataPoint, AnalysisResult, Timeframe } from '../types';
+import type { PriceDataPoint, AnalysisResult, Timeframe, TickerData } from '../types';
+import Ticker from './Ticker';
 
 interface PriceChartProps {
   priceData: PriceDataPoint[];
@@ -8,6 +9,8 @@ interface PriceChartProps {
   timeframe: Timeframe;
   onTimeframeChange: (timeframe: Timeframe) => void;
   isChartLoading: boolean;
+  tickerData: TickerData | null;
+  coinPair: string | null;
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -42,13 +45,11 @@ const CustomSignalShape: React.FC<CustomSignalShapeProps> = (props) => {
     const bgColor = isBuy ? 'rgba(74, 222, 128, 0.9)' : 'rgba(248, 113, 113, 0.9)';
     const strokeColor = isBuy ? '#4ade80' : '#f87171';
     
-    // Position the label above the circle dot
     const labelYPosition = cy - 20;
 
     return (
         <g>
             <foreignObject x={cx - 25} y={labelYPosition - 15} width="50" height="28" style={{ overflow: 'visible' }}>
-                {/* FIX: The 'xmlns' attribute is not valid for a React div element. */}
                 <div 
                     style={{
                         backgroundColor: bgColor,
@@ -67,19 +68,17 @@ const CustomSignalShape: React.FC<CustomSignalShapeProps> = (props) => {
                     {payload.label}
                 </div>
             </foreignObject>
-            {/* Pointer triangle */}
             <polygon 
               points={`${cx},${labelYPosition + 13} ${cx - 5},${labelYPosition + 8} ${cx + 5},${labelYPosition + 8}`} 
               fill={bgColor} 
             />
-            {/* Circle on the exact data point */}
             <circle cx={cx} cy={cy} r="4" fill={strokeColor} stroke="#0D1117" strokeWidth="2" />
         </g>
     );
 };
 
 
-const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe, onTimeframeChange, isChartLoading }) => {
+const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe, onTimeframeChange, isChartLoading, tickerData, coinPair }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const timeframes: Timeframe[] = ['1D', '7D', '1M', '1Y'];
 
@@ -89,7 +88,6 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe,
       element.classList.remove('animate-chart-shake');
       void element.offsetWidth;
       element.classList.add('animate-chart-shake');
-
 
       const animationTimeout = setTimeout(() => {
         element.classList.remove('animate-chart-shake');
@@ -105,18 +103,15 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe,
     const points = [];
     const recentData = priceData.slice(-90);
 
-    // --- Intelligent Buy Signal Logic ---
     const buyZoneTop = analysis.buyZone.to;
-    const buyCandidates = recentData.filter(p => p.price <= buyZoneTop * 1.05); // Price is within 5% above the buy zone
+    const buyCandidates = recentData.filter(p => p.price <= buyZoneTop * 1.05);
     if (buyCandidates.length > 0) {
         const buyPoint = buyCandidates.reduce((min, p) => p.price < min.price ? p : min, buyCandidates[0]);
         points.push({ ...buyPoint, type: 'buy', label: 'MUA' });
     }
 
-    // --- Intelligent Sell Signal Logic ---
     if (analysis.takeProfitLevels.length > 0) {
         const firstTakeProfit = analysis.takeProfitLevels[0];
-        // Price has to be at least 95% of the take-profit level
         const sellCandidates = recentData.filter(p => p.price >= firstTakeProfit * 0.95);
         if (sellCandidates.length > 0) {
             const sellPoint = sellCandidates.reduce((max, p) => p.price > max.price ? p : max, sellCandidates[0]);
@@ -124,7 +119,6 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe,
         }
     }
     
-    // Ensure no duplicate points on the same date (can happen if low/high is the same point)
     const uniquePoints = Array.from(new Map(points.map(p => [p.date, p])).values());
     return uniquePoints;
   }, [analysis, priceData]);
@@ -142,14 +136,14 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe,
     
     const volumeDomain: [number, number] = [
         0,
-        Math.max(...priceData.map(p => p.volume)) * 2.5, // Give volume bars some room
+        Math.max(...priceData.map(p => p.volume)) * 2.5,
     ];
 
     return (
         <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
                 data={priceData}
-                margin={{ top: 30, right: 100, left: 20, bottom: 5 }}
+                margin={{ top: 5, right: 100, left: 20, bottom: 5 }}
             >
                 <defs>
                     <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
@@ -175,29 +169,22 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe,
 
                 {analysis && (
                     <>
-                    {/* Buy Zone */}
                     <ReferenceArea yAxisId="left" y1={analysis.buyZone.from} y2={analysis.buyZone.to} stroke="#81E6D9" strokeDasharray="3 3" strokeOpacity={0.5} fill="#2C7A7B" fillOpacity={0.15} label={{ value: 'Vùng Mua', position: 'insideTopRight', fill: '#B2F5EA', fontSize: 14, fontWeight: 'bold' }} />
 
-                    {/* Support Levels */}
                     {analysis.supportLevels.map((level, index) => (
                         <ReferenceLine yAxisId="left" key={`sup-${index}`} y={level} label={{ value: `Hỗ trợ ${index + 1}`, position: 'right', fill: '#9AE6B4', fontSize: 12, dy: -5 }} stroke="#48BB78" strokeDasharray="4 4" strokeWidth={1.5} />
                     ))}
                     
-                    {/* Resistance Levels */}
                     {analysis.resistanceLevels.map((level, index) => (
                         <ReferenceLine yAxisId="left" key={`res-${index}`} y={level} label={{ value: `Kháng cự ${index + 1}`, position: 'right', fill: '#FEB2B2', fontSize: 12, dy: -5 }} stroke="#F56565" strokeDasharray="4 4" strokeWidth={1.5} />
                     ))}
 
-                    {/* Take Profit Levels */}
                     {analysis.takeProfitLevels.map((level, index) => (
                         <ReferenceLine yAxisId="left" key={`tp-${index}`} y={level} label={{ value: `Chốt lời ${index + 1}`, position: 'right', fill: '#68D391', fontSize: 12, fontWeight: 'bold', dy: -5 }} stroke="#38A169" strokeWidth={2}/>
                     ))}
                     
-                    {/* Stop Loss */}
                     <ReferenceLine yAxisId="left" y={analysis.stopLoss} label={{ value: 'Cắt lỗ', position: 'right', fill: '#FC8181', fontSize: 12, fontWeight: 'bold', dy: -5 }} stroke="#E53E3E" strokeWidth={2}/>
                     
-                    {/* Buy/Sell Signals */}
-                    {/* FIX: The 'zIndex' prop is not valid for the Scatter component. SVG rendering order naturally places it on top. */}
                     <Scatter yAxisId="left" data={signalPoints} shape={<CustomSignalShape />} />
                     </>
                 )}
@@ -215,18 +202,23 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe,
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
           </div>
         )}
-        <div className="flex justify-end items-center mb-2 space-x-1">
-          {timeframes.map((tf) => (
-            <button
-              key={tf}
-              onClick={() => onTimeframeChange(tf)}
-              disabled={isChartLoading}
-              className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed
-                ${timeframe === tf ? 'bg-cyan-600 text-white' : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700'}`}
-            >
-              {tf}
-            </button>
-          ))}
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-2 gap-2">
+            <div className="w-full sm:w-auto">
+                <Ticker coinPair={coinPair} tickerData={tickerData} />
+            </div>
+            <div className="flex-shrink-0 space-x-1">
+                {timeframes.map((tf) => (
+                    <button
+                    key={tf}
+                    onClick={() => onTimeframeChange(tf)}
+                    disabled={isChartLoading}
+                    className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed
+                        ${timeframe === tf ? 'bg-cyan-600 text-white' : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700'}`}
+                    >
+                    {tf}
+                    </button>
+                ))}
+            </div>
         </div>
         <div className="flex-grow w-full h-full">
             {renderChartContent()}

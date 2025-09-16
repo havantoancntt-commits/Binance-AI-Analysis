@@ -7,7 +7,6 @@ import { fetchNews } from './services/newsService';
 import PriceChart from './components/PriceChart';
 import AnalysisDisplay from './components/AnalysisDisplay';
 import Disclaimer from './components/Disclaimer';
-import Ticker from './components/Ticker';
 import SupportProject from './components/PriceAlert';
 import NewsFeed from './components/NewsFeed';
 import DashboardSkeleton from './components/DashboardSkeleton';
@@ -170,12 +169,10 @@ const App: React.FC = () => {
         dispatch({ type: 'SET_DELISTING_WATCHLIST', payload: data });
     } catch (error) {
         console.error("Failed to load delisting watchlist", error);
-        // On error, just set an empty list and stop loading
         dispatch({ type: 'SET_DELISTING_WATCHLIST', payload: [] });
     }
   }, []);
 
-  // Load watchlist on initial mount
   useEffect(() => {
     loadDelistingWatchlist();
   }, [loadDelistingWatchlist]);
@@ -187,21 +184,17 @@ const App: React.FC = () => {
       try {
         mainContentRef.current?.scrollIntoView({ behavior: 'smooth' });
         
-        // Step 1: Fetch historical data first for quick chart display
         const historicalData = await fetchHistoricalData(analyzedCoin, '1Y');
         dispatch({ type: 'SET_PRICE_DATA', payload: historicalData });
 
-        // Step 2: Check cache for AI analysis
         if (analysisCache[analyzedCoin]) {
             console.log(`Using cached analysis for ${analyzedCoin}`);
             dispatch({ type: 'USE_CACHED_ANALYSIS', payload: { analysis: analysisCache[analyzedCoin], coin: analyzedCoin } });
-            // Fetch fresh news in the background
             const baseCoin = analyzedCoin.split('/')[0];
             fetchNews(baseCoin).then(newsData => dispatch({ type: 'SET_NEWS', payload: newsData }));
             return;
         }
         
-        // Step 3: If no cache, fetch AI analysis and news in parallel
         console.log(`Fetching new analysis for ${analyzedCoin}`);
         const baseCoin = analyzedCoin.split('/')[0];
         const [aiAnalysis, fetchedNews] = await Promise.all([
@@ -302,9 +295,6 @@ const App: React.FC = () => {
       case AppStatus.Success:
         return (
           <div className="space-y-8 animate-fade-in">
-            <div className="p-4 glassmorphism rounded-xl">
-                <Ticker coinPair={analyzedCoin} tickerData={tickerData} />
-            </div>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 h-[400px] sm:h-[500px] lg:h-[600px]">
                 <PriceChart 
@@ -313,6 +303,8 @@ const App: React.FC = () => {
                   timeframe={timeframe}
                   onTimeframeChange={handleTimeframeChange}
                   isChartLoading={isChartLoading}
+                  tickerData={tickerData}
+                  coinPair={analyzedCoin}
                 />
               </div>
               <div className="lg:col-span-1">
