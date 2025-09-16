@@ -55,6 +55,7 @@ export interface NewsArticle {
   imageUrl: string;
 }
 
+// Fix: Add DelistingCoin interface based on the schema in api/delistings.js
 export interface DelistingCoin {
   coinPair: string;
   delistingDate: string;

@@ -1,17 +1,15 @@
 
 import React, { useReducer, useCallback, useEffect, useRef } from 'react';
-import type { PriceDataPoint, AnalysisResult, TickerData, NewsArticle, Timeframe, DelistingCoin } from './types';
+import type { PriceDataPoint, AnalysisResult, TickerData, NewsArticle, Timeframe } from './types';
 import { AppStatus } from './types';
 import { fetchAIAnalysis } from './services/geminiService';
 import { fetchHistoricalData } from './services/binanceService';
 import { fetchNews } from './services/newsService';
-import { fetchDelistings } from './services/delistingService';
 import PriceChart from './components/PriceChart';
 import AnalysisDisplay from './components/AnalysisDisplay';
 import Disclaimer from './components/Disclaimer';
 import SupportProject from './components/SupportProject';
 import NewsFeed from './components/NewsFeed';
-import DelistingWatchlist from './components/DelistingWatchlist';
 import DashboardSkeleton from './components/DashboardSkeleton';
 import { COIN_PAIRS } from './constants';
 import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
@@ -26,8 +24,6 @@ interface AppState {
   news: NewsArticle[];
   isNewsLoading: boolean;
   isAnalysisLoading: boolean;
-  delistings: DelistingCoin[];
-  isDelistingsLoading: boolean;
   error: string | null;
   timeframe: Timeframe;
   isChartLoading: boolean;
@@ -45,9 +41,7 @@ type AppAction =
   | { type: 'RESET' }
   | { type: 'SET_TIMEFRAME'; payload: Timeframe }
   | { type: 'SET_CHART_LOADING'; payload: boolean }
-  | { type: 'SET_NEWS'; payload: NewsArticle[] }
-  | { type: 'SET_DELISTINGS_LOADING' }
-  | { type: 'SET_DELISTINGS'; payload: DelistingCoin[] };
+  | { type: 'SET_NEWS'; payload: NewsArticle[] };
 
 const initialState: AppState = {
   status: AppStatus.Idle,
@@ -57,10 +51,8 @@ const initialState: AppState = {
   analysis: null,
   tickerData: null,
   news: [],
-  isNewsLoading: true,
-  isAnalysisLoading: true,
-  delistings: [],
-  isDelistingsLoading: true,
+  isNewsLoading: false,
+  isAnalysisLoading: false,
   error: null,
   timeframe: '1Y',
   isChartLoading: false,
@@ -117,10 +109,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
             news: action.payload,
             isNewsLoading: false,
         };
-    case 'SET_DELISTINGS_LOADING':
-        return { ...state, isDelistingsLoading: true };
-    case 'SET_DELISTINGS':
-        return { ...state, delistings: action.payload, isDelistingsLoading: false };
     case 'FETCH_ERROR':
       return {
         ...state,
@@ -142,8 +130,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
           ...initialState,
           analysisCache: state.analysisCache, // Persist cache on reset
           coinInput: state.coinInput,
-          delistings: state.delistings, // Persist delistings
-          isDelistingsLoading: state.isDelistingsLoading
       };
     case 'SET_TIMEFRAME':
         return { ...state, timeframe: action.payload };
@@ -156,13 +142,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, news, isNewsLoading, isAnalysisLoading, delistings, isDelistingsLoading, error, timeframe, isChartLoading, analysisCache } = state;
+  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, news, isNewsLoading, isAnalysisLoading, error, timeframe, isChartLoading, analysisCache } = state;
   const inputRef = useRef<HTMLInputElement>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    fetchDelistings().then(data => dispatch({ type: 'SET_DELISTINGS', payload: data }));
-  }, []);
 
   useEffect(() => {
     if (status !== AppStatus.Loading || !analyzedCoin) return;
@@ -292,11 +274,6 @@ const App: React.FC = () => {
     handleAnalysisRequest(coinInput);
   };
   
-  const handleRefreshDelistings = useCallback(async () => {
-    dispatch({ type: 'SET_DELISTINGS_LOADING' });
-    fetchDelistings().then(data => dispatch({ type: 'SET_DELISTINGS', payload: data }));
-  }, []);
-
   const handleClearInput = () => {
     dispatch({ type: 'SET_COIN_INPUT', payload: '' });
     inputRef.current?.focus();
@@ -310,8 +287,8 @@ const App: React.FC = () => {
         return <DashboardSkeleton />;
       case AppStatus.Error:
         return (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
-             <div className="lg:col-span-2">
+          <div className="flex justify-center items-center py-10 animate-fade-in">
+            <div className="w-full max-w-3xl">
                 <div className="flex flex-col items-center justify-center h-full glassmorphism rounded-xl p-8 text-center">
                     <XCircleIcon className="w-16 h-16 text-red-500/80 mx-auto" />
                     <h3 className="text-2xl font-bold text-red-400 mt-4">Rất tiếc, đã xảy ra lỗi</h3>
@@ -319,13 +296,6 @@ const App: React.FC = () => {
                         <p className="whitespace-pre-wrap">{error}</p>
                     </div>
                 </div>
-             </div>
-             <div className="lg:col-span-1">
-                <DelistingWatchlist 
-                  watchlist={delistings} 
-                  isLoading={isDelistingsLoading} 
-                  onRefresh={handleRefreshDelistings} 
-                />
              </div>
           </div>
         );
@@ -362,12 +332,7 @@ const App: React.FC = () => {
                     Chọn một cặp tiền điện tử phổ biến hoặc nhập một cặp tùy chỉnh để nhận phân tích kỹ thuật chi tiết do AI cung cấp.
                 </p>
              </div>
-             <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8">
-                <DelistingWatchlist 
-                  watchlist={delistings} 
-                  isLoading={isDelistingsLoading} 
-                  onRefresh={handleRefreshDelistings} 
-                />
+             <div className="w-full max-w-2xl mx-auto">
                 <SupportProject />
              </div>
           </div>

@@ -121,9 +121,10 @@ export const PencilSquareIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props)
   </svg>
 );
 
+// Fix: Add missing ArchiveBoxXMarkIcon
 export const ArchiveBoxXMarkIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.353-.026.692-.026 1.04 0 .348.026.687.026 1.04 0 1.131.094 1.976 1.057 1.976 2.192V7.5M12 14.25L10.5 12.75m0 0L9 14.25m1.5-1.5L10.5 11.25m1.5 1.5L13.5 14.25m0 0L15 12.75m-1.5 1.5L13.5 11.25m-3 3.75h6m-6 3h6m3.75-9.75H5.25c-.621 0-1.125.504-1.125 1.125v6c0 .621.504 1.125 1.125 1.125h13.5c.621 0 1.125-.504 1.125-1.125v-6c0-.621-.504-1.125-1.125-1.125Z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6 4.125 2.25 2.25m0 0 2.25 2.25M12 13.875l2.25-2.25M12 13.875l-2.25 2.25M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125V6.375c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v.001c0 .621.504 1.125 1.125 1.125Z" />
   </svg>
 );
 
