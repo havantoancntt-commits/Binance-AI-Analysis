@@ -42,7 +42,7 @@ export const fetchAIAnalysis = async (coinPair: string, priceData: PriceDataPoin
 
 export const fetchDelistingWatchlist = async (): Promise<DelistingCoin[]> => {
   try {
-    const apiResponse = await fetch('/api/delistings', {
+    const apiResponse = await fetch('/api/delisting', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
