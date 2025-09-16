@@ -135,3 +135,15 @@ export const ArchiveBoxXMarkIcon: React.FC<React.SVGProps<SVGSVGElement>> = (pro
     <path strokeLinecap="round" strokeLinejoin="round" d="m14.25 17.25-4.5-4.5m0 4.5 4.5-4.5" />
   </svg>
 );
+
+export const BinanceIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
+    <path d="M16.624 12.12L12 7.498l-4.625 4.624 2.25 2.25L12 11.999l2.375 2.375 2.25-2.25zM12 2.25l4.625 4.624-2.25 2.25L12 4.501 9.625 6.874l-2.25-2.25L12 2.25zm0 19.5l-4.625-4.624 2.25-2.25L12 19.5l2.375-2.375 2.25 2.25L12 21.75zm-7.375-7.375l2.25-2.25L4.5 9.75l2.375-2.375-2.25-2.25v9.25zm14.75 0v-9.25l-2.25 2.25L17.125 9.75l2.25 2.25-2.25 2.25z"/>
+  </svg>
+);
+
+export const ArrowUpRightIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 19.5l15-15m0 0H8.25m11.25 0v11.25" />
+  </svg>
+);

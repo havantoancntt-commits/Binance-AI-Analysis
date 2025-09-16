@@ -10,6 +10,7 @@ import AnalysisDisplay from './components/AnalysisDisplay';
 import Disclaimer from './components/Disclaimer';
 import SupportProject from './components/SupportProject';
 import DashboardSkeleton from './components/DashboardSkeleton';
+import BinanceReferral from './components/BinanceReferral';
 
 import { COIN_PAIRS } from './constants';
 import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
@@ -245,6 +246,7 @@ const App: React.FC = () => {
           </div>
           <div className="lg:col-span-2 space-y-8">
             <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
+            <BinanceReferral />
             <SupportProject />
           </div>
         </div>
