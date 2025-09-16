@@ -139,7 +139,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
         <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
                 data={priceData}
-                margin={{ top: 5, right: 100, left: 20, bottom: 5 }}
+                margin={{ top: 20, right: 20, left: 5, bottom: 5 }}
             >
                 <defs>
                     <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
@@ -154,7 +154,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
                     orientation="left"
                     stroke="#A0AEC0"
                     domain={priceDomain}
-                    tickFormatter={(value) => `$${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                    tickFormatter={(value) => `$${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`}
                     tick={{ fontSize: 12 }}
                 />
                 <YAxis yAxisId="right" orientation="right" stroke="#718096" domain={volumeDomain} tickFormatter={(value) => `${(Number(value) / 1000000).toFixed(1)}M`} />
@@ -164,21 +164,21 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
 
                 {analysis && (
                     <>
-                    <ReferenceArea yAxisId="left" y1={analysis.buyZone.from} y2={analysis.buyZone.to} stroke="#f59e0b" strokeDasharray="3 3" strokeOpacity={0.5} fill="#b45309" fillOpacity={0.15} label={{ value: 'Vùng Mua', position: 'insideTopRight', fill: '#fcd34d', fontSize: 14, fontWeight: 'bold' }} />
+                    <ReferenceArea yAxisId="left" y1={analysis.buyZone.from} y2={analysis.buyZone.to} stroke="#f59e0b" strokeDasharray="3 3" strokeOpacity={0.5} fill="#b45309" fillOpacity={0.15} label={{ value: 'Vùng Mua', position: 'insideTopRight', fill: '#fcd34d', fontSize: 12, fontWeight: 'bold' }} />
 
                     {analysis.supportLevels.map((level, index) => (
-                        <ReferenceLine yAxisId="left" key={`sup-${index}`} y={level} label={{ value: `Hỗ trợ ${index + 1}`, position: 'right', fill: '#facc15', fontSize: 12, dy: -5 }} stroke="#eab308" strokeDasharray="4 4" strokeWidth={1.5} />
+                        <ReferenceLine yAxisId="left" key={`sup-${index}`} y={level} label={{ value: `Hỗ trợ ${index + 1}`, position: 'insideTopRight', fill: '#facc15', fontSize: 11, dy: 15 }} stroke="#eab308" strokeDasharray="4 4" strokeWidth={1.5} />
                     ))}
                     
                     {analysis.resistanceLevels.map((level, index) => (
-                        <ReferenceLine yAxisId="left" key={`res-${index}`} y={level} label={{ value: `Kháng cự ${index + 1}`, position: 'right', fill: '#c084fc', fontSize: 12, dy: -5 }} stroke="#a855f7" strokeDasharray="4 4" strokeWidth={1.5} />
+                        <ReferenceLine yAxisId="left" key={`res-${index}`} y={level} label={{ value: `Kháng cự ${index + 1}`, position: 'insideTopRight', fill: '#c084fc', fontSize: 11, dy: 15 }} stroke="#a855f7" strokeDasharray="4 4" strokeWidth={1.5} />
                     ))}
 
                     {analysis.takeProfitLevels.map((level, index) => (
-                        <ReferenceLine yAxisId="left" key={`tp-${index}`} y={level} label={{ value: `Chốt lời ${index + 1}`, position: 'right', fill: '#fbbf24', fontSize: 12, fontWeight: 'bold', dy: -5 }} stroke="#f59e0b" strokeWidth={2}/>
+                        <ReferenceLine yAxisId="left" key={`tp-${index}`} y={level} label={{ value: `Chốt lời ${index + 1}`, position: 'insideTopRight', fill: '#fbbf24', fontSize: 11, fontWeight: 'bold', dy: 15 }} stroke="#f59e0b" strokeWidth={2}/>
                     ))}
                     
-                    <ReferenceLine yAxisId="left" y={analysis.stopLoss} label={{ value: 'Cắt lỗ', position: 'right', fill: '#f87171', fontSize: 12, fontWeight: 'bold', dy: -5 }} stroke="#ef4444" strokeWidth={2}/>
+                    <ReferenceLine yAxisId="left" y={analysis.stopLoss} label={{ value: 'Cắt lỗ', position: 'insideTopRight', fill: '#f87171', fontSize: 11, fontWeight: 'bold', dy: 15 }} stroke="#ef4444" strokeWidth={2}/>
                     
                     <Scatter yAxisId="left" data={signalPoints} shape={<CustomSignalShape />} />
                     </>

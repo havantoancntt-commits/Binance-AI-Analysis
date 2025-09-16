@@ -28,7 +28,7 @@ const BinanceReferral: React.FC = () => {
                 <BinanceIcon className="w-8 h-8 text-yellow-400"/>
             </div>
             <div>
-                <h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500">
+                <h3 className="text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500">
                     Cổng Vào Giao Dịch Đẳng Cấp
                 </h3>
                 <p className="text-sm text-gray-400">Giao dịch thông minh hơn với chi phí thấp hơn.</p>

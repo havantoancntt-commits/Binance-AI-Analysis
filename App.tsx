@@ -241,7 +241,7 @@ const App: React.FC = () => {
     if (status === AppStatus.Success && analyzedCoin && analysis) {
       return (
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 animate-fade-in">
-          <div className="lg:col-span-3 h-[600px]">
+          <div className="lg:col-span-3 h-[450px] sm:h-[500px] lg:h-[600px]">
             <PriceChart priceData={priceData} analysis={analysis} tickerData={tickerData} coinPair={analyzedCoin} />
           </div>
           <div className="lg:col-span-2 space-y-8">
@@ -274,10 +274,10 @@ const App: React.FC = () => {
     <div className="min-h-screen text-gray-100">
       <main className="p-4 sm:p-6 lg:p-8 max-w-screen-2xl mx-auto pb-24">
         <header className="text-center mb-8">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
             Meta Mind Crypto
           </h1>
-          <p className="mt-2 text-lg text-orange-100/80">Dẫn Lối Thị Trường Tiền Điện Tử Bằng Trí Tuệ Nhân Tạo</p>
+          <p className="mt-2 text-base sm:text-lg text-orange-100/80">Dẫn Lối Thị Trường Tiền Điện Tử Bằng Trí Tuệ Nhân Tạo</p>
         </header>
         
         <div className="p-4 glassmorphism rounded-xl max-w-4xl mx-auto sticky top-4 z-40">
@@ -334,7 +334,7 @@ const App: React.FC = () => {
             )}
         </div>
         
-        <div ref={mainContentRef} className="min-h-[600px] mt-8">
+        <div ref={mainContentRef} className="mt-8">
           {renderContent()}
         </div>
         

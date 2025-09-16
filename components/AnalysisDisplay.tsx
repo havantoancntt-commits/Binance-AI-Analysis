@@ -65,11 +65,11 @@ const RecommendationCard: React.FC<{ recommendation: Recommendation }> = ({ reco
 
     return (
         <div className={`border-2 ${borderColor} ${bgColor} rounded-xl p-6 flex items-center space-x-4 md:space-x-6 shadow-lg shadow-black/20`}>
-            <div className={`p-3 rounded-full ${bgColor} border-2 ${borderColor} flex-shrink-0`}>
-                {React.cloneElement(icon, { className: `w-10 h-10 ${textColor}` })}
+            <div className={`p-2 sm:p-3 rounded-full ${bgColor} border-2 ${borderColor} flex-shrink-0`}>
+                {React.cloneElement(icon, { className: `w-8 h-8 sm:w-10 h-10 ${textColor}` })}
             </div>
             <div className="text-left flex-grow">
-                <h3 className={`text-3xl font-bold ${textColor}`}>{text}</h3>
+                <h3 className={`text-2xl sm:text-3xl font-bold ${textColor}`}>{text}</h3>
                 <p className="text-gray-300 mt-1 text-md">{recommendation.reason}</p>
             </div>
         </div>
@@ -161,7 +161,7 @@ const TradingSetupDetails: React.FC<{analysis: AnalysisResult}> = ({ analysis })
 const TabButton: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; children: React.ReactNode }> = ({ active, onClick, icon, children }) => (
     <button
         onClick={onClick}
-        className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-red-500
+        className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-3 text-sm font-semibold border-b-2 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-red-500 whitespace-nowrap
             ${active ? 'border-red-500 text-white' : 'border-transparent text-gray-400 hover:border-gray-600 hover:text-gray-200'}`}
     >
         {icon}
@@ -298,7 +298,7 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
         <div className="p-6 flex-grow flex flex-col">
             <header className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-4">
                 <div>
-                    <h2 className="text-3xl font-bold text-white">Phân tích {coinPair}</h2>
+                    <h2 className="text-2xl sm:text-3xl font-bold text-white">Phân tích {coinPair}</h2>
                     <p className="text-gray-400 mt-1 italic">
                         <strong>Triển vọng Chiến lược:</strong> {analysis.summary}
                     </p>
@@ -314,7 +314,7 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
             </header>
 
             <div className="border-b border-gray-700 mb-6">
-                <nav className="flex space-x-4" aria-label="Tabs">
+                <nav className="flex space-x-1 sm:space-x-4 overflow-x-auto no-scrollbar" aria-label="Tabs">
                     <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} icon={<ChartBarSquareIcon className="w-5 h-5" />}>Tổng quan</TabButton>
                     <TabButton active={activeTab === 'setup'} onClick={() => setActiveTab('setup')} icon={<TableCellsIcon className="w-5 h-5" />}>Thiết lập Giao dịch</TabButton>
                     <TabButton active={activeTab === 'deep'} onClick={() => setActiveTab('deep')} icon={<PencilSquareIcon className="w-5 h-5" />}>Phân tích Sâu</TabButton>

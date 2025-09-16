@@ -24,7 +24,7 @@ const SupportProject: React.FC = () => {
         <div className="flex items-center gap-3 mb-4">
             <CpuChipIcon className="w-8 h-8 text-red-400"/>
             <div>
-                <h3 className="text-xl font-bold text-gray-200">Hỗ trợ dự án</h3>
+                <h3 className="text-lg sm:text-xl font-bold text-gray-200">Hỗ trợ dự án</h3>
                 <p className="text-sm text-gray-400">Nếu thấy công cụ này hữu ích, bạn có thể ủng hộ nhà phát triển.</p>
             </div>
         </div>

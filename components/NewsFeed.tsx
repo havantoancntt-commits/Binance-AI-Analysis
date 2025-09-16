@@ -28,7 +28,7 @@ const formatTimeAgo = (timestamp: number) => {
 const NewsSkeleton: React.FC = () => (
     <div className="bg-gray-900/50 rounded-lg p-4 animate-pulse">
         <div className="flex items-start space-x-4">
-            <div className="rounded-md bg-gray-700 h-24 w-24 flex-shrink-0"></div>
+            <div className="rounded-md bg-gray-700 h-20 w-20 sm:h-24 sm:w-24 flex-shrink-0"></div>
             <div className="flex-1 space-y-4 py-1">
                 <div className="h-4 bg-gray-700 rounded w-3/4"></div>
                 <div className="space-y-2">
@@ -47,7 +47,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ news, isLoading }) => {
             <NewspaperIcon className="w-6 h-6 text-red-400"/>
             <h3 className="text-xl font-bold text-gray-200">Tin tức thị trường liên quan</h3>
         </div>
-      <div className="mt-6 space-y-4 max-h-[500px] overflow-y-auto pr-2">
+      <div className="mt-6 space-y-4 max-h-[400px] md:max-h-[500px] overflow-y-auto pr-2">
         {isLoading ? (
           <>
             <NewsSkeleton />
@@ -69,10 +69,10 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ news, isLoading }) => {
                 <img 
                   src={article.imageUrl} 
                   alt={article.title} 
-                  className="w-24 h-24 object-cover rounded-md flex-shrink-0 border border-gray-700" 
+                  className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-md flex-shrink-0 border border-gray-700" 
                 />
                 <div className="flex flex-col flex-1">
-                  <h4 className="text-md font-bold text-gray-100 group-hover:text-red-400 transition-colors">
+                  <h4 className="text-sm sm:text-md font-bold text-gray-100 group-hover:text-red-400 transition-colors">
                     {article.title}
                   </h4>
                   <div className="flex-grow"></div>
