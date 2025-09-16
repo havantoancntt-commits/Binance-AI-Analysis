@@ -1,15 +1,17 @@
 
 import React, { useReducer, useCallback, useEffect, useRef } from 'react';
-import type { PriceDataPoint, AnalysisResult, TickerData, NewsArticle, Timeframe } from './types';
+import type { PriceDataPoint, AnalysisResult, TickerData, NewsArticle, Timeframe, DelistingCoin } from './types';
 import { AppStatus } from './types';
 import { fetchAIAnalysis } from './services/geminiService';
 import { fetchHistoricalData } from './services/binanceService';
 import { fetchNews } from './services/newsService';
+import { fetchDelistings } from './services/delistingService';
 import PriceChart from './components/PriceChart';
 import AnalysisDisplay from './components/AnalysisDisplay';
 import Disclaimer from './components/Disclaimer';
-import SupportProject from './components/PriceAlert';
+import SupportProject from './components/SupportProject';
 import NewsFeed from './components/NewsFeed';
+import DelistingWatchlist from './components/DelistingWatchlist';
 import DashboardSkeleton from './components/DashboardSkeleton';
 import { COIN_PAIRS } from './constants';
 import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
@@ -24,6 +26,8 @@ interface AppState {
   news: NewsArticle[];
   isNewsLoading: boolean;
   isAnalysisLoading: boolean;
+  delistings: DelistingCoin[];
+  isDelistingsLoading: boolean;
   error: string | null;
   timeframe: Timeframe;
   isChartLoading: boolean;
@@ -41,7 +45,9 @@ type AppAction =
   | { type: 'RESET' }
   | { type: 'SET_TIMEFRAME'; payload: Timeframe }
   | { type: 'SET_CHART_LOADING'; payload: boolean }
-  | { type: 'SET_NEWS'; payload: NewsArticle[] };
+  | { type: 'SET_NEWS'; payload: NewsArticle[] }
+  | { type: 'SET_DELISTINGS_LOADING' }
+  | { type: 'SET_DELISTINGS'; payload: DelistingCoin[] };
 
 const initialState: AppState = {
   status: AppStatus.Idle,
@@ -53,6 +59,8 @@ const initialState: AppState = {
   news: [],
   isNewsLoading: true,
   isAnalysisLoading: true,
+  delistings: [],
+  isDelistingsLoading: true,
   error: null,
   timeframe: '1Y',
   isChartLoading: false,
@@ -109,6 +117,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
             news: action.payload,
             isNewsLoading: false,
         };
+    case 'SET_DELISTINGS_LOADING':
+        return { ...state, isDelistingsLoading: true };
+    case 'SET_DELISTINGS':
+        return { ...state, delistings: action.payload, isDelistingsLoading: false };
     case 'FETCH_ERROR':
       return {
         ...state,
@@ -130,6 +142,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
           ...initialState,
           analysisCache: state.analysisCache, // Persist cache on reset
           coinInput: state.coinInput,
+          delistings: state.delistings, // Persist delistings
+          isDelistingsLoading: state.isDelistingsLoading
       };
     case 'SET_TIMEFRAME':
         return { ...state, timeframe: action.payload };
@@ -142,9 +156,13 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, news, isNewsLoading, isAnalysisLoading, error, timeframe, isChartLoading, analysisCache } = state;
+  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, news, isNewsLoading, isAnalysisLoading, delistings, isDelistingsLoading, error, timeframe, isChartLoading, analysisCache } = state;
   const inputRef = useRef<HTMLInputElement>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    fetchDelistings().then(data => dispatch({ type: 'SET_DELISTINGS', payload: data }));
+  }, []);
 
   useEffect(() => {
     if (status !== AppStatus.Loading || !analyzedCoin) return;
@@ -273,6 +291,11 @@ const App: React.FC = () => {
     e.preventDefault();
     handleAnalysisRequest(coinInput);
   };
+  
+  const handleRefreshDelistings = useCallback(async () => {
+    dispatch({ type: 'SET_DELISTINGS_LOADING' });
+    fetchDelistings().then(data => dispatch({ type: 'SET_DELISTINGS', payload: data }));
+  }, []);
 
   const handleClearInput = () => {
     dispatch({ type: 'SET_COIN_INPUT', payload: '' });
@@ -297,15 +320,18 @@ const App: React.FC = () => {
                     </div>
                 </div>
              </div>
-             <div className="lg:col-span-1 space-y-8">
-                <SupportProject />
+             <div className="lg:col-span-1">
+                <DelistingWatchlist 
+                  watchlist={delistings} 
+                  isLoading={isDelistingsLoading} 
+                  onRefresh={handleRefreshDelistings} 
+                />
              </div>
           </div>
         );
       case AppStatus.Success:
         return (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
-            {/* Main content: Chart & News */}
             <div className="lg:col-span-2 space-y-8">
               <div className="h-[400px] sm:h-[500px] lg:h-[600px]">
                 <PriceChart 
@@ -320,24 +346,29 @@ const App: React.FC = () => {
               </div>
               <NewsFeed news={news} isLoading={isNewsLoading} />
             </div>
-
-            {/* Sidebar: Analysis & Support */}
-            <div className="lg:col-span-1 space-y-8">
+            <div className="lg:col-span-1">
               <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
-              <SupportProject />
             </div>
           </div>
         );
       case AppStatus.Idle:
       default:
         return (
-          <div className="flex flex-col items-center justify-center min-h-[600px] text-center space-y-8">
-             <div className="p-8 max-w-2xl w-full">
+          <div className="flex flex-col items-center justify-center min-h-[600px] space-y-12 animate-fade-in">
+             <div className="p-8 max-w-2xl w-full text-center">
                 <CpuChipIcon className="w-16 h-16 mx-auto text-cyan-400/70" />
                 <h2 className="text-3xl font-bold text-gray-100 mt-4">Bắt đầu phân tích</h2>
                 <p className="text-gray-400 mt-2 max-w-md mx-auto">
                     Chọn một cặp tiền điện tử phổ biến hoặc nhập một cặp tùy chỉnh để nhận phân tích kỹ thuật chi tiết do AI cung cấp.
                 </p>
+             </div>
+             <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8">
+                <DelistingWatchlist 
+                  watchlist={delistings} 
+                  isLoading={isDelistingsLoading} 
+                  onRefresh={handleRefreshDelistings} 
+                />
+                <SupportProject />
              </div>
           </div>
         );
@@ -346,7 +377,7 @@ const App: React.FC = () => {
 
   return (
     <div className="min-h-screen text-gray-100">
-      <main className="p-4 sm:p-6 lg:p-8 max-w-8xl mx-auto pb-24">
+      <main className="p-4 sm:p-6 lg:p-8 max-w-screen-2xl mx-auto pb-24">
         <header className="text-center mb-8">
           <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-teal-400">
             Binance Coin AI Analyzer

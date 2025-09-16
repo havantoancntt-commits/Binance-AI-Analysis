@@ -37,6 +37,7 @@ const getAnalysisPrompt = (coinPair, priceData) => {
 
     **CRITICAL OUTPUT INSTRUCTIONS:**
     *   **Language:** The entire text content in your JSON response MUST be in Vietnamese.
+    *   **Brevity:** Be concise and direct in your text descriptions.
     *   **Format:** Respond ONLY with a JSON object that strictly adheres to the provided schema. Do not include any text before or after the JSON object.
   `;
 };

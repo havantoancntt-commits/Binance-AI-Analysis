@@ -13,9 +13,8 @@ const DashboardSkeleton: React.FC = () => (
             <Box className="h-[400px]" /> {/* For NewsFeed */}
         </div>
         {/* Right Column Skeleton */}
-        <div className="lg:col-span-1 space-y-8">
-            <Box className="h-[600px]" /> {/* For AnalysisDisplay */}
-            <Box className="h-[250px]" /> {/* For SupportProject */}
+        <div className="lg:col-span-1">
+            <Box className="h-full min-h-[850px]" /> {/* For AnalysisDisplay */}
         </div>
     </div>
 );

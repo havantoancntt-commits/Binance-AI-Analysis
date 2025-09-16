@@ -55,7 +55,6 @@ export interface NewsArticle {
   imageUrl: string;
 }
 
-// FIX: Add DelistingCoin interface to fix import error.
 export interface DelistingCoin {
   coinPair: string;
   delistingDate: string;

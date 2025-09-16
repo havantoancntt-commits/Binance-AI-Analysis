@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from 'react';
 import type { AnalysisResult, Recommendation } from '../types';
 import AnalysisDisplaySkeleton from './AnalysisDisplaySkeleton';
@@ -40,7 +41,7 @@ const RecommendationCard: React.FC<{ recommendation: Recommendation }> = ({ reco
     }
 
     return (
-        <div className={`border-2 ${borderColor} ${bgColor} rounded-xl p-6 flex items-center space-x-4 md:space-x-6`}>
+        <div className={`border-2 ${borderColor} ${bgColor} rounded-xl p-6 flex items-center space-x-4 md:space-x-6 shadow-lg shadow-black/20`}>
             <div className={`p-3 rounded-full ${bgColor} border-2 ${borderColor} flex-shrink-0`}>
                 {React.cloneElement(icon, { className: `w-10 h-10 ${textColor}` })}
             </div>
