@@ -282,7 +282,7 @@ const App: React.FC = () => {
     return (
       <div className="animate-fade-in">
         <div className="text-center p-8 max-w-3xl mx-auto">
-           <CpuChipIcon className="w-16 h-16 mx-auto text-cyan-400/70" />
+           <CpuChipIcon className="w-16 h-16 mx-auto text-red-400/70" />
            <h2 className="text-3xl font-bold text-gray-100 mt-4">Chào mừng đến với Bảng điều khiển Phân tích AI</h2>
            <p className="text-gray-400 mt-2">
                Nhận thông tin chi tiết về thị trường tức thì. Bắt đầu bằng cách chọn một cặp phổ biến hoặc nhập một cặp tùy chỉnh ở trên.
@@ -305,13 +305,13 @@ const App: React.FC = () => {
     <div className="min-h-screen text-gray-100">
       <main className="p-4 sm:p-6 lg:p-8 max-w-screen-2xl mx-auto pb-24">
         <header className="text-center mb-8">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-teal-400">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
             Meta Mind Crypto
           </h1>
-          <p className="mt-2 text-lg text-gray-400">Dẫn Lối Thị Trường Tiền Điện Tử Bằng Trí Tuệ Nhân Tạo</p>
+          <p className="mt-2 text-lg text-orange-100/80">Dẫn Lối Thị Trường Tiền Điện Tử Bằng Trí Tuệ Nhân Tạo</p>
         </header>
         
-        <div className="p-4 glassmorphism rounded-xl max-w-4xl mx-auto sticky top-4 z-40 shadow-2xl">
+        <div className="p-4 glassmorphism rounded-xl max-w-4xl mx-auto sticky top-4 z-40">
             {analyzedCoin && (status === AppStatus.Success || status === AppStatus.Loading || status === AppStatus.Error) ? (
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
@@ -321,7 +321,7 @@ const App: React.FC = () => {
                     <button
                         type="button"
                         onClick={handleReset}
-                        className="px-5 py-2.5 font-bold text-cyan-300 bg-gray-700 rounded-lg hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-cyan-500 transition-all duration-300 flex-shrink-0 flex items-center justify-center gap-2"
+                        className="px-5 py-2.5 font-bold text-orange-300 bg-gray-700/50 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-red-500 transition-all duration-300 flex-shrink-0 flex items-center justify-center gap-2"
                     >
                         <ArrowPathIcon className="w-5 h-5" />
                         Phân tích Cặp Mới
@@ -335,7 +335,7 @@ const App: React.FC = () => {
                                 ref={inputRef} type="text" value={coinInput}
                                 onChange={(e) => dispatch({ type: 'SET_COIN_INPUT', payload: e.target.value })}
                                 placeholder="Nhập cặp coin (ví dụ: BTC/USDT)"
-                                className="w-full bg-gray-700 text-gray-100 placeholder-gray-400 px-4 py-3 rounded-lg border-2 border-gray-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all pr-10"
+                                className="w-full bg-gray-800/80 text-gray-100 placeholder-gray-500 px-4 py-3 rounded-lg border-2 border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all pr-10"
                                 aria-label="Cặp coin"
                             />
                             {coinInput && status !== AppStatus.Loading && (
@@ -346,7 +346,7 @@ const App: React.FC = () => {
                         </div>
                         <button 
                             type="submit" disabled={status === AppStatus.Loading || !coinInput}
-                            className="px-8 py-3 font-bold text-white bg-gradient-to-r from-cyan-600 to-teal-600 rounded-lg hover:from-cyan-500 hover:to-teal-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-cyan-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
+                            className="px-8 py-3 font-bold text-white bg-gradient-to-r from-red-600 to-orange-500 rounded-lg hover:from-red-500 hover:to-orange-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-red-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0"
                         >
                             {status === AppStatus.Loading ? 'Đang xử lý...' : 'Phân tích'}
                         </button>
@@ -354,7 +354,7 @@ const App: React.FC = () => {
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 mt-4">
                         {COIN_PAIRS.slice(0, 6).map(pair => (
                             <button key={pair} onClick={() => handleAnalysisRequest(pair)}
-                                className="px-3 py-2 text-sm font-semibold text-cyan-300 bg-gray-900/50 rounded-md border border-gray-700 hover:bg-gray-800 hover:text-white hover:border-cyan-500 transition-all duration-300 focus:outline-none focus:ring-1 focus:ring-cyan-500 disabled:opacity-50"
+                                className="px-3 py-2 text-sm font-semibold text-orange-300 bg-gray-900/50 rounded-md border border-gray-700 hover:bg-red-900/50 hover:text-white hover:border-red-500 transition-all duration-300 focus:outline-none focus:ring-1 focus:ring-red-500 disabled:opacity-50"
                                 disabled={status === AppStatus.Loading}
                             >
                                 {pair}

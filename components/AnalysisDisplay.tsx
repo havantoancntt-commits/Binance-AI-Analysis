@@ -22,9 +22,9 @@ type AnalysisTab = 'overview' | 'setup' | 'deep';
 
 const TrendIcon: React.FC<{ trend: TrendInfo['trend'] }> = ({ trend }) => {
     switch(trend) {
-        case 'Uptrend': return <ArrowTrendingUpIcon className="w-6 h-6 text-green-400" />;
-        case 'Downtrend': return <ArrowTrendingDownIcon className="w-6 h-6 text-red-400" />;
-        default: return <ArrowsRightLeftIcon className="w-6 h-6 text-yellow-400" />;
+        case 'Uptrend': return <ArrowTrendingUpIcon className="w-6 h-6 text-yellow-400" />;
+        case 'Downtrend': return <ArrowTrendingDownIcon className="w-6 h-6 text-purple-400" />;
+        default: return <ArrowsRightLeftIcon className="w-6 h-6 text-orange-400" />;
     }
 };
 
@@ -55,11 +55,11 @@ const MultiTimeframeTrend: React.FC<{ trendAnalysis: AnalysisResult['trendAnalys
 const RecommendationCard: React.FC<{ recommendation: Recommendation }> = ({ recommendation }) => {
     let icon, text, bgColor, textColor, borderColor;
     switch (recommendation.signal) {
-        case 'Strong Buy': icon = <RocketLaunchIcon />; text = 'MUA MẠNH'; bgColor = 'bg-green-500/10'; textColor = 'text-green-300'; borderColor = 'border-green-400'; break;
-        case 'Buy': icon = <ArrowTrendingUpIcon />; text = 'MUA'; bgColor = 'bg-green-500/10'; textColor = 'text-green-400'; borderColor = 'border-green-500'; break;
-        case 'Hold': icon = <HandRaisedIcon />; text = 'NẮM GIỮ'; bgColor = 'bg-yellow-500/10'; textColor = 'text-yellow-300'; borderColor = 'border-yellow-400'; break;
-        case 'Sell': icon = <ArrowTrendingDownIcon />; text = 'BÁN'; bgColor = 'bg-red-500/10'; textColor = 'text-red-400'; borderColor = 'border-red-500'; break;
-        case 'Strong Sell': icon = <ArrowDownCircleIcon />; text = 'BÁN MẠNH'; bgColor = 'bg-red-500/10'; textColor = 'text-red-300'; borderColor = 'border-red-400'; break;
+        case 'Strong Buy': icon = <RocketLaunchIcon />; text = 'MUA MẠNH'; bgColor = 'bg-red-500/10'; textColor = 'text-red-400'; borderColor = 'border-red-500'; break;
+        case 'Buy': icon = <ArrowTrendingUpIcon />; text = 'MUA'; bgColor = 'bg-orange-500/10'; textColor = 'text-orange-400'; borderColor = 'border-orange-500'; break;
+        case 'Hold': icon = <HandRaisedIcon />; text = 'NẮM GIỮ'; bgColor = 'bg-amber-500/10'; textColor = 'text-amber-300'; borderColor = 'border-amber-400'; break;
+        case 'Sell': icon = <ArrowTrendingDownIcon />; text = 'BÁN'; bgColor = 'bg-purple-500/10'; textColor = 'text-purple-400'; borderColor = 'border-purple-500'; break;
+        case 'Strong Sell': icon = <ArrowDownCircleIcon />; text = 'BÁN MẠNH'; bgColor = 'bg-fuchsia-500/10'; textColor = 'text-fuchsia-400'; borderColor = 'border-fuchsia-500'; break;
         default: icon = <HandRaisedIcon />; text = 'TRÁNH GIAO DỊCH'; bgColor = 'bg-gray-600/20'; textColor = 'text-gray-400'; borderColor = 'border-gray-600';
     }
 
@@ -88,11 +88,11 @@ const StatCard: React.FC<{ title: string; children: React.ReactNode; icon: React
 
 const SentimentIndicator: React.FC<{ sentiment: AnalysisResult['marketSentiment'] }> = ({ sentiment }) => {
     const sentimentConfig = {
-        'Extreme Fear': { text: 'Sợ hãi tột độ', color: 'text-red-500', bgColor: 'bg-red-500/20', value: 10 },
-        'Fear': { text: 'Sợ hãi', color: 'text-orange-400', bgColor: 'bg-orange-400/20', value: 30 },
-        'Neutral': { text: 'Trung lập', color: 'text-yellow-400', bgColor: 'bg-yellow-400/20', value: 50 },
-        'Greed': { text: 'Tham lam', color: 'text-green-400', bgColor: 'bg-green-400/20', value: 70 },
-        'Extreme Greed': { text: 'Tham lam tột độ', color: 'text-emerald-400', bgColor: 'bg-emerald-400/20', value: 90 },
+        'Extreme Fear': { text: 'Sợ hãi tột độ', color: 'text-fuchsia-500', bgColor: 'bg-fuchsia-500/20', value: 10 },
+        'Fear': { text: 'Sợ hãi', color: 'text-purple-400', bgColor: 'bg-purple-400/20', value: 30 },
+        'Neutral': { text: 'Trung lập', color: 'text-orange-400', bgColor: 'bg-orange-400/20', value: 50 },
+        'Greed': { text: 'Tham lam', color: 'text-amber-400', bgColor: 'bg-amber-400/20', value: 70 },
+        'Extreme Greed': { text: 'Tham lam tột độ', color: 'text-yellow-300', bgColor: 'bg-yellow-300/20', value: 90 },
     };
     const config = sentimentConfig[sentiment] || sentimentConfig['Neutral'];
     return (
@@ -100,8 +100,8 @@ const SentimentIndicator: React.FC<{ sentiment: AnalysisResult['marketSentiment'
             <div className="relative h-20 flex flex-col justify-end">
                 <div className="w-full bg-gray-700/50 rounded-full h-2.5">
                     <div
-                        className={`h-2.5 rounded-full transition-all duration-1000 ease-out ${config.bgColor.replace('bg-', '')}`}
-                        style={{ width: `${config.value}%`, backgroundImage: `linear-gradient(to right, ${config.bgColor.replace('bg-','').split('/')[0]}, ${config.color.replace('text-', '')})` }}
+                        className={`h-2.5 rounded-full transition-all duration-1000 ease-out`}
+                        style={{ width: `${config.value}%`, background: `linear-gradient(90deg, ${config.color.replace('text-','')}33, ${config.color})` }}
                     ></div>
                 </div>
                 <div className={`absolute bottom-5 font-bold text-lg ${config.color}`} style={{ left: `calc(${config.value}% - 2.5rem)` }}>
@@ -117,7 +117,7 @@ const KeyTakeaways: React.FC<{ takeaways: string[] }> = ({ takeaways }) => (
         <ul className="space-y-2 mt-2">
             {takeaways.map((point, index) => (
                 <li key={index} className="flex items-start gap-2">
-                    <span className="text-cyan-400 mt-1">▶</span>
+                    <span className="text-red-400 mt-1">▶</span>
                     <p className="text-gray-300 text-sm">{point}</p>
                 </li>
             ))}
@@ -131,16 +131,16 @@ const TradingSetupDetails: React.FC<{analysis: AnalysisResult}> = ({ analysis })
     const formatPriceRange = (from: number, to: number) => `${formatPrice(Math.min(from, to))} - ${formatPrice(Math.max(from, to))}`;
 
     const setupItems = [
-        { label: 'Vùng Mua', value: formatPriceRange(analysis.buyZone.from, analysis.buyZone.to), color: 'text-cyan-300 font-bold text-lg' },
+        { label: 'Vùng Mua', value: formatPriceRange(analysis.buyZone.from, analysis.buyZone.to), color: 'text-amber-300 font-bold text-lg' },
         ...analysis.takeProfitLevels.map((level, i) => ({
-            label: `Chốt Lời ${i + 1}`, value: formatPrice(level), color: 'text-teal-300'
+            label: `Chốt Lời ${i + 1}`, value: formatPrice(level), color: 'text-yellow-300'
         })),
-        { label: 'Cắt Lỗ', value: formatPrice(analysis.stopLoss), color: 'text-orange-400' },
+        { label: 'Cắt Lỗ', value: formatPrice(analysis.stopLoss), color: 'text-red-400' },
         ...analysis.supportLevels.map((level, i) => ({
-            label: `Hỗ Trợ ${i + 1}`, value: formatPrice(level), color: 'text-green-400'
+            label: `Hỗ Trợ ${i + 1}`, value: formatPrice(level), color: 'text-amber-400'
         })),
         ...analysis.resistanceLevels.map((level, i) => ({
-            label: `Kháng Cự ${i + 1}`, value: formatPrice(level), color: 'text-red-400'
+            label: `Kháng Cự ${i + 1}`, value: formatPrice(level), color: 'text-purple-400'
         })),
     ];
 
@@ -161,8 +161,8 @@ const TradingSetupDetails: React.FC<{analysis: AnalysisResult}> = ({ analysis })
 const TabButton: React.FC<{ active: boolean; onClick: () => void; icon: React.ReactNode; children: React.ReactNode }> = ({ active, onClick, icon, children }) => (
     <button
         onClick={onClick}
-        className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-t-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500
-            ${active ? 'bg-gray-800/60 text-white' : 'bg-transparent text-gray-400 hover:bg-gray-800/30 hover:text-gray-200'}`}
+        className={`flex items-center gap-2 px-4 py-3 text-sm font-semibold border-b-2 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-red-500
+            ${active ? 'border-red-500 text-white' : 'border-transparent text-gray-400 hover:border-gray-600 hover:text-gray-200'}`}
     >
         {icon}
         {children}
@@ -209,7 +209,7 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
       margin: 0.5,
       filename: `${filename}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#161B22' },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: '#140a0a' },
       jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
     };
 
@@ -259,11 +259,11 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
             return (
                 <div className="space-y-6 animate-fade-in">
                     <StatCard title="Động Lực Chính" icon={<LightBulbIcon className="w-5 h-5"/>}>
-                        <p className="text-purple-400 font-bold text-lg">{analysis.marketDriver}</p>
+                        <p className="text-orange-400 font-bold text-lg">{analysis.marketDriver}</p>
                     </StatCard>
                     <div className="relative">
-                        <h4 className="text-lg font-bold text-green-400 mb-2">Trường hợp Tăng giá (Bull Case)</h4>
-                        <blockquote className="bg-gray-900/50 p-4 rounded-lg border-l-4 border-green-500 text-gray-300 leading-relaxed pr-12">
+                        <h4 className="text-lg font-bold text-yellow-400 mb-2">Trường hợp Tăng giá (Bull Case)</h4>
+                        <blockquote className="bg-gray-900/50 p-4 rounded-lg border-l-4 border-yellow-500 text-gray-300 leading-relaxed pr-12">
                             {analysis.detailedAnalysis.bullCase}
                         </blockquote>
                         <button
@@ -275,8 +275,8 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
                         </button>
                     </div>
                     <div className="relative">
-                        <h4 className="text-lg font-bold text-red-400 mb-2">Trường hợp Giảm giá (Bear Case)</h4>
-                        <blockquote className="bg-gray-900/50 p-4 rounded-lg border-l-4 border-red-500 text-gray-300 leading-relaxed pr-12">
+                        <h4 className="text-lg font-bold text-purple-400 mb-2">Trường hợp Giảm giá (Bear Case)</h4>
+                        <blockquote className="bg-gray-900/50 p-4 rounded-lg border-l-4 border-purple-500 text-gray-300 leading-relaxed pr-12">
                             {analysis.detailedAnalysis.bearCase}
                         </blockquote>
                         <button
@@ -293,7 +293,7 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
   };
 
   return (
-    <div className="glassmorphism rounded-lg shadow-2xl animate-fade-in w-full h-full flex flex-col">
+    <div className="glassmorphism rounded-lg animate-fade-in w-full h-full flex flex-col">
       <div id="analysis-report" ref={exportContainerRef} className="flex-grow flex flex-col">
         <div className="p-6 flex-grow flex flex-col">
             <header className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-4">
@@ -314,7 +314,7 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
             </header>
 
             <div className="border-b border-gray-700 mb-6">
-                <nav className="flex space-x-2" aria-label="Tabs">
+                <nav className="flex space-x-4" aria-label="Tabs">
                     <TabButton active={activeTab === 'overview'} onClick={() => setActiveTab('overview')} icon={<ChartBarSquareIcon className="w-5 h-5" />}>Tổng quan</TabButton>
                     <TabButton active={activeTab === 'setup'} onClick={() => setActiveTab('setup')} icon={<TableCellsIcon className="w-5 h-5" />}>Thiết lập Giao dịch</TabButton>
                     <TabButton active={activeTab === 'deep'} onClick={() => setActiveTab('deep')} icon={<PencilSquareIcon className="w-5 h-5" />}>Phân tích Sâu</TabButton>

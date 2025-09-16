@@ -35,7 +35,7 @@ const Ticker: React.FC<TickerProps> = ({ coinPair, tickerData }) => {
     return null;
   }
 
-  const changeColor = tickerData?.isPositive ? 'text-green-400' : 'text-red-400';
+  const changeColor = tickerData?.isPositive ? 'text-yellow-400' : 'text-red-400';
   const Icon = tickerData?.isPositive ? ArrowTrendingUpIcon : ArrowTrendingDownIcon;
 
   return (

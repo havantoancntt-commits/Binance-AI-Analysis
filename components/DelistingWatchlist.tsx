@@ -52,7 +52,7 @@ const DelistingWatchlist: React.FC<DelistingWatchlistProps> = ({ watchlist, isLo
           </div>
         ) : (
           watchlist.map((item, index) => (
-            <div key={index} className="grid grid-cols-3 items-center gap-4 bg-gray-900/50 p-3 rounded-lg border border-transparent hover:border-orange-500/50 transition-colors">
+            <div key={index} className="grid grid-cols-3 items-center gap-4 bg-gray-900/50 p-3 rounded-lg border border-transparent hover:border-red-500/50 hover:bg-red-900/20 transition-colors">
               <div className="col-span-1">
                 <p className="font-bold text-lg text-white">{item.coinPair}</p>
                 <p className="text-xs text-gray-400 truncate" title={item.reason}>{item.reason}</p>

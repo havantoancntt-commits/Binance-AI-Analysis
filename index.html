@@ -12,24 +12,28 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
       :root {
-        --background-start-rgb: 13, 17, 23;
-        --background-end-rgb: 22, 27, 34;
-        --accent-color: #2dd4bf;
+        --background-start-rgb: 20, 10, 10;
+        --background-end-rgb: 35, 15, 15;
+        --accent-color: #ef4444; /* Fiery Red */
       }
 
       body {
         background-color: rgb(var(--background-start-rgb));
-        background-image: linear-gradient(to bottom right, rgb(var(--background-end-rgb)), rgb(var(--background-start-rgb)), rgb(var(--background-start-rgb)));
+        background-image: radial-gradient(circle at top right, rgba(194, 65, 12, 0.3), transparent 40%),
+                          radial-gradient(circle at bottom left, rgba(133, 27, 27, 0.3), transparent 50%);
+        background-repeat: no-repeat;
+        background-attachment: fixed;
         font-family: 'Inter', sans-serif;
         overscroll-behavior: none; /* Prevents pull-to-refresh */
       }
       
       /* Refined glassmorphism effect */
       .glassmorphism {
-        background: rgba(22, 27, 34, 0.6);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(59, 18, 11, 0.5);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 100, 100, 0.1);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
       }
 
       /* Custom scrollbar for a more modern look */
@@ -39,21 +43,21 @@
         height: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #0D1117;
+        background: rgb(var(--background-start-rgb));
       }
       ::-webkit-scrollbar-thumb {
-        background-color: #2c3543;
+        background-color: #7e22ce; /* A contrasting deep purple */
         border-radius: 10px;
-        border: 2px solid #0D1117;
+        border: 2px solid rgb(var(--background-start-rgb));
       }
       ::-webkit-scrollbar-thumb:hover {
-        background-color: #4a5568;
+        background-color: #9333ea;
       }
 
       /* For Firefox */
       html {
         scrollbar-width: thin;
-        scrollbar-color: #2c3543 #0D1117;
+        scrollbar-color: #7e22ce rgb(var(--background-start-rgb));
       }
       
       /* Fade-in animation */
@@ -67,7 +71,7 @@
 
       /* Price ticker animations */
       @keyframes priceUp {
-        from { background-color: rgba(74, 222, 128, 0.2); }
+        from { background-color: rgba(250, 204, 21, 0.3); } /* Yellow-400 */
         to { background-color: transparent; }
       }
       .animate-price-up {
@@ -75,7 +79,7 @@
       }
 
       @keyframes priceDown {
-        from { background-color: rgba(248, 113, 113, 0.2); }
+        from { background-color: rgba(239, 68, 68, 0.3); } /* Red-500 */
         to { background-color: transparent; }
       }
       .animate-price-down {

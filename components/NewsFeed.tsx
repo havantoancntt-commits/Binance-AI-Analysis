@@ -44,7 +44,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ news, isLoading }) => {
   return (
     <section className="glassmorphism p-6 rounded-lg shadow-2xl animate-fade-in h-full">
         <div className="flex items-center gap-3">
-            <NewspaperIcon className="w-6 h-6 text-cyan-400"/>
+            <NewspaperIcon className="w-6 h-6 text-red-400"/>
             <h3 className="text-xl font-bold text-gray-200">Tin tức thị trường liên quan</h3>
         </div>
       <div className="mt-6 space-y-4 max-h-[500px] overflow-y-auto pr-2">
@@ -72,7 +72,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ news, isLoading }) => {
                   className="w-24 h-24 object-cover rounded-md flex-shrink-0 border border-gray-700" 
                 />
                 <div className="flex flex-col flex-1">
-                  <h4 className="text-md font-bold text-gray-100 group-hover:text-cyan-400 transition-colors">
+                  <h4 className="text-md font-bold text-gray-100 group-hover:text-red-400 transition-colors">
                     {article.title}
                   </h4>
                   <div className="flex-grow"></div>
