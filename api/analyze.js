@@ -1,3 +1,4 @@
+
 // This is a Vercel Serverless Function that acts as a secure proxy to the Google Gemini API.
 // It has been optimized to use the official @google/genai Node.js SDK.
 
@@ -103,7 +104,7 @@ export default async function handler(request, response) {
 
         const geminiResponse = await ai.models.generateContent({
             model: "gemini-2.5-flash",
-            contents: [{parts: [{text: prompt}]}],
+            contents: prompt,
             config: {
                 responseMimeType: "application/json",
                 responseSchema: analysisSchema,
