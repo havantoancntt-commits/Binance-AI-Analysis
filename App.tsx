@@ -306,9 +306,9 @@ const App: React.FC = () => {
       <main className="p-4 sm:p-6 lg:p-8 max-w-screen-2xl mx-auto pb-24">
         <header className="text-center mb-8">
           <h1 className="text-4xl sm:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-teal-400">
-            Binance Coin AI Analyzer
+            Meta Mind Crypto
           </h1>
-          <p className="mt-2 text-lg text-gray-400">Phân tích kỹ thuật chuyên sâu bằng Trí tuệ nhân tạo</p>
+          <p className="mt-2 text-lg text-gray-400">Dẫn Lối Thị Trường Tiền Điện Tử Bằng Trí Tuệ Nhân Tạo</p>
         </header>
         
         <div className="p-4 glassmorphism rounded-xl max-w-4xl mx-auto sticky top-4 z-40 shadow-2xl">
