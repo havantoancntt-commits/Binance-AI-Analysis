@@ -10,6 +10,11 @@ export interface Recommendation {
   reason: string;
 }
 
+export interface TrendInfo {
+  trend: 'Uptrend' | 'Downtrend' | 'Sideways';
+  reason: string;
+}
+
 export interface AnalysisResult {
   supportLevels: number[];
   resistanceLevels: number[];
@@ -19,17 +24,22 @@ export interface AnalysisResult {
   };
   takeProfitLevels: number[];
   stopLoss: number;
-  shortTermTrend: 'Uptrend' | 'Downtrend' | 'Sideways';
+  trendAnalysis: {
+    shortTerm: TrendInfo;
+    mediumTerm: TrendInfo;
+    longTerm: TrendInfo;
+  };
   confidenceScore: number;
   confidenceReason: string;
   marketDriver: string;
-  summary: string;
+  summary: string; // Will now hold the "Strategic Outlook"
   recommendation: Recommendation;
   detailedAnalysis: {
     bullCase: string;
     bearCase: string;
   };
   marketSentiment: 'Extreme Fear' | 'Fear' | 'Neutral' | 'Greed' | 'Extreme Greed';
+  keyTakeaways: string[];
 }
 
 export enum AppStatus {
@@ -46,6 +56,14 @@ export interface TickerData {
   isPositive: boolean;
 }
 
+// Fix: Add DelistingCoin interface based on the schema in api/delistings.js
+export interface DelistingCoin {
+  coinPair: string;
+  delistingDate: string;
+  reason: string;
+}
+
+// Fix: Add NewsArticle interface to resolve import errors.
 export interface NewsArticle {
   id: string;
   title: string;
@@ -54,12 +72,3 @@ export interface NewsArticle {
   url: string;
   imageUrl: string;
 }
-
-// Fix: Add DelistingCoin interface based on the schema in api/delistings.js
-export interface DelistingCoin {
-  coinPair: string;
-  delistingDate: string;
-  reason: string;
-}
-
-export type Timeframe = '1D' | '7D' | '1M' | '1Y';

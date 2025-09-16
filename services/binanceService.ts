@@ -1,4 +1,4 @@
-import type { PriceDataPoint, Timeframe } from '../types';
+import type { PriceDataPoint } from '../types';
 
 // Binance API documentation for kline/candlestick data:
 // https://github.com/binance/binance-spot-api-docs/blob/master/rest-api.md#klinecandlestick-data
@@ -14,21 +14,23 @@ import type { PriceDataPoint, Timeframe } from '../types';
 //     ...
 //   ]
 // ]
+type ValidTimeframe = '1D' | '7D' | '1M' | '3M' | '1Y';
 
-const TIMEFRAME_PARAMS: Record<Timeframe, { interval: string; limit: number }> = {
+const TIMEFRAME_PARAMS: Record<ValidTimeframe, { interval: string; limit: number }> = {
   '1D': { interval: '5m', limit: 288 }, // 24h * 60m / 5m = 288 data points
   '7D': { interval: '30m', limit: 336 }, // 7d * 24h * 60m / 30m = 336 data points
   '1M': { interval: '2h', limit: 360 }, // 30d * 24h / 2h = 360 data points
+  '3M': { interval: '1d', limit: 90 }, // 90 days of daily data
   '1Y': { interval: '1d', limit: 365 },
 };
 
 /**
  * Fetches historical price and volume data for a given cryptocurrency pair from the Binance API based on a specified timeframe.
  * @param coinPair The coin pair to fetch data for (e.g., 'BTC/USDT').
- * @param timeframe The timeframe for the data ('1D', '7D', '1M', '1Y'). Defaults to '1Y'.
+ * @param timeframe The timeframe for the data ('1D', '7D', '1M', '1Y').
  * @returns A promise that resolves to an array of price data points including volume.
  */
-export const fetchHistoricalData = async (coinPair: string, timeframe: Timeframe = '1Y'): Promise<PriceDataPoint[]> => {
+export const fetchHistoricalData = async (coinPair: string, timeframe: ValidTimeframe): Promise<PriceDataPoint[]> => {
   console.log(`Fetching real historical data for ${coinPair} (${timeframe}) from Binance...`);
   
   const symbol = coinPair.replace('/', '').toUpperCase();

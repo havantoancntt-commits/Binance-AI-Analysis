@@ -1,12 +1,13 @@
 
 import React, { useState, useRef } from 'react';
-import type { AnalysisResult, Recommendation } from '../types';
+import type { AnalysisResult, Recommendation, TrendInfo } from '../types';
 import AnalysisDisplaySkeleton from './AnalysisDisplaySkeleton';
 import { 
     ArrowTrendingUpIcon, ArrowTrendingDownIcon, ArrowsRightLeftIcon, ShieldCheckIcon, 
     RocketLaunchIcon, HandRaisedIcon, ArrowDownCircleIcon, LightBulbIcon, 
     ChartBarSquareIcon, DocumentArrowDownIcon, PhotoIcon, 
-    ClipboardIcon, CheckIcon, SparklesIcon, TableCellsIcon, PencilSquareIcon
+    ClipboardIcon, CheckIcon, SparklesIcon, TableCellsIcon, PencilSquareIcon,
+    ExclamationTriangleIcon
 } from './Icons';
 
 declare var html2pdf: any;
@@ -19,15 +20,37 @@ interface AnalysisDisplayProps {
 
 type AnalysisTab = 'overview' | 'setup' | 'deep';
 
-const TrendIndicator: React.FC<{ trend: AnalysisResult['shortTermTrend'] }> = ({ trend }) => {
-    let icon, text, color;
+const TrendIcon: React.FC<{ trend: TrendInfo['trend'] }> = ({ trend }) => {
     switch(trend) {
-        case 'Uptrend': icon = <ArrowTrendingUpIcon className="w-6 h-6" />; text = 'Xu Hướng Tăng'; color = 'text-green-400'; break;
-        case 'Downtrend': icon = <ArrowTrendingDownIcon className="w-6 h-6" />; text = 'Xu Hướng Giảm'; color = 'text-red-400'; break;
-        default: icon = <ArrowsRightLeftIcon className="w-6 h-6" />; text = 'Đi Ngang'; color = 'text-yellow-400';
+        case 'Uptrend': return <ArrowTrendingUpIcon className="w-6 h-6 text-green-400" />;
+        case 'Downtrend': return <ArrowTrendingDownIcon className="w-6 h-6 text-red-400" />;
+        default: return <ArrowsRightLeftIcon className="w-6 h-6 text-yellow-400" />;
     }
-    return <div className={`flex items-center text-xl font-bold ${color}`}> {icon} <span className="ml-2">{text}</span> </div>;
 };
+
+const MultiTimeframeTrend: React.FC<{ trendAnalysis: AnalysisResult['trendAnalysis'] }> = ({ trendAnalysis }) => {
+    const TrendCard = ({ title, trendInfo }: { title: string; trendInfo: TrendInfo }) => (
+        <div className="bg-gray-900/50 p-4 rounded-lg flex-1 border border-gray-700/50">
+            <h4 className="text-sm font-bold text-gray-300 mb-2 text-center">{title}</h4>
+            <div className="flex items-center justify-center gap-2 mb-2">
+                <TrendIcon trend={trendInfo.trend} />
+                <span className="text-lg font-bold">{trendInfo.trend}</span>
+            </div>
+            <p className="text-xs text-gray-400 text-center">{trendInfo.reason}</p>
+        </div>
+    );
+    
+    return (
+        <StatCard title="Dự báo Xu hướng" icon={<ChartBarSquareIcon className="w-5 h-5" />}>
+            <div className="flex flex-col md:flex-row gap-3 mt-2">
+                <TrendCard title="Ngắn hạn" trendInfo={trendAnalysis.shortTerm} />
+                <TrendCard title="Trung hạn" trendInfo={trendAnalysis.mediumTerm} />
+                <TrendCard title="Dài hạn" trendInfo={trendAnalysis.longTerm} />
+            </div>
+        </StatCard>
+    );
+};
+
 
 const RecommendationCard: React.FC<{ recommendation: Recommendation }> = ({ recommendation }) => {
     let icon, text, bgColor, textColor, borderColor;
@@ -88,6 +111,20 @@ const SentimentIndicator: React.FC<{ sentiment: AnalysisResult['marketSentiment'
         </StatCard>
     );
 };
+
+const KeyTakeaways: React.FC<{ takeaways: string[] }> = ({ takeaways }) => (
+    <StatCard title="Điểm Mấu Chốt" icon={<ExclamationTriangleIcon className="w-5 h-5" />}>
+        <ul className="space-y-2 mt-2">
+            {takeaways.map((point, index) => (
+                <li key={index} className="flex items-start gap-2">
+                    <span className="text-cyan-400 mt-1">▶</span>
+                    <p className="text-gray-300 text-sm">{point}</p>
+                </li>
+            ))}
+        </ul>
+    </StatCard>
+);
+
 
 const TradingSetupDetails: React.FC<{analysis: AnalysisResult}> = ({ analysis }) => {
     const formatPrice = (price: number) => `$${price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
@@ -201,16 +238,15 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
             return (
                 <div className="space-y-6 animate-fade-in">
                     <RecommendationCard recommendation={analysis.recommendation} />
+                    <KeyTakeaways takeaways={analysis.keyTakeaways} />
+                    <MultiTimeframeTrend trendAnalysis={analysis.trendAnalysis} />
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <StatCard title="Độ Tin Cậy" icon={<ShieldCheckIcon className="w-5 h-5" />}>
                             <div className="text-3xl font-bold text-yellow-300">{`${analysis.confidenceScore}%`}</div>
                             <p className="text-xs text-gray-400 mt-1">{analysis.confidenceReason}</p>
                         </StatCard>
-                        <StatCard title="Xu Hướng" icon={<ChartBarSquareIcon className="w-5 h-5" />}>
-                            <TrendIndicator trend={analysis.shortTermTrend} />
-                        </StatCard>
+                         <SentimentIndicator sentiment={analysis.marketSentiment} />
                     </div>
-                    <SentimentIndicator sentiment={analysis.marketSentiment} />
                 </div>
             );
         case 'setup':
@@ -263,7 +299,9 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
             <header className="flex flex-col sm:flex-row justify-between items-start gap-4 pb-4">
                 <div>
                     <h2 className="text-3xl font-bold text-white">Phân tích {coinPair}</h2>
-                    <p className="text-gray-400 mt-1">{analysis.summary}</p>
+                    <p className="text-gray-400 mt-1 italic">
+                        <strong>Triển vọng Chiến lược:</strong> {analysis.summary}
+                    </p>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                     <button onClick={() => handleExport(false)} disabled={isExporting} className="p-2 text-gray-300 bg-gray-800/50 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-wait" aria-label="Lưu PDF">

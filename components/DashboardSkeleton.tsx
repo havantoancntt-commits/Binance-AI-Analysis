@@ -8,9 +8,8 @@ const Box: React.FC<{ className?: string }> = ({ className = '' }) => (
 const DashboardSkeleton: React.FC = () => (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-pulse animate-fade-in" aria-label="Đang tải nội dung">
         {/* Left & Center Column Skeleton */}
-        <div className="lg:col-span-2 space-y-8">
+        <div className="lg:col-span-2">
             <Box className="h-[400px] sm:h-[500px] lg:h-[600px]" />
-            <Box className="h-[400px]" /> {/* For NewsFeed */}
         </div>
         {/* Right Column Skeleton */}
         <div className="lg:col-span-1">

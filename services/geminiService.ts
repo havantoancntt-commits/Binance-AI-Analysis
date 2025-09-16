@@ -1,13 +1,19 @@
 import type { PriceDataPoint, AnalysisResult } from '../types';
 
-export const fetchAIAnalysis = async (coinPair: string, priceData: PriceDataPoint[]): Promise<AnalysisResult> => {
+export interface MultiTimeframePriceData {
+    priceData7D: PriceDataPoint[];
+    priceData3M: PriceDataPoint[];
+    priceData1Y: PriceDataPoint[];
+}
+
+export const fetchAIAnalysis = async (coinPair: string, priceData: MultiTimeframePriceData): Promise<AnalysisResult> => {
   try {
     const apiResponse = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ coinPair, priceData }),
+        body: JSON.stringify({ coinPair, ...priceData }),
     });
 
     if (!apiResponse.ok) {

@@ -1,15 +1,13 @@
 
 import React, { useReducer, useCallback, useEffect, useRef } from 'react';
-import type { PriceDataPoint, AnalysisResult, TickerData, NewsArticle, Timeframe } from './types';
+import type { PriceDataPoint, AnalysisResult, TickerData } from './types';
 import { AppStatus } from './types';
 import { fetchAIAnalysis } from './services/geminiService';
 import { fetchHistoricalData } from './services/binanceService';
-import { fetchNews } from './services/newsService';
 import PriceChart from './components/PriceChart';
 import AnalysisDisplay from './components/AnalysisDisplay';
 import Disclaimer from './components/Disclaimer';
 import SupportProject from './components/SupportProject';
-import NewsFeed from './components/NewsFeed';
 import DashboardSkeleton from './components/DashboardSkeleton';
 import { COIN_PAIRS } from './constants';
 import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
@@ -21,27 +19,20 @@ interface AppState {
   priceData: PriceDataPoint[];
   analysis: AnalysisResult | null;
   tickerData: TickerData | null;
-  news: NewsArticle[];
-  isNewsLoading: boolean;
   isAnalysisLoading: boolean;
   error: string | null;
-  timeframe: Timeframe;
-  isChartLoading: boolean;
   analysisCache: Record<string, AnalysisResult>;
 }
 
 type AppAction =
   | { type: 'START_ANALYSIS'; payload: string }
   | { type: 'SET_PRICE_DATA'; payload: PriceDataPoint[] }
-  | { type: 'SET_ANALYSIS_AND_NEWS'; payload: { analysis: AnalysisResult; news: NewsArticle[]; coin: string } }
+  | { type: 'SET_ANALYSIS'; payload: { analysis: AnalysisResult; coin: string } }
   | { type: 'USE_CACHED_ANALYSIS'; payload: { analysis: AnalysisResult; coin: string } }
   | { type: 'FETCH_ERROR'; payload: string }
   | { type: 'UPDATE_TICKER'; payload: TickerData | null }
   | { type: 'SET_COIN_INPUT'; payload: string }
-  | { type: 'RESET' }
-  | { type: 'SET_TIMEFRAME'; payload: Timeframe }
-  | { type: 'SET_CHART_LOADING'; payload: boolean }
-  | { type: 'SET_NEWS'; payload: NewsArticle[] };
+  | { type: 'RESET' };
 
 const initialState: AppState = {
   status: AppStatus.Idle,
@@ -50,12 +41,8 @@ const initialState: AppState = {
   priceData: [],
   analysis: null,
   tickerData: null,
-  news: [],
-  isNewsLoading: false,
   isAnalysisLoading: false,
   error: null,
-  timeframe: '1Y',
-  isChartLoading: false,
   analysisCache: {},
 };
 
@@ -70,27 +57,20 @@ function appReducer(state: AppState, action: AppAction): AppState {
         error: null,
         analysis: null,
         priceData: [],
-        news: [],
         tickerData: null,
-        timeframe: '1Y',
-        isChartLoading: true,
         isAnalysisLoading: true,
-        isNewsLoading: true,
       };
     case 'SET_PRICE_DATA':
         return {
             ...state,
             status: AppStatus.Success, // Show chart immediately
             priceData: action.payload,
-            isChartLoading: false,
         };
-    case 'SET_ANALYSIS_AND_NEWS':
+    case 'SET_ANALYSIS':
         return {
             ...state,
             analysis: action.payload.analysis,
-            news: action.payload.news,
             isAnalysisLoading: false,
-            isNewsLoading: false,
             analysisCache: {
                 ...state.analysisCache,
                 [action.payload.coin]: action.payload.analysis,
@@ -103,12 +83,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
             analyzedCoin: action.payload.coin,
             isAnalysisLoading: false,
         };
-    case 'SET_NEWS':
-        return {
-            ...state,
-            news: action.payload,
-            isNewsLoading: false,
-        };
     case 'FETCH_ERROR':
       return {
         ...state,
@@ -116,10 +90,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         error: action.payload,
         analysis: null,
         priceData: [],
-        news: [],
-        isNewsLoading: false,
         isAnalysisLoading: false,
-        isChartLoading: false,
       };
     case 'UPDATE_TICKER':
       return { ...state, tickerData: action.payload };
@@ -131,10 +102,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
           analysisCache: state.analysisCache, // Persist cache on reset
           coinInput: state.coinInput,
       };
-    case 'SET_TIMEFRAME':
-        return { ...state, timeframe: action.payload };
-    case 'SET_CHART_LOADING':
-        return { ...state, isChartLoading: action.payload };
     default:
       return state;
   }
@@ -142,7 +109,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, news, isNewsLoading, isAnalysisLoading, error, timeframe, isChartLoading, analysisCache } = state;
+  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, isAnalysisLoading, error, analysisCache } = state;
   const inputRef = useRef<HTMLInputElement>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
 
@@ -155,32 +122,30 @@ const App: React.FC = () => {
       try {
         mainContentRef.current?.scrollIntoView({ behavior: 'smooth' });
         
-        const historicalData = await fetchHistoricalData(analyzedCoin, '1Y');
-        if (isCancelled) return;
-        dispatch({ type: 'SET_PRICE_DATA', payload: historicalData });
+        // Fetch multi-timeframe data concurrently for efficiency
+        const [priceData1Y, priceData3M, priceData7D] = await Promise.all([
+            fetchHistoricalData(analyzedCoin, '1Y'),
+            fetchHistoricalData(analyzedCoin, '3M'),
+            fetchHistoricalData(analyzedCoin, '7D')
+        ]);
 
+        if (isCancelled) return;
+
+        // Set chart data immediately (using 3M for the default view)
+        dispatch({ type: 'SET_PRICE_DATA', payload: priceData3M });
+
+        // Check cache after fetching data to ensure chart is shown
         if (analysisCache[analyzedCoin]) {
             console.log(`Using cached analysis for ${analyzedCoin}`);
             dispatch({ type: 'USE_CACHED_ANALYSIS', payload: { analysis: analysisCache[analyzedCoin], coin: analyzedCoin } });
-            
-            const baseCoin = analyzedCoin.split('/')[0];
-            fetchNews(baseCoin).then(newsData => {
-                if (!isCancelled) {
-                    dispatch({ type: 'SET_NEWS', payload: newsData });
-                }
-            });
             return;
         }
         
         console.log(`Fetching new analysis for ${analyzedCoin}`);
-        const baseCoin = analyzedCoin.split('/')[0];
-        const [aiAnalysis, fetchedNews] = await Promise.all([
-          fetchAIAnalysis(analyzedCoin, historicalData),
-          fetchNews(baseCoin)
-        ]);
+        const aiAnalysis = await fetchAIAnalysis(analyzedCoin, { priceData1Y, priceData3M, priceData7D });
         
         if (isCancelled) return;
-        dispatch({ type: 'SET_ANALYSIS_AND_NEWS', payload: { analysis: aiAnalysis, news: fetchedNews, coin: analyzedCoin } });
+        dispatch({ type: 'SET_ANALYSIS', payload: { analysis: aiAnalysis, coin: analyzedCoin } });
 
       } catch (err: any) {
         if (isCancelled) return;
@@ -253,22 +218,6 @@ const App: React.FC = () => {
     dispatch({ type: 'START_ANALYSIS', payload: formattedCoin });
   }, []);
 
-  const handleTimeframeChange = useCallback(async (newTimeframe: Timeframe) => {
-    if (!analyzedCoin || newTimeframe === timeframe) return;
-    
-    dispatch({ type: 'SET_TIMEFRAME', payload: newTimeframe });
-    dispatch({ type: 'SET_CHART_LOADING', payload: true });
-    
-    try {
-      const newPriceData = await fetchHistoricalData(analyzedCoin, newTimeframe);
-      dispatch({ type: 'SET_PRICE_DATA', payload: newPriceData });
-    } catch (err: any) {
-      dispatch({ type: 'FETCH_ERROR', payload: err.message || `Không thể tải dữ liệu cho khung thời gian ${newTimeframe}.` });
-    } finally {
-      dispatch({ type: 'SET_CHART_LOADING', payload: false });
-    }
-  }, [analyzedCoin, timeframe]);
-
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     handleAnalysisRequest(coinInput);
@@ -302,19 +251,15 @@ const App: React.FC = () => {
       case AppStatus.Success:
         return (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2">
               <div className="h-[400px] sm:h-[500px] lg:h-[600px]">
                 <PriceChart 
                   priceData={priceData} 
                   analysis={analysis}
-                  timeframe={timeframe}
-                  onTimeframeChange={handleTimeframeChange}
-                  isChartLoading={isChartLoading}
                   tickerData={tickerData}
                   coinPair={analyzedCoin}
                 />
               </div>
-              <NewsFeed news={news} isLoading={isNewsLoading} />
             </div>
             <div className="lg:col-span-1">
               <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />

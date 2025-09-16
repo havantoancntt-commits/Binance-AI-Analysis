@@ -1,14 +1,11 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 import { ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea, Scatter } from 'recharts';
-import type { PriceDataPoint, AnalysisResult, Timeframe, TickerData } from '../types';
+import type { PriceDataPoint, AnalysisResult, TickerData } from '../types';
 import Ticker from './Ticker';
 
 interface PriceChartProps {
   priceData: PriceDataPoint[];
   analysis: AnalysisResult | null;
-  timeframe: Timeframe;
-  onTimeframeChange: (timeframe: Timeframe) => void;
-  isChartLoading: boolean;
   tickerData: TickerData | null;
   coinPair: string | null;
 }
@@ -78,9 +75,8 @@ const CustomSignalShape: React.FC<CustomSignalShapeProps> = (props) => {
 };
 
 
-const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe, onTimeframeChange, isChartLoading, tickerData, coinPair }) => {
+const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData, coinPair }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const timeframes: Timeframe[] = ['1D', '7D', '1M', '1Y'];
 
   useEffect(() => {
     if (analysis && chartContainerRef.current) {
@@ -125,8 +121,8 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe,
 
 
   const renderChartContent = () => {
-    if (priceData.length === 0 && !isChartLoading) {
-        return <div className="flex items-center justify-center h-full text-gray-500">Không có dữ liệu biểu đồ.</div>;
+    if (priceData.length === 0) {
+        return <div className="flex items-center justify-center h-full text-gray-500">Đang tải dữ liệu biểu đồ...</div>;
     }
 
     const priceDomain: [number, number] = [
@@ -196,27 +192,9 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe,
 
   return (
     <div ref={chartContainerRef} className="glassmorphism p-4 rounded-lg shadow-2xl h-full w-full flex flex-col relative">
-        {isChartLoading && (
-          <div className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm flex items-center justify-center z-10 rounded-lg">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
-          </div>
-        )}
         <div className="flex flex-col sm:flex-row justify-between items-center mb-2 gap-2">
             <div className="w-full sm:w-auto">
                 <Ticker coinPair={coinPair} tickerData={tickerData} />
-            </div>
-            <div className="flex-shrink-0 space-x-1">
-                {timeframes.map((tf) => (
-                    <button
-                    key={tf}
-                    onClick={() => onTimeframeChange(tf)}
-                    disabled={isChartLoading}
-                    className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-cyan-500 disabled:opacity-50 disabled:cursor-not-allowed
-                        ${timeframe === tf ? 'bg-cyan-600 text-white' : 'bg-gray-700/50 text-gray-300 hover:bg-gray-700'}`}
-                    >
-                    {tf}
-                    </button>
-                ))}
             </div>
         </div>
         <div className="flex-grow w-full h-full">
