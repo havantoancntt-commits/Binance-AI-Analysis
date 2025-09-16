@@ -56,3 +56,9 @@ export interface NewsArticle {
 }
 
 export type Timeframe = '1D' | '7D' | '1M' | '1Y';
+
+export interface DelistingCoin {
+  coinPair: string;
+  delistingDate: string;
+  reason: string;
+}

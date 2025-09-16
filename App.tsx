@@ -1,7 +1,7 @@
 import React, { useReducer, useCallback, useEffect, useRef } from 'react';
-import type { PriceDataPoint, AnalysisResult, TickerData, NewsArticle, Timeframe } from './types';
+import type { PriceDataPoint, AnalysisResult, TickerData, NewsArticle, Timeframe, DelistingCoin } from './types';
 import { AppStatus } from './types';
-import { fetchAIAnalysis } from './services/geminiService';
+import { fetchAIAnalysis, fetchDelistingWatchlist } from './services/geminiService';
 import { fetchHistoricalData } from './services/binanceService';
 import { fetchNews } from './services/newsService';
 import PriceChart from './components/PriceChart';
@@ -11,6 +11,7 @@ import Ticker from './components/Ticker';
 import SupportProject from './components/PriceAlert';
 import NewsFeed from './components/NewsFeed';
 import DashboardSkeleton from './components/DashboardSkeleton';
+import DelistingWatchlist from './components/DelistingWatchlist';
 import { COIN_PAIRS } from './constants';
 import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
 
@@ -28,6 +29,8 @@ interface AppState {
   timeframe: Timeframe;
   isChartLoading: boolean;
   analysisCache: Record<string, AnalysisResult>;
+  delistingWatchlist: DelistingCoin[];
+  isDelistingWatchlistLoading: boolean;
 }
 
 type AppAction =
@@ -41,7 +44,9 @@ type AppAction =
   | { type: 'RESET' }
   | { type: 'SET_TIMEFRAME'; payload: Timeframe }
   | { type: 'SET_CHART_LOADING'; payload: boolean }
-  | { type: 'SET_NEWS'; payload: NewsArticle[] };
+  | { type: 'SET_NEWS'; payload: NewsArticle[] }
+  | { type: 'SET_DELISTING_WATCHLIST'; payload: DelistingCoin[] }
+  | { type: 'SET_DELISTING_WATCHLIST_LOADING'; payload: boolean };
 
 const initialState: AppState = {
   status: AppStatus.Idle,
@@ -57,6 +62,8 @@ const initialState: AppState = {
   timeframe: '1Y',
   isChartLoading: false,
   analysisCache: {},
+  delistingWatchlist: [],
+  isDelistingWatchlistLoading: true,
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -130,11 +137,21 @@ function appReducer(state: AppState, action: AppAction): AppState {
           ...initialState,
           analysisCache: state.analysisCache, // Persist cache on reset
           coinInput: state.coinInput,
+          delistingWatchlist: state.delistingWatchlist, // Persist watchlist on reset
+          isDelistingWatchlistLoading: false, // Don't show loading on reset
       };
     case 'SET_TIMEFRAME':
         return { ...state, timeframe: action.payload };
     case 'SET_CHART_LOADING':
         return { ...state, isChartLoading: action.payload };
+    case 'SET_DELISTING_WATCHLIST':
+        return {
+            ...state,
+            delistingWatchlist: action.payload,
+            isDelistingWatchlistLoading: false,
+        };
+    case 'SET_DELISTING_WATCHLIST_LOADING':
+        return { ...state, isDelistingWatchlistLoading: action.payload };
     default:
       return state;
   }
@@ -142,9 +159,26 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, news, isNewsLoading, isAnalysisLoading, error, timeframe, isChartLoading, analysisCache } = state;
+  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, news, isNewsLoading, isAnalysisLoading, error, timeframe, isChartLoading, analysisCache, delistingWatchlist, isDelistingWatchlistLoading } = state;
   const inputRef = useRef<HTMLInputElement>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
+
+  const loadDelistingWatchlist = useCallback(async () => {
+    dispatch({ type: 'SET_DELISTING_WATCHLIST_LOADING', payload: true });
+    try {
+        const data = await fetchDelistingWatchlist();
+        dispatch({ type: 'SET_DELISTING_WATCHLIST', payload: data });
+    } catch (error) {
+        console.error("Failed to load delisting watchlist", error);
+        // On error, just set an empty list and stop loading
+        dispatch({ type: 'SET_DELISTING_WATCHLIST', payload: [] });
+    }
+  }, []);
+
+  // Load watchlist on initial mount
+  useEffect(() => {
+    loadDelistingWatchlist();
+  }, [loadDelistingWatchlist]);
 
   useEffect(() => {
     if (status !== AppStatus.Loading || !analyzedCoin) return;
@@ -285,6 +319,7 @@ const App: React.FC = () => {
                 <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
               </div>
             </div>
+             <DelistingWatchlist watchlist={delistingWatchlist} isLoading={isDelistingWatchlistLoading} onRefresh={loadDelistingWatchlist} />
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <NewsFeed news={news} isLoading={isNewsLoading} />
                 <SupportProject />

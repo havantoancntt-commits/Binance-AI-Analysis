@@ -103,7 +103,7 @@ export default async function handler(request, response) {
 
         const geminiResponse = await ai.models.generateContent({
             model: "gemini-2.5-flash",
-            contents: { parts: [{ text: prompt }] },
+            contents: [{parts: [{text: prompt}]}],
             config: {
                 responseMimeType: "application/json",
                 responseSchema: analysisSchema,
