@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useMemo } from 'react';
-import { ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine, ReferenceArea, Scatter } from 'recharts';
+import { ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea, Scatter } from 'recharts';
 import type { PriceDataPoint, AnalysisResult, Timeframe, TickerData } from '../types';
 import Ticker from './Ticker';
 
@@ -163,7 +163,6 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, timeframe,
                 />
                 <YAxis yAxisId="right" orientation="right" stroke="#718096" domain={volumeDomain} tickFormatter={(value) => `${(Number(value) / 1000000).toFixed(1)}M`} />
                 <Tooltip content={<CustomTooltip />} />
-                <Legend wrapperStyle={{ color: '#A0AEC0' }} />
                 <Area type="monotone" dataKey="price" name="Giá" stroke="#2dd4bf" strokeWidth={2} fillOpacity={1} fill="url(#colorPrice)" yAxisId="left" />
                 <Bar dataKey="volume" name="Khối Lượng" barSize={20} fill="#4A5568" yAxisId="right" />
 

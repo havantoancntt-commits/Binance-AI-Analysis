@@ -11,11 +11,23 @@ export const fetchAIAnalysis = async (coinPair: string, priceData: PriceDataPoin
     });
 
     if (!apiResponse.ok) {
-        const errorData = await apiResponse.json().catch(() => ({ error: 'Phản hồi không hợp lệ từ máy chủ.' }));
-        throw new Error(errorData.error || 'Lỗi giao tiếp với máy chủ phân tích.');
+        const errorText = await apiResponse.text();
+        try {
+            const errorData = JSON.parse(errorText);
+            throw new Error(errorData.error || 'Lỗi giao tiếp với máy chủ phân tích.');
+        } catch (e) {
+            throw new Error(`Phản hồi máy chủ không hợp lệ (${apiResponse.status}): ${errorText.substring(0, 150)}`);
+        }
     }
-
-    const analysisResult: AnalysisResult = await apiResponse.json();
+    
+    const responseText = await apiResponse.text();
+    let analysisResult: AnalysisResult;
+    try {
+        analysisResult = JSON.parse(responseText);
+    } catch(e) {
+        console.error("Lỗi phân tích cú pháp JSON phân tích:", responseText);
+        throw new Error("Phản hồi phân tích từ AI không phải là JSON hợp lệ.");
+    }
 
     if (!analysisResult.supportLevels || !analysisResult.recommendation || !analysisResult.detailedAnalysis) {
       throw new Error("Cấu trúc dữ liệu phân tích không hợp lệ nhận được từ máy chủ.");
@@ -23,7 +35,7 @@ export const fetchAIAnalysis = async (coinPair: string, priceData: PriceDataPoin
 
     return analysisResult;
   } catch (error) {
-    console.error("Error fetching AI analysis via proxy:", error);
+    console.error("Lỗi khi tìm nạp phân tích AI qua proxy:", error);
     throw error;
   }
 };
@@ -38,16 +50,20 @@ export const fetchDelistingWatchlist = async (): Promise<DelistingCoin[]> => {
     });
 
     if (!apiResponse.ok) {
-        const errorData = await apiResponse.json().catch(() => ({ error: 'Phản hồi không hợp lệ từ máy chủ.' }));
-        throw new Error(errorData.error || 'Lỗi giao tiếp với máy chủ lấy danh sách hủy niêm yết.');
+        const errorText = await apiResponse.text();
+        try {
+            const errorData = JSON.parse(errorText);
+            throw new Error(errorData.error || 'Lỗi giao tiếp với máy chủ lấy danh sách hủy niêm yết.');
+        } catch (e) {
+            throw new Error(`Phản hồi máy chủ không hợp lệ (${apiResponse.status}): ${errorText.substring(0, 150)}`);
+        }
     }
 
     const delistingData: DelistingCoin[] = await apiResponse.json();
     return delistingData;
 
   } catch (error) {
-    console.error("Error fetching delisting watchlist via proxy:", error);
-    // Return empty array on failure so it doesn't break the UI
-    return [];
+    console.error("Lỗi khi tìm nạp danh sách theo dõi hủy niêm yết qua proxy:", error);
+    throw error;
   }
 };

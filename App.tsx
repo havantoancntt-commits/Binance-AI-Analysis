@@ -167,8 +167,9 @@ const App: React.FC = () => {
     try {
         const data = await fetchDelistingWatchlist();
         dispatch({ type: 'SET_DELISTING_WATCHLIST', payload: data });
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to load delisting watchlist", error);
+        // Dispatching with empty array will show the 'not found' message which is acceptable.
         dispatch({ type: 'SET_DELISTING_WATCHLIST', payload: [] });
     }
   }, []);
@@ -180,18 +181,26 @@ const App: React.FC = () => {
   useEffect(() => {
     if (status !== AppStatus.Loading || !analyzedCoin) return;
 
+    let isCancelled = false;
+
     const analyzeCoin = async () => {
       try {
         mainContentRef.current?.scrollIntoView({ behavior: 'smooth' });
         
         const historicalData = await fetchHistoricalData(analyzedCoin, '1Y');
+        if (isCancelled) return;
         dispatch({ type: 'SET_PRICE_DATA', payload: historicalData });
 
         if (analysisCache[analyzedCoin]) {
             console.log(`Using cached analysis for ${analyzedCoin}`);
             dispatch({ type: 'USE_CACHED_ANALYSIS', payload: { analysis: analysisCache[analyzedCoin], coin: analyzedCoin } });
+            
             const baseCoin = analyzedCoin.split('/')[0];
-            fetchNews(baseCoin).then(newsData => dispatch({ type: 'SET_NEWS', payload: newsData }));
+            fetchNews(baseCoin).then(newsData => {
+                if (!isCancelled) {
+                    dispatch({ type: 'SET_NEWS', payload: newsData });
+                }
+            });
             return;
         }
         
@@ -202,48 +211,74 @@ const App: React.FC = () => {
           fetchNews(baseCoin)
         ]);
         
+        if (isCancelled) return;
         dispatch({ type: 'SET_ANALYSIS_AND_NEWS', payload: { analysis: aiAnalysis, news: fetchedNews, coin: analyzedCoin } });
 
       } catch (err: any) {
+        if (isCancelled) return;
         console.error(err);
         dispatch({ type: 'FETCH_ERROR', payload: err.message || 'Đã xảy ra lỗi không xác định.' });
       }
     };
 
     analyzeCoin();
+    
+    return () => {
+        isCancelled = true;
+    };
   }, [status, analyzedCoin, analysisCache]);
 
   useEffect(() => {
     if (!analyzedCoin) return;
 
     const symbol = analyzedCoin.replace('/', '').toLowerCase();
-    const ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@ticker`);
+    let ws: WebSocket;
+    let connectTimeout: number;
 
-    ws.onopen = () => console.log(`WebSocket connected for ${symbol}`);
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      dispatch({
-        type: 'UPDATE_TICKER',
-        payload: {
-          price: parseFloat(data.c).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 }),
-          change: parseFloat(data.p).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4, signDisplay: 'always' }),
-          changePercent: `${parseFloat(data.P).toFixed(2)}%`,
-          isPositive: parseFloat(data.p) >= 0,
-        },
-      });
+    const connect = () => {
+        console.log(`Connecting WebSocket for ${symbol}...`);
+        ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@ticker`);
+
+        ws.onopen = () => console.log(`WebSocket connected for ${symbol}`);
+        
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          dispatch({
+            type: 'UPDATE_TICKER',
+            payload: {
+              price: parseFloat(data.c).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 }),
+              change: parseFloat(data.p).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4, signDisplay: 'always' }),
+              changePercent: `${parseFloat(data.P).toFixed(2)}%`,
+              isPositive: parseFloat(data.p) >= 0,
+            },
+          });
+        };
+
+        ws.onerror = (error) => console.error("WebSocket Error: ", error);
+
+        ws.onclose = () => {
+            console.log(`WebSocket disconnected for ${symbol}. Reconnecting in 5s...`);
+            clearTimeout(connectTimeout);
+            connectTimeout = window.setTimeout(connect, 5000);
+        };
     };
-    ws.onerror = (error) => console.error("WebSocket Error: ", error);
-    ws.onclose = () => console.log(`WebSocket disconnected for ${symbol}`);
+
+    connect();
 
     return () => {
-      if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) ws.close();
+        clearTimeout(connectTimeout);
+        if (ws) {
+            ws.onclose = null; 
+            ws.close();
+        }
     };
   }, [analyzedCoin]);
   
   const handleAnalysisRequest = useCallback((coin: string) => {
     if (!coin) return;
     const formattedCoin = coin.trim().toUpperCase().replace(/[^A-Z0-9/]/g, '');
-    if (!formattedCoin.includes('/')) {
+    const coinPairRegex = /^[A-Z0-9]{2,}\/[A-Z0-9]{3,}$/;
+    if (!coinPairRegex.test(formattedCoin)) {
         dispatch({ type: 'FETCH_ERROR', payload: "Định dạng cặp coin không hợp lệ. Vui lòng sử dụng 'COIN/QUOTE', ví dụ: BTC/USDT." });
         return;
     }
