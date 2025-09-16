@@ -1,17 +1,15 @@
 
 import React, { useReducer, useCallback, useEffect, useRef } from 'react';
-import type { PriceDataPoint, AnalysisResult, TickerData, NewsArticle } from './types';
+import type { PriceDataPoint, AnalysisResult, TickerData } from './types';
 import { AppStatus } from './types';
 import { fetchAIAnalysis } from './services/geminiService';
 import { fetchHistoricalData } from './services/binanceService';
-import { fetchNews } from './services/newsService';
 
 import PriceChart from './components/PriceChart';
 import AnalysisDisplay from './components/AnalysisDisplay';
 import Disclaimer from './components/Disclaimer';
 import SupportProject from './components/SupportProject';
 import DashboardSkeleton from './components/DashboardSkeleton';
-import NewsFeed from './components/NewsFeed';
 
 import { COIN_PAIRS } from './constants';
 import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
@@ -26,8 +24,6 @@ interface AppState {
   isAnalysisLoading: boolean;
   error: string | null;
   analysisCache: Record<string, AnalysisResult>;
-  news: NewsArticle[];
-  isNewsLoading: boolean;
 }
 
 type AppAction =
@@ -38,8 +34,7 @@ type AppAction =
   | { type: 'FETCH_ERROR'; payload: string }
   | { type: 'UPDATE_TICKER'; payload: TickerData | null }
   | { type: 'SET_COIN_INPUT'; payload: string }
-  | { type: 'RESET' }
-  | { type: 'SET_NEWS'; payload: { news: NewsArticle[]; isLoading: boolean } };
+  | { type: 'RESET' };
 
 const initialState: AppState = {
   status: AppStatus.Idle,
@@ -51,8 +46,6 @@ const initialState: AppState = {
   isAnalysisLoading: false,
   error: null,
   analysisCache: {},
-  news: [],
-  isNewsLoading: true,
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -112,8 +105,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
           analysisCache: state.analysisCache,
           coinInput: state.coinInput,
       };
-    case 'SET_NEWS':
-      return { ...state, news: action.payload.news, isNewsLoading: action.payload.isLoading };
     default:
       return state;
   }
@@ -121,24 +112,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, isAnalysisLoading, error, analysisCache, news, isNewsLoading } = state;
+  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, isAnalysisLoading, error, analysisCache } = state;
   const inputRef = useRef<HTMLInputElement>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
-
-  // Fetch news based on current context (analyzed coin or default)
-  useEffect(() => {
-    const baseCoin = analyzedCoin ? analyzedCoin.split('/')[0] : 'BTC';
-    
-    // Only fetch news when the app is idle (default) or after an analysis succeeds.
-    if (status === AppStatus.Idle || status === AppStatus.Success) {
-      const loadNews = async () => {
-        dispatch({ type: 'SET_NEWS', payload: { news: [], isLoading: true } });
-        const newsData = await fetchNews(baseCoin);
-        dispatch({ type: 'SET_NEWS', payload: { news: newsData, isLoading: false } });
-      };
-      loadNews();
-    }
-  }, [status, analyzedCoin]);
 
   // Main analysis logic
   useEffect(() => {
@@ -263,14 +239,11 @@ const App: React.FC = () => {
     
     if (status === AppStatus.Success && analyzedCoin && analysis) {
       return (
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 animate-fade-in">
-          <div className="xl:col-span-2 space-y-8">
-            <div className="h-[600px]">
-              <PriceChart priceData={priceData} analysis={analysis} tickerData={tickerData} coinPair={analyzedCoin} />
-            </div>
-            <NewsFeed news={news} isLoading={isNewsLoading} />
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 animate-fade-in">
+          <div className="lg:col-span-3 h-[600px]">
+            <PriceChart priceData={priceData} analysis={analysis} tickerData={tickerData} coinPair={analyzedCoin} />
           </div>
-          <div className="xl:col-span-1 space-y-8">
+          <div className="lg:col-span-2 space-y-8">
             <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
             <SupportProject />
           </div>
@@ -286,16 +259,10 @@ const App: React.FC = () => {
            <h2 className="text-3xl font-bold text-gray-100 mt-4">Chào mừng đến với Bảng điều khiển Phân tích AI</h2>
            <p className="text-gray-400 mt-2">
                Nhận thông tin chi tiết về thị trường tức thì. Bắt đầu bằng cách chọn một cặp phổ biến hoặc nhập một cặp tùy chỉnh ở trên.
-               Trong khi chờ đợi, hãy xem tin tức thị trường mới nhất.
            </p>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
-          <div className="lg:col-span-2">
-            <NewsFeed news={news} isLoading={isNewsLoading} />
-          </div>
-          <div className="lg:col-span-1">
-            <SupportProject />
-          </div>
+        <div className="mt-8 max-w-2xl mx-auto">
+          <SupportProject />
         </div>
       </div>
     );

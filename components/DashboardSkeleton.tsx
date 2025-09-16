@@ -6,24 +6,16 @@ const Box: React.FC<{ className?: string }> = ({ className = '' }) => (
 );
 
 const DashboardSkeleton: React.FC = () => (
-    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 animate-pulse" aria-label="Đang tải bảng điều khiển">
-        {/* Left Column Skeleton */}
-        <div className="xl:col-span-2 space-y-8">
-            {/* Price Chart Skeleton */}
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 animate-pulse" aria-label="Đang tải bảng điều khiển">
+        {/* Left Column Skeleton (Chart) */}
+        <div className="lg:col-span-3">
             <Box className="h-[600px]" />
-            {/* News Feed Skeleton */}
-            <div className="space-y-4">
-                <Box className="h-8 w-1/2" />
-                <Box className="h-28 w-full" />
-                <Box className="h-28 w-full" />
-                <Box className="h-28 w-full" />
-            </div>
         </div>
 
-        {/* Right Column Skeleton */}
-        <div className="xl:col-span-1 space-y-8">
+        {/* Right Column Skeleton (Analysis & Support) */}
+        <div className="lg:col-span-2 space-y-8">
             {/* Analysis Display Skeleton */}
-            <div className="space-y-6">
+            <div className="space-y-6 p-6 glassmorphism rounded-lg">
                 <div className="flex justify-between items-start">
                     <div className="space-y-3 w-3/4">
                         <Box className="h-8 w-full" />
@@ -45,6 +37,9 @@ const DashboardSkeleton: React.FC = () => (
                 </div>
                 <Box className="h-28 w-full" />
             </div>
+
+            {/* Support Project Skeleton */}
+            <Box className="h-[280px] w-full" />
         </div>
     </div>
 );

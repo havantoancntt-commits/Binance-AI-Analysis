@@ -56,7 +56,7 @@ export interface TickerData {
   isPositive: boolean;
 }
 
-// Fix: Add NewsArticle interface to resolve import errors.
+// FIX: Add missing NewsArticle interface.
 export interface NewsArticle {
   id: string;
   title: string;
@@ -66,7 +66,7 @@ export interface NewsArticle {
   imageUrl: string;
 }
 
-// Fix: Add DelistingCoin interface to resolve import errors.
+// FIX: Add missing DelistingCoin interface.
 export interface DelistingCoin {
   coinPair: string;
   delistingDate: string;
