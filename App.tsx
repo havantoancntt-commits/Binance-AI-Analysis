@@ -1,14 +1,18 @@
 
 import React, { useReducer, useCallback, useEffect, useRef } from 'react';
-import type { PriceDataPoint, AnalysisResult, TickerData } from './types';
+import type { PriceDataPoint, AnalysisResult, TickerData, NewsArticle } from './types';
 import { AppStatus } from './types';
 import { fetchAIAnalysis } from './services/geminiService';
 import { fetchHistoricalData } from './services/binanceService';
+import { fetchNews } from './services/newsService';
+
 import PriceChart from './components/PriceChart';
 import AnalysisDisplay from './components/AnalysisDisplay';
 import Disclaimer from './components/Disclaimer';
 import SupportProject from './components/SupportProject';
 import DashboardSkeleton from './components/DashboardSkeleton';
+import NewsFeed from './components/NewsFeed';
+
 import { COIN_PAIRS } from './constants';
 import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
 
@@ -22,6 +26,8 @@ interface AppState {
   isAnalysisLoading: boolean;
   error: string | null;
   analysisCache: Record<string, AnalysisResult>;
+  news: NewsArticle[];
+  isNewsLoading: boolean;
 }
 
 type AppAction =
@@ -32,7 +38,8 @@ type AppAction =
   | { type: 'FETCH_ERROR'; payload: string }
   | { type: 'UPDATE_TICKER'; payload: TickerData | null }
   | { type: 'SET_COIN_INPUT'; payload: string }
-  | { type: 'RESET' };
+  | { type: 'RESET' }
+  | { type: 'SET_NEWS'; payload: { news: NewsArticle[]; isLoading: boolean } };
 
 const initialState: AppState = {
   status: AppStatus.Idle,
@@ -44,6 +51,8 @@ const initialState: AppState = {
   isAnalysisLoading: false,
   error: null,
   analysisCache: {},
+  news: [],
+  isNewsLoading: true,
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -63,12 +72,12 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'SET_PRICE_DATA':
         return {
             ...state,
-            status: AppStatus.Success, // Show chart immediately
             priceData: action.payload,
         };
     case 'SET_ANALYSIS':
         return {
             ...state,
+            status: AppStatus.Success,
             analysis: action.payload.analysis,
             isAnalysisLoading: false,
             analysisCache: {
@@ -79,6 +88,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'USE_CACHED_ANALYSIS':
         return {
             ...state,
+            status: AppStatus.Success,
             analysis: action.payload.analysis,
             analyzedCoin: action.payload.coin,
             isAnalysisLoading: false,
@@ -99,9 +109,11 @@ function appReducer(state: AppState, action: AppAction): AppState {
     case 'RESET':
       return {
           ...initialState,
-          analysisCache: state.analysisCache, // Persist cache on reset
+          analysisCache: state.analysisCache,
           coinInput: state.coinInput,
       };
+    case 'SET_NEWS':
+      return { ...state, news: action.payload.news, isNewsLoading: action.payload.isLoading };
     default:
       return state;
   }
@@ -109,10 +121,26 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, isAnalysisLoading, error, analysisCache } = state;
+  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, isAnalysisLoading, error, analysisCache, news, isNewsLoading } = state;
   const inputRef = useRef<HTMLInputElement>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
 
+  // Fetch news based on current context (analyzed coin or default)
+  useEffect(() => {
+    const baseCoin = analyzedCoin ? analyzedCoin.split('/')[0] : 'BTC';
+    
+    // Only fetch news when the app is idle (default) or after an analysis succeeds.
+    if (status === AppStatus.Idle || status === AppStatus.Success) {
+      const loadNews = async () => {
+        dispatch({ type: 'SET_NEWS', payload: { news: [], isLoading: true } });
+        const newsData = await fetchNews(baseCoin);
+        dispatch({ type: 'SET_NEWS', payload: { news: newsData, isLoading: false } });
+      };
+      loadNews();
+    }
+  }, [status, analyzedCoin]);
+
+  // Main analysis logic
   useEffect(() => {
     if (status !== AppStatus.Loading || !analyzedCoin) return;
 
@@ -122,7 +150,6 @@ const App: React.FC = () => {
       try {
         mainContentRef.current?.scrollIntoView({ behavior: 'smooth' });
         
-        // Fetch multi-timeframe data concurrently for efficiency
         const [priceData1Y, priceData3M, priceData7D] = await Promise.all([
             fetchHistoricalData(analyzedCoin, '1Y'),
             fetchHistoricalData(analyzedCoin, '3M'),
@@ -131,10 +158,8 @@ const App: React.FC = () => {
 
         if (isCancelled) return;
 
-        // Set chart data immediately (using 3M for the default view)
         dispatch({ type: 'SET_PRICE_DATA', payload: priceData3M });
 
-        // Check cache after fetching data to ensure chart is shown
         if (analysisCache[analyzedCoin]) {
             console.log(`Using cached analysis for ${analyzedCoin}`);
             dispatch({ type: 'USE_CACHED_ANALYSIS', payload: { analysis: analysisCache[analyzedCoin], coin: analyzedCoin } });
@@ -156,11 +181,10 @@ const App: React.FC = () => {
 
     analyzeCoin();
     
-    return () => {
-        isCancelled = true;
-    };
+    return () => { isCancelled = true; };
   }, [status, analyzedCoin, analysisCache]);
 
+  // WebSocket for live ticker data
   useEffect(() => {
     if (!analyzedCoin) return;
 
@@ -169,11 +193,7 @@ const App: React.FC = () => {
     let connectTimeout: number;
 
     const connect = () => {
-        console.log(`Connecting WebSocket for ${symbol}...`);
         ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@ticker`);
-
-        ws.onopen = () => console.log(`WebSocket connected for ${symbol}`);
-        
         ws.onmessage = (event) => {
           const data = JSON.parse(event.data);
           dispatch({
@@ -186,32 +206,22 @@ const App: React.FC = () => {
             },
           });
         };
-
-        ws.onerror = (error) => console.error("WebSocket Error: ", error);
-
         ws.onclose = () => {
-            console.log(`WebSocket disconnected for ${symbol}. Reconnecting in 5s...`);
             clearTimeout(connectTimeout);
             connectTimeout = window.setTimeout(connect, 5000);
         };
     };
-
     connect();
-
     return () => {
         clearTimeout(connectTimeout);
-        if (ws) {
-            ws.onclose = null; 
-            ws.close();
-        }
+        if (ws) { ws.onclose = null; ws.close(); }
     };
   }, [analyzedCoin]);
   
   const handleAnalysisRequest = useCallback((coin: string) => {
     if (!coin) return;
     const formattedCoin = coin.trim().toUpperCase().replace(/[^A-Z0-9/]/g, '');
-    const coinPairRegex = /^[A-Z0-9]{2,}\/[A-Z0-9]{3,}$/;
-    if (!coinPairRegex.test(formattedCoin)) {
+    if (!/^[A-Z0-9]{2,}\/[A-Z0-9]{3,}$/.test(formattedCoin)) {
         dispatch({ type: 'FETCH_ERROR', payload: "Định dạng cặp coin không hợp lệ. Vui lòng sử dụng 'COIN/QUOTE', ví dụ: BTC/USDT." });
         return;
     }
@@ -228,61 +238,67 @@ const App: React.FC = () => {
     inputRef.current?.focus();
   };
   
-  const handleReset = () => dispatch({ type: 'RESET' });
+  const handleReset = useCallback(() => {
+    dispatch({ type: 'RESET' });
+  }, []);
 
   const renderContent = () => {
-    switch(status) {
-      case AppStatus.Loading:
-        return <DashboardSkeleton />;
-      case AppStatus.Error:
-        return (
-          <div className="flex justify-center items-center py-10 animate-fade-in">
-            <div className="w-full max-w-3xl">
-                <div className="flex flex-col items-center justify-center h-full glassmorphism rounded-xl p-8 text-center">
-                    <XCircleIcon className="w-16 h-16 text-red-500/80 mx-auto" />
-                    <h3 className="text-2xl font-bold text-red-400 mt-4">Rất tiếc, đã xảy ra lỗi</h3>
-                    <div className="mt-2 text-red-300 bg-red-500/10 p-3 rounded-lg max-w-lg">
-                        <p className="whitespace-pre-wrap">{error}</p>
-                    </div>
-                </div>
-             </div>
-          </div>
-        );
-      case AppStatus.Success:
-        return (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
-            <div className="lg:col-span-2">
-              <div className="h-[400px] sm:h-[500px] lg:h-[600px]">
-                <PriceChart 
-                  priceData={priceData} 
-                  analysis={analysis}
-                  tickerData={tickerData}
-                  coinPair={analyzedCoin}
-                />
-              </div>
-            </div>
-            <div className="lg:col-span-1">
-              <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
-            </div>
-          </div>
-        );
-      case AppStatus.Idle:
-      default:
-        return (
-          <div className="flex flex-col items-center justify-center min-h-[600px] space-y-12 animate-fade-in">
-             <div className="p-8 max-w-2xl w-full text-center">
-                <CpuChipIcon className="w-16 h-16 mx-auto text-cyan-400/70" />
-                <h2 className="text-3xl font-bold text-gray-100 mt-4">Bắt đầu phân tích</h2>
-                <p className="text-gray-400 mt-2 max-w-md mx-auto">
-                    Chọn một cặp tiền điện tử phổ biến hoặc nhập một cặp tùy chỉnh để nhận phân tích kỹ thuật chi tiết do AI cung cấp.
-                </p>
-             </div>
-             <div className="w-full max-w-2xl mx-auto">
-                <SupportProject />
-             </div>
-          </div>
-        );
+    if (status === AppStatus.Loading) {
+      return <DashboardSkeleton />;
     }
+    
+    if (status === AppStatus.Error) {
+      return (
+        <div className="flex justify-center items-center py-10 animate-fade-in">
+          <div className="w-full max-w-3xl glassmorphism rounded-xl p-8 text-center">
+              <XCircleIcon className="w-16 h-16 text-red-500/80 mx-auto" />
+              <h3 className="text-2xl font-bold text-red-400 mt-4">Rất tiếc, đã xảy ra lỗi</h3>
+              <div className="mt-2 text-red-300 bg-red-500/10 p-3 rounded-lg max-w-lg mx-auto">
+                  <p className="whitespace-pre-wrap">{error}</p>
+              </div>
+          </div>
+        </div>
+      );
+    }
+    
+    if (status === AppStatus.Success && analyzedCoin && analysis) {
+      return (
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 animate-fade-in">
+          <div className="xl:col-span-2 space-y-8">
+            <div className="h-[600px]">
+              <PriceChart priceData={priceData} analysis={analysis} tickerData={tickerData} coinPair={analyzedCoin} />
+            </div>
+            <NewsFeed news={news} isLoading={isNewsLoading} />
+          </div>
+          <div className="xl:col-span-1 space-y-8">
+            <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
+            <SupportProject />
+          </div>
+        </div>
+      );
+    }
+    
+    // Idle State
+    return (
+      <div className="animate-fade-in">
+        <div className="text-center p-8 max-w-3xl mx-auto">
+           <CpuChipIcon className="w-16 h-16 mx-auto text-cyan-400/70" />
+           <h2 className="text-3xl font-bold text-gray-100 mt-4">Chào mừng đến với Bảng điều khiển Phân tích AI</h2>
+           <p className="text-gray-400 mt-2">
+               Nhận thông tin chi tiết về thị trường tức thì. Bắt đầu bằng cách chọn một cặp phổ biến hoặc nhập một cặp tùy chỉnh ở trên.
+               Trong khi chờ đợi, hãy xem tin tức thị trường mới nhất.
+           </p>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
+          <div className="lg:col-span-2">
+            <NewsFeed news={news} isLoading={isNewsLoading} />
+          </div>
+          <div className="lg:col-span-1">
+            <SupportProject />
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (

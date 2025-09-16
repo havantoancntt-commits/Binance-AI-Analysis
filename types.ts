@@ -56,13 +56,6 @@ export interface TickerData {
   isPositive: boolean;
 }
 
-// Fix: Add DelistingCoin interface based on the schema in api/delistings.js
-export interface DelistingCoin {
-  coinPair: string;
-  delistingDate: string;
-  reason: string;
-}
-
 // Fix: Add NewsArticle interface to resolve import errors.
 export interface NewsArticle {
   id: string;
@@ -71,4 +64,11 @@ export interface NewsArticle {
   publishedOn: number;
   url: string;
   imageUrl: string;
+}
+
+// Fix: Add DelistingCoin interface to resolve import errors.
+export interface DelistingCoin {
+  coinPair: string;
+  delistingDate: string;
+  reason: string;
 }
