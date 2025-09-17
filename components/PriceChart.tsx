@@ -1,8 +1,22 @@
 
 import React, { useRef, useEffect, useMemo } from 'react';
-import { ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea, Scatter, Cell } from 'recharts';
+import { ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea, Scatter, Cell, Label } from 'recharts';
 import type { PriceDataPoint, AnalysisResult, TickerData } from '../types';
 import Ticker from './Ticker';
+
+const formatLargeNumber = (num: number) => {
+    if (num >= 1_000_000_000) {
+        return `${(num / 1_000_000_000).toFixed(2)}B`;
+    }
+    if (num >= 1_000_000) {
+        return `${(num / 1_000_000).toFixed(2)}M`;
+    }
+    if (num >= 1_000) {
+        return `${(num / 1_000).toFixed(2)}K`;
+    }
+    return num.toLocaleString();
+};
+
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
@@ -10,9 +24,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     const volumePayload = payload.find(p => p.dataKey === 'volume');
     return (
       <div className="glassmorphism p-3 rounded-lg shadow-lg border border-gray-700/50" style={{background: 'rgba(10, 5, 5, 0.8)'}}>
-        <p className="label text-sm text-gray-400 font-semibold">{`Ngày: ${label}`}</p>
+        <p className="label text-sm text-gray-400 font-semibold mb-2">{`Ngày: ${label}`}</p>
         {pricePayload && <p className="intro text-md font-bold text-orange-400">{`Giá: $${pricePayload.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`}</p>}
-        {volumePayload && <p className="intro text-sm text-gray-500">{`KLGD: ${volumePayload.value.toLocaleString()}`}</p>}
+        {volumePayload && <p className="intro text-sm text-gray-500">{`KLGD: ${formatLargeNumber(volumePayload.value)}`}</p>}
       </div>
     );
   }
@@ -148,49 +162,71 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
         return renderChartSkeleton();
     }
     
-    const yAxisDomain: [number, number] = [
+    const priceDomain: [number, number] = [
         Math.min(...processedData.map(p => p.price)) * 0.95,
         Math.max(...processedData.map(p => p.price)) * 1.05,
+    ];
+
+    const volumeDomain: [number, number] = [
+        0,
+        Math.max(...processedData.map(p => p.volume)) * 2,
     ];
     
     return (
         <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
                 data={processedData}
-                margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
+                margin={{ top: 5, right: 20, left: 20, bottom: 20 }}
             >
                 <defs>
                     <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.4}/>
+                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
                         <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
                     </linearGradient>
                     <linearGradient id="chartBackground" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="rgba(239, 68, 68, 0.05)" />
+                        <stop offset="0%" stopColor="rgba(239, 68, 68, 0.03)" />
                         <stop offset="100%" stopColor="rgba(239, 68, 68, 0)" />
                     </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="1 4" stroke="rgba(255, 255, 255, 0.08)" />
-                <XAxis dataKey="date" stroke="#9ca3af" tick={{ fontSize: 12 }} dy={5} />
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
+                <XAxis dataKey="date" stroke="#9ca3af" tick={{ fontSize: 12 }} dy={10}>
+                    <Label value="Ngày" offset={-15} position="insideBottom" fill="#888" fontSize={12} />
+                </XAxis>
+                <YAxis
+                    yAxisId="left"
+                    orientation="left"
+                    stroke="#9ca3af"
+                    domain={volumeDomain}
+                    tickFormatter={(value) => formatLargeNumber(Number(value))}
+                    tick={{ fontSize: 12 }}
+                    dx={-5}
+                    width={60}
+                >
+                    <Label value="Khối Lượng Giao Dịch" angle={-90} position="insideLeft" style={{ textAnchor: 'middle', fill: '#888' }} fontSize={12} />
+                </YAxis>
                 <YAxis
                     yAxisId="right"
                     orientation="right"
                     stroke="#9ca3af"
-                    domain={yAxisDomain}
+                    domain={priceDomain}
                     tickFormatter={(value) => `$${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`}
                     tick={{ fontSize: 12 }}
                     dx={5}
-                />
+                    width={80}
+                >
+                    <Label value="Giá (USDT)" angle={90} position="insideRight" style={{ textAnchor: 'middle', fill: '#888' }} fontSize={12} />
+                </YAxis>
                 
                 <Tooltip 
                     content={<CustomTooltip />} 
-                    cursor={{ stroke: 'rgba(255, 165, 0, 0.3)', strokeWidth: 1, strokeDasharray: '3 3' }}
+                    cursor={{ stroke: '#f97316', strokeWidth: 1, strokeDasharray: '3 3' }}
                 />
                 
-                <Area yAxisId="right" type="monotone" dataKey={() => yAxisDomain[1]} stroke="none" fill="url(#chartBackground)" />
+                <Area yAxisId="right" type="monotone" dataKey={() => priceDomain[1]} stroke="none" fill="url(#chartBackground)" />
 
-                <Area type="monotone" dataKey="price" name="Giá" stroke="#f97316" strokeWidth={2.5} fillOpacity={1} fill="url(#colorPrice)" yAxisId="right" isAnimationActive={true} animationDuration={700} animationEasing="ease-in-out" />
+                <Area type="monotone" dataKey="price" name="Giá" stroke="#f97316" strokeWidth={2.5} fillOpacity={1} fill="url(#colorPrice)" yAxisId="right" isAnimationActive={true} animationDuration={700} animationEasing="ease-in-out" activeDot={{ r: 6, stroke: '#140a0a', strokeWidth: 2, fill: '#f97316' }} />
                 
-                <Bar dataKey="volume" name="Khối Lượng" barSize={20} yAxisId="right" fillOpacity={0.5} isAnimationActive={true} animationDuration={700} animationEasing="ease-in-out">
+                <Bar dataKey="volume" name="Khối Lượng" barSize={30} yAxisId="left" fillOpacity={0.5} isAnimationActive={true} animationDuration={700} animationEasing="ease-in-out">
                     {processedData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.volumeColor} />
                     ))}
@@ -198,7 +234,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
 
                 {analysis && (
                     <>
-                    <ReferenceArea yAxisId="right" y1={analysis.buyZone.from} y2={analysis.buyZone.to} stroke="#f59e0b" strokeDasharray="3 3" strokeOpacity={0.7} fill="#f59e0b" fillOpacity={0.1} label={{ value: 'Vùng Mua', position: 'insideBottomRight', fill: '#fcd34d', fontSize: 12, fontWeight: 'bold' }} />
+                    <ReferenceArea yAxisId="right" y1={analysis.buyZone.from} y2={analysis.buyZone.to} stroke="#f59e0b" strokeDasharray="3 3" strokeOpacity={0.7} fill="#f59e0b" fillOpacity={0.2} label={{ value: 'Vùng Mua', position: 'insideTopLeft', fill: '#fcd34d', fontSize: 12, fontWeight: 'bold', dy: 10, dx: 10 }} />
 
                     {analysis.supportLevels.map((level, index) => (
                         <ReferenceLine yAxisId="right" key={`sup-${index}`} y={level} label={{ value: `Hỗ trợ ${index + 1}`, position: 'right', fill: '#67e8f9', fontSize: 12, dy: -5, dx: 10, fontWeight: 'bold' }} stroke="#22d3ee" strokeDasharray="4 4" strokeWidth={1.5} />
@@ -209,10 +245,10 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
                     ))}
 
                     {analysis.takeProfitLevels.map((level, index) => (
-                        <ReferenceLine yAxisId="right" key={`tp-${index}`} y={level} label={{ value: `Chốt lời ${index + 1}`, position: 'right', fill: '#fde047', fontSize: 12, dy: -5, dx: 10, fontWeight: 'bold' }} stroke="#facc15" strokeWidth={2}/>
+                        <ReferenceLine yAxisId="right" key={`tp-${index}`} y={level} label={{ value: `Chốt lời ${index + 1}`, position: 'right', fill: '#4ade80', fontSize: 12, dy: -5, dx: 10, fontWeight: 'bold' }} stroke="#22c55e" strokeWidth={2} strokeDasharray="8 4"/>
                     ))}
                     
-                    <ReferenceLine yAxisId="right" y={analysis.stopLoss} label={{ value: 'Cắt lỗ', position: 'right', fill: '#fca5a5', fontSize: 12, dy: -5, dx: 10, fontWeight: 'bold' }} stroke="#f87171" strokeWidth={2}/>
+                    <ReferenceLine yAxisId="right" y={analysis.stopLoss} label={{ value: 'Cắt lỗ', position: 'right', fill: '#f87171', fontSize: 12, dy: -5, dx: 10, fontWeight: 'bold' }} stroke="#ef4444" strokeWidth={2} strokeDasharray="5 5"/>
                     
                     <Scatter yAxisId="right" data={signalPoints} shape={<CustomSignalShape />} />
                     </>
