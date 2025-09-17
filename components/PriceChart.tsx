@@ -1,24 +1,18 @@
+
 import React, { useRef, useEffect, useMemo } from 'react';
-import { ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea, Scatter } from 'recharts';
+import { ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea, Scatter, Cell } from 'recharts';
 import type { PriceDataPoint, AnalysisResult, TickerData } from '../types';
 import Ticker from './Ticker';
-
-interface PriceChartProps {
-  priceData: PriceDataPoint[];
-  analysis: AnalysisResult | null;
-  tickerData: TickerData | null;
-  coinPair: string | null;
-}
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const pricePayload = payload.find(p => p.dataKey === 'price');
     const volumePayload = payload.find(p => p.dataKey === 'volume');
     return (
-      <div className="glassmorphism p-3 rounded-lg shadow-lg">
-        <p className="label text-sm text-gray-300">{`Ngày : ${label}`}</p>
-        {pricePayload && <p className="intro text-md font-bold text-red-400">{`Giá : $${pricePayload.value.toLocaleString()}`}</p>}
-        {volumePayload && <p className="intro text-sm text-gray-400">{`KLGD : ${volumePayload.value.toLocaleString()}`}</p>}
+      <div className="glassmorphism p-3 rounded-lg shadow-lg border border-gray-700/50" style={{background: 'rgba(10, 5, 5, 0.8)'}}>
+        <p className="label text-sm text-gray-400 font-semibold">{`Ngày: ${label}`}</p>
+        {pricePayload && <p className="intro text-md font-bold text-orange-400">{`Giá: $${pricePayload.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`}</p>}
+        {volumePayload && <p className="intro text-sm text-gray-500">{`KLGD: ${volumePayload.value.toLocaleString()}`}</p>}
       </div>
     );
   }
@@ -39,27 +33,28 @@ const CustomSignalShape: React.FC<CustomSignalShapeProps> = (props) => {
     if (!cx || !cy || !payload) return null;
 
     const isBuy = payload.type === 'buy';
-    const bgColor = isBuy ? 'rgba(250, 204, 21, 0.9)' : 'rgba(239, 68, 68, 0.9)';
-    const strokeColor = isBuy ? '#facc15' : '#f87171';
+    const bgColor = isBuy ? '#22c55e' : '#ef4444'; // green-500, red-500
+    const strokeColor = isBuy ? '#86efac' : '#fca5a5'; // green-300, red-300
+    const textColor = 'white';
     
-    const labelYPosition = cy - 20;
+    const labelYPosition = cy - 25;
 
     return (
-        <g>
+        <g style={{ filter: `drop-shadow(0 0 5px ${bgColor}aa)` }}>
             <foreignObject x={cx - 25} y={labelYPosition - 15} width="50" height="28" style={{ overflow: 'visible' }}>
                 <div 
                     style={{
                         backgroundColor: bgColor,
                         borderRadius: '6px',
-                        color: isBuy ? '#1e293b' : 'white',
+                        color: textColor,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         padding: '2px 8px',
                         fontSize: '12px',
                         fontWeight: 'bold',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.4)',
-                        border: `1px solid ${isBuy ? 'rgba(252, 211, 77, 0.7)' : 'rgba(255, 130, 130, 0.7)'}`,
+                        boxShadow: `0 2px 8px rgba(0,0,0,0.5)`,
+                        border: `1px solid ${strokeColor}`,
                         textAlign: 'center'
                     }}>
                     {payload.label}
@@ -68,12 +63,21 @@ const CustomSignalShape: React.FC<CustomSignalShapeProps> = (props) => {
             <polygon 
               points={`${cx},${labelYPosition + 13} ${cx - 5},${labelYPosition + 8} ${cx + 5},${labelYPosition + 8}`} 
               fill={bgColor} 
+              stroke={strokeColor}
+              strokeWidth={1}
             />
-            <circle cx={cx} cy={cy} r="4" fill={strokeColor} stroke="#0D1117" strokeWidth="2" />
+            <circle cx={cx} cy={cy} r="4" fill={bgColor} stroke="#0D1117" strokeWidth="2" />
         </g>
     );
 };
 
+// FIX: Define the missing PriceChartProps interface.
+interface PriceChartProps {
+  priceData: PriceDataPoint[];
+  analysis: AnalysisResult | null;
+  tickerData: TickerData | null;
+  coinPair: string;
+}
 
 const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData, coinPair }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -92,6 +96,19 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
       return () => clearTimeout(animationTimeout);
     }
   }, [analysis]);
+
+  const processedData = useMemo(() => {
+    if (!priceData || priceData.length === 0) return [];
+    return priceData.map((d, i) => {
+        if (i === 0) return { ...d, volumeColor: '#71717a' }; // zinc-500 for the first bar
+        const prevPrice = priceData[i - 1].price;
+        return {
+            ...d,
+            volumeColor: d.price >= prevPrice ? '#166534' : '#991b1b', // dark green-800, dark red-800
+        };
+    });
+  }, [priceData]);
+
 
   const signalPoints = useMemo(() => {
     if (!analysis || priceData.length < 2) return [];
@@ -120,67 +137,84 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
   }, [analysis, priceData]);
 
 
-  const renderChartContent = () => {
-    if (priceData.length === 0) {
-        return <div className="flex items-center justify-center h-full text-gray-500">Đang tải dữ liệu biểu đồ...</div>;
-    }
+  const renderChartSkeleton = () => (
+    <div className="w-full h-full bg-gray-900/50 rounded-lg flex items-center justify-center animate-pulse">
+        <div className="text-gray-600 font-semibold">Đang tải dữ liệu biểu đồ...</div>
+    </div>
+  );
 
-    const priceDomain: [number, number] = [
-        Math.min(...priceData.map(p => p.price)) * 0.98,
-        Math.max(...priceData.map(p => p.price)) * 1.02,
+  const renderChartContent = () => {
+    if (processedData.length === 0) {
+        return renderChartSkeleton();
+    }
+    
+    const yAxisDomain: [number, number] = [
+        Math.min(...processedData.map(p => p.price)) * 0.95,
+        Math.max(...processedData.map(p => p.price)) * 1.05,
     ];
     
-    const volumeDomain: [number, number] = [
-        0,
-        Math.max(...priceData.map(p => p.volume)) * 2.5,
-    ];
-
     return (
         <ResponsiveContainer width="100%" height="100%">
             <ComposedChart
-                data={priceData}
-                margin={{ top: 20, right: 20, left: 5, bottom: 5 }}
+                data={processedData}
+                margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
             >
                 <defs>
                     <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.4}/>
+                        <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                    </linearGradient>
+                    <linearGradient id="chartBackground" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="rgba(239, 68, 68, 0.05)" />
+                        <stop offset="100%" stopColor="rgba(239, 68, 68, 0)" />
                     </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
-                <XAxis dataKey="date" stroke="#A0AEC0" tick={{ fontSize: 12 }} />
+                <CartesianGrid strokeDasharray="1 4" stroke="rgba(255, 255, 255, 0.08)" />
+                <XAxis dataKey="date" stroke="#9ca3af" tick={{ fontSize: 12 }} dy={5} />
                 <YAxis
-                    yAxisId="left"
-                    orientation="left"
-                    stroke="#A0AEC0"
-                    domain={priceDomain}
+                    yAxisId="right"
+                    orientation="right"
+                    stroke="#9ca3af"
+                    domain={yAxisDomain}
                     tickFormatter={(value) => `$${Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`}
                     tick={{ fontSize: 12 }}
+                    dx={5}
                 />
-                <YAxis yAxisId="right" orientation="right" stroke="#718096" domain={volumeDomain} tickFormatter={(value) => `${(Number(value) / 1000000).toFixed(1)}M`} />
-                <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="price" name="Giá" stroke="#f97316" strokeWidth={2} fillOpacity={1} fill="url(#colorPrice)" yAxisId="left" />
-                <Bar dataKey="volume" name="Khối Lượng" barSize={20} fill="#52525b" yAxisId="right" />
+                
+                <Tooltip 
+                    content={<CustomTooltip />} 
+                    cursor={{ stroke: 'rgba(255, 165, 0, 0.3)', strokeWidth: 1, strokeDasharray: '3 3' }}
+                />
+                
+                <Area yAxisId="right" type="monotone" dataKey={() => yAxisDomain[1]} stroke="none" fill="url(#chartBackground)" />
+
+                <Area type="monotone" dataKey="price" name="Giá" stroke="#f97316" strokeWidth={2.5} fillOpacity={1} fill="url(#colorPrice)" yAxisId="right" />
+                
+                <Bar dataKey="volume" name="Khối Lượng" barSize={20} yAxisId="right" fillOpacity={0.5}>
+                    {processedData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.volumeColor} />
+                    ))}
+                </Bar>
 
                 {analysis && (
                     <>
-                    <ReferenceArea yAxisId="left" y1={analysis.buyZone.from} y2={analysis.buyZone.to} stroke="#f59e0b" strokeDasharray="3 3" strokeOpacity={0.5} fill="#b45309" fillOpacity={0.15} label={{ value: 'Vùng Mua', position: 'insideTopRight', fill: '#fcd34d', fontSize: 12, fontWeight: 'bold' }} />
+                    <ReferenceArea yAxisId="right" y1={analysis.buyZone.from} y2={analysis.buyZone.to} stroke="#f59e0b" strokeDasharray="3 3" strokeOpacity={0.7} fill="#f59e0b" fillOpacity={0.1} label={{ value: 'Vùng Mua', position: 'insideBottomRight', fill: '#fcd34d', fontSize: 12, fontWeight: 'bold' }} />
 
                     {analysis.supportLevels.map((level, index) => (
-                        <ReferenceLine yAxisId="left" key={`sup-${index}`} y={level} label={{ value: `Hỗ trợ ${index + 1}`, position: 'insideTopRight', fill: '#facc15', fontSize: 11, dy: 15 }} stroke="#eab308" strokeDasharray="4 4" strokeWidth={1.5} />
+                        <ReferenceLine yAxisId="right" key={`sup-${index}`} y={level} label={{ value: `Hỗ trợ ${index + 1}`, position: 'right', fill: '#67e8f9', fontSize: 12, dy: -5, dx: 10, fontWeight: 'bold' }} stroke="#22d3ee" strokeDasharray="4 4" strokeWidth={1.5} />
                     ))}
                     
                     {analysis.resistanceLevels.map((level, index) => (
-                        <ReferenceLine yAxisId="left" key={`res-${index}`} y={level} label={{ value: `Kháng cự ${index + 1}`, position: 'insideTopRight', fill: '#c084fc', fontSize: 11, dy: 15 }} stroke="#a855f7" strokeDasharray="4 4" strokeWidth={1.5} />
+                        <ReferenceLine yAxisId="right" key={`res-${index}`} y={level} label={{ value: `Kháng cự ${index + 1}`, position: 'right', fill: '#d8b4fe', fontSize: 12, dy: -5, dx: 10, fontWeight: 'bold' }} stroke="#c084fc" strokeDasharray="4 4" strokeWidth={1.5} />
                     ))}
 
                     {analysis.takeProfitLevels.map((level, index) => (
-                        <ReferenceLine yAxisId="left" key={`tp-${index}`} y={level} label={{ value: `Chốt lời ${index + 1}`, position: 'insideTopRight', fill: '#fbbf24', fontSize: 11, fontWeight: 'bold', dy: 15 }} stroke="#f59e0b" strokeWidth={2}/>
+                        <ReferenceLine yAxisId="right" key={`tp-${index}`} y={level} label={{ value: `Chốt lời ${index + 1}`, position: 'right', fill: '#fde047', fontSize: 12, dy: -5, dx: 10, fontWeight: 'bold' }} stroke="#facc15" strokeWidth={2}/>
                     ))}
                     
-                    <ReferenceLine yAxisId="left" y={analysis.stopLoss} label={{ value: 'Cắt lỗ', position: 'insideTopRight', fill: '#f87171', fontSize: 11, fontWeight: 'bold', dy: 15 }} stroke="#ef4444" strokeWidth={2}/>
+                    <ReferenceLine yAxisId="right" y={analysis.stopLoss} label={{ value: 'Cắt lỗ', position: 'right', fill: '#fca5a5', fontSize: 12, dy: -5, dx: 10, fontWeight: 'bold' }} stroke="#f87171" strokeWidth={2}/>
                     
-                    <Scatter yAxisId="left" data={signalPoints} shape={<CustomSignalShape />} />
+                    <Scatter yAxisId="right" data={signalPoints} shape={<CustomSignalShape />} />
                     </>
                 )}
 
@@ -189,10 +223,9 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
     );
   }
 
-
   return (
     <div ref={chartContainerRef} className="glassmorphism p-4 rounded-lg h-full w-full flex flex-col relative">
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-2 gap-2">
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
             <div className="w-full sm:w-auto">
                 <Ticker coinPair={coinPair} tickerData={tickerData} />
             </div>
