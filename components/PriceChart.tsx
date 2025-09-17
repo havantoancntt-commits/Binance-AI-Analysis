@@ -188,9 +188,9 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
                 
                 <Area yAxisId="right" type="monotone" dataKey={() => yAxisDomain[1]} stroke="none" fill="url(#chartBackground)" />
 
-                <Area type="monotone" dataKey="price" name="Giá" stroke="#f97316" strokeWidth={2.5} fillOpacity={1} fill="url(#colorPrice)" yAxisId="right" />
+                <Area type="monotone" dataKey="price" name="Giá" stroke="#f97316" strokeWidth={2.5} fillOpacity={1} fill="url(#colorPrice)" yAxisId="right" isAnimationActive={true} animationDuration={700} animationEasing="ease-in-out" />
                 
-                <Bar dataKey="volume" name="Khối Lượng" barSize={20} yAxisId="right" fillOpacity={0.5}>
+                <Bar dataKey="volume" name="Khối Lượng" barSize={20} yAxisId="right" fillOpacity={0.5} isAnimationActive={true} animationDuration={700} animationEasing="ease-in-out">
                     {processedData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.volumeColor} />
                     ))}
