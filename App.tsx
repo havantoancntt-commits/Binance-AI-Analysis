@@ -11,6 +11,7 @@ import DashboardSkeleton from './components/DashboardSkeleton';
 import MotivationalTicker from './components/MotivationalTicker';
 import ActionCenter from './components/ActionCenter';
 import Chatbot from './components/Chatbot';
+import Logo from './components/Logo';
 
 import { COIN_PAIRS } from './constants';
 import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
@@ -243,9 +244,12 @@ const App: React.FC = () => {
     <div className="min-h-screen text-gray-100">
       <main className="p-4 sm:p-6 lg:p-8 max-w-screen-2xl mx-auto pb-24">
         <header className="text-center mb-8 animate-fade-in-up">
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
-            Meta Mind Crypto
-          </h1>
+          <div className="flex items-center justify-center gap-3 sm:gap-4 mb-2">
+            <Logo className="w-12 h-12 sm:w-14 sm:h-14" />
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
+              Meta Mind Crypto
+            </h1>
+          </div>
           <p className="mt-2 text-base sm:text-lg text-orange-100/80">Dẫn Lối Thị Trường Tiền Điện Tử Bằng Trí Tuệ Nhân Tạo</p>
         </header>
         
