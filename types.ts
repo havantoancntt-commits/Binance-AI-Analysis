@@ -73,9 +73,17 @@ export interface DelistingCoin {
   reason: string;
 }
 
+export interface GroundingChunk {
+  web: {
+    uri: string;
+    title: string;
+  };
+}
+
 export interface ChatMessage {
   role: 'user' | 'model';
   text: string;
+  groundingChunks?: GroundingChunk[];
 }
 
 // Centralized state and action types for the application
