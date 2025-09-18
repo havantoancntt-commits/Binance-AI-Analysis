@@ -1,3 +1,4 @@
+
 // This is a Vercel Serverless Function that acts as a secure proxy to the Google Gemini API.
 // It has been optimized to use the official @google/genai Node.js SDK.
 
@@ -61,14 +62,10 @@ const calculateRSI = (data, period = 14) => {
 const getAnalysisPrompt = (coinPair, data) => {
   const { priceData7D, priceData3M, priceData1Y } = data;
 
-  // Helper to safely get the latest price
   const getLatestPrice = (d) => d.length > 0 ? d[d.length - 1].price : 0;
   const latestPrice = getLatestPrice(priceData7D) || getLatestPrice(priceData3M) || getLatestPrice(priceData1Y);
-
-  // Helper to format indicators
   const formatIndicator = (name, value, decimals = 2) => value ? `${name}=${value.toFixed(decimals)}` : `${name}=N/A`;
   
-  // Calculate indicators for each timeframe
   const indicators1Y = {
     high: Math.max(...priceData1Y.map(p => p.price)),
     low: Math.min(...priceData1Y.map(p => p.price)),
@@ -81,28 +78,28 @@ const getAnalysisPrompt = (coinPair, data) => {
   };
 
   return `
-    **VAI TRÒ:** Bạn là một nhà phân tích kỹ thuật thị trường tài chính chuyên nghiệp, dày dạn kinh nghiệm. Nhiệm vụ của bạn là thực hiện một phân tích đa khung thời gian toàn diện. Mục tiêu cuối cùng là cung cấp một dự báo chính xác và một kế hoạch giao dịch khả thi.
+    **ROLE:** You are an expert financial market technical analyst. Your mission is to perform a comprehensive, multi-timeframe analysis to provide a precise forecast and an actionable trading plan.
 
-    **NHIỆM VỤ:** Thực hiện phân tích kỹ thuật chuyên sâu cho ${coinPair} bằng cách sử dụng dữ liệu từ các khung thời gian khác nhau (1 năm, 3 tháng, 7 ngày) được cung cấp. Tổng hợp những phát hiện của bạn vào một triển vọng chiến lược duy nhất.
+    **TASK:** Conduct an in-depth technical analysis for ${coinPair} using the provided multi-timeframe data. Synthesize your findings into a single, coherent strategic outlook.
 
-    **BỐI CẢNH DỮ LIỆU THỊ TRƯỜNG:**
-    *   **Tài sản:** ${coinPair}
-    *   **Giá hiện tại:** ~${latestPrice.toFixed(4)}
-    *   **Bối cảnh Dài hạn (1 năm):**
-        *   Phạm vi: ${formatIndicator('Low', indicators1Y.low, 4)} - ${formatIndicator('High', indicators1Y.high, 4)}
-        *   Các đường SMA chính: ${formatIndicator('200D', indicators1Y.sma200, 4)}, ${formatIndicator('100D', indicators1Y.sma100, 4)}
-    *   **Bối cảnh Trung hạn (3 tháng):**
-        *   Các chỉ báo chính: ${formatIndicator('SMA50', indicators3M.sma50, 4)}, ${formatIndicator('RSI(14)', indicators3M.rsi14)}
-    *   **Hành động giá Ngắn hạn (7 ngày):**
-        *   Phân tích cấu trúc thị trường gần đây, các mẫu hình nến và biến động giá trong tuần qua.
+    **MARKET DATA CONTEXT:**
+    *   **Asset:** ${coinPair}
+    *   **Current Price:** ~${latestPrice.toFixed(4)}
+    *   **Long-Term Context (1-Year):**
+        *   Range: ${formatIndicator('Low', indicators1Y.low, 4)} - ${formatIndicator('High', indicators1Y.high, 4)}
+        *   Key SMAs: ${formatIndicator('200D', indicators1Y.sma200, 4)}, ${formatIndicator('100D', indicators1Y.sma100, 4)}
+    *   **Mid-Term Context (3-Month):**
+        *   Key Indicators: ${formatIndicator('SMA50', indicators3M.sma50, 4)}, ${formatIndicator('RSI(14)', indicators3M.rsi14)}
+    *   **Short-Term Price Action (7-Day):**
+        *   Analyze the recent market structure, candlestick patterns, and price volatility from the past week's data.
 
-    **HƯỚNG DẪN ĐẦU RA:**
-    1.  **Phân tích tổng hợp:** Xem xét tất cả dữ liệu trên các khung thời gian. Xu hướng dài hạn cho bối cảnh, xu hướng trung hạn cho động lượng, và xu hướng ngắn hạn cho điểm vào lệnh.
-    2.  **Điền vào Schema:** Điền vào TẤT CẢ các trường trong schema JSON bắt buộc. Tất cả các mức giá (hỗ trợ, kháng cự, v.v.) phải dựa trên phân tích tổng hợp này.
-    3.  **Dự báo xu hướng:** Cung cấp một dự báo xu hướng ('Uptrend', 'Downtrend', 'Sideways') và một lý do NGẮN GỌN cho mỗi khung thời gian (ngắn, trung, dài hạn).
-    4.  **Điểm mấu chốt:** Xác định ba điểm quan trọng nhất từ phân tích của bạn.
-    5.  **Ngôn ngữ:** Toàn bộ văn bản đầu ra trong JSON PHẢI bằng **tiếng Việt**.
-    6.  **Định dạng:** Bạn PHẢI trả lời CHỈ với một đối tượng JSON hợp lệ duy nhất tuân thủ nghiêm ngặt schema. KHÔNG có văn bản, giải thích hoặc markdown nào khác.
+    **OUTPUT INSTRUCTIONS:**
+    1.  **Synthesize Analysis:** Consider all timeframes. Use the long-term for context, mid-term for momentum, and short-term for entry points.
+    2.  **Populate Schema:** Fill in ALL fields in the required JSON schema based on your synthesized analysis. All price levels must be derived from this analysis.
+    3.  **Trend Forecast:** Provide a trend forecast ('Uptrend', 'Downtrend', 'Sideways') and a BRIEF reason for each timeframe (short, medium, long).
+    4.  **Key Takeaways:** Identify the three most critical takeaways from your analysis.
+    5.  **Language:** The entire text output within the JSON MUST be in **Vietnamese**.
+    6.  **Format:** You MUST respond with ONLY a single, valid JSON object that strictly adheres to the schema. NO other text, explanations, or markdown.
   `;
 };
 

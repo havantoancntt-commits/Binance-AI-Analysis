@@ -56,7 +56,6 @@ export interface TickerData {
   isPositive: boolean;
 }
 
-// FIX: Add missing NewsArticle interface.
 export interface NewsArticle {
   id: string;
   title: string;
@@ -72,3 +71,30 @@ export interface DelistingCoin {
   delistingDate: string;
   reason: string;
 }
+
+// Centralized state and action types for the application
+export interface AppState {
+  status: AppStatus;
+  coinInput: string;
+  analyzedCoin: string | null;
+  priceData: PriceDataPoint[];
+  analysis: AnalysisResult | null;
+  tickerData: TickerData | null;
+  news: NewsArticle[];
+  isAnalysisLoading: boolean; // For primary AI analysis
+  isExtraDataLoading: boolean; // For secondary data like news/delistings
+  error: string | null;
+  analysisCache: Record<string, AnalysisResult>;
+}
+
+export type AppAction =
+  | { type: 'START_ANALYSIS'; payload: string }
+  | { type: 'SET_PRICE_DATA'; payload: PriceDataPoint[] }
+  | { type: 'SET_ANALYSIS'; payload: { analysis: AnalysisResult; coin: string } }
+  | { type: 'USE_CACHED_ANALYSIS'; payload: { analysis: AnalysisResult; coin: string } }
+  | { type: 'START_EXTRA_DATA_FETCH' }
+  | { type: 'SET_NEWS'; payload: NewsArticle[] }
+  | { type: 'FETCH_ERROR'; payload: string }
+  | { type: 'UPDATE_TICKER'; payload: TickerData | null }
+  | { type: 'SET_COIN_INPUT'; payload: string }
+  | { type: 'RESET' };

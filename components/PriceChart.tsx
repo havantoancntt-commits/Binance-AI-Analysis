@@ -85,7 +85,6 @@ const CustomSignalShape: React.FC<CustomSignalShapeProps> = (props) => {
     );
 };
 
-// FIX: Define the missing PriceChartProps interface.
 interface PriceChartProps {
   priceData: PriceDataPoint[];
   analysis: AnalysisResult | null;

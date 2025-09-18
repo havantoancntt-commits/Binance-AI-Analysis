@@ -1,8 +1,10 @@
+
 import React, { useReducer, useCallback, useEffect, useRef } from 'react';
-import type { PriceDataPoint, AnalysisResult, TickerData } from './types';
+import type { AppState, AppAction } from './types';
 import { AppStatus } from './types';
 import { fetchAIAnalysis } from './services/geminiService';
 import { fetchHistoricalData } from './services/binanceService';
+import { fetchNews } from './services/newsService';
 
 import PriceChart from './components/PriceChart';
 import AnalysisDisplay from './components/AnalysisDisplay';
@@ -11,31 +13,10 @@ import SupportProject from './components/SupportProject';
 import DashboardSkeleton from './components/DashboardSkeleton';
 import BinanceReferral from './components/BinanceReferral';
 import MotivationalTicker from './components/MotivationalTicker';
+import NewsFeed from './components/NewsFeed';
 
 import { COIN_PAIRS } from './constants';
 import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
-
-interface AppState {
-  status: AppStatus;
-  coinInput: string;
-  analyzedCoin: string | null;
-  priceData: PriceDataPoint[];
-  analysis: AnalysisResult | null;
-  tickerData: TickerData | null;
-  isAnalysisLoading: boolean;
-  error: string | null;
-  analysisCache: Record<string, AnalysisResult>;
-}
-
-type AppAction =
-  | { type: 'START_ANALYSIS'; payload: string }
-  | { type: 'SET_PRICE_DATA'; payload: PriceDataPoint[] }
-  | { type: 'SET_ANALYSIS'; payload: { analysis: AnalysisResult; coin: string } }
-  | { type: 'USE_CACHED_ANALYSIS'; payload: { analysis: AnalysisResult; coin: string } }
-  | { type: 'FETCH_ERROR'; payload: string }
-  | { type: 'UPDATE_TICKER'; payload: TickerData | null }
-  | { type: 'SET_COIN_INPUT'; payload: string }
-  | { type: 'RESET' };
 
 const initialState: AppState = {
   status: AppStatus.Idle,
@@ -44,7 +25,9 @@ const initialState: AppState = {
   priceData: [],
   analysis: null,
   tickerData: null,
+  news: [],
   isAnalysisLoading: false,
+  isExtraDataLoading: false,
   error: null,
   analysisCache: {},
 };
@@ -61,32 +44,35 @@ function appReducer(state: AppState, action: AppAction): AppState {
         analysis: null,
         priceData: [],
         tickerData: null,
+        news: [],
         isAnalysisLoading: true,
       };
     case 'SET_PRICE_DATA':
-        return {
-            ...state,
-            priceData: action.payload,
-        };
+      return { ...state, priceData: action.payload };
     case 'SET_ANALYSIS':
-        return {
-            ...state,
-            status: AppStatus.Success,
-            analysis: action.payload.analysis,
-            isAnalysisLoading: false,
-            analysisCache: {
-                ...state.analysisCache,
-                [action.payload.coin]: action.payload.analysis,
-            },
-        };
+      return {
+        ...state,
+        status: AppStatus.Success,
+        analysis: action.payload.analysis,
+        isAnalysisLoading: false,
+        analysisCache: { ...state.analysisCache, [action.payload.coin]: action.payload.analysis },
+      };
     case 'USE_CACHED_ANALYSIS':
-        return {
-            ...state,
-            status: AppStatus.Success,
-            analysis: action.payload.analysis,
-            analyzedCoin: action.payload.coin,
-            isAnalysisLoading: false,
-        };
+      return {
+        ...state,
+        status: AppStatus.Success,
+        analysis: action.payload.analysis,
+        analyzedCoin: action.payload.coin,
+        isAnalysisLoading: false,
+      };
+    case 'START_EXTRA_DATA_FETCH':
+      return { ...state, isExtraDataLoading: true };
+    case 'SET_NEWS':
+      return {
+        ...state,
+        news: action.payload,
+        isExtraDataLoading: false,
+      };
     case 'FETCH_ERROR':
       return {
         ...state,
@@ -95,6 +81,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         analysis: null,
         priceData: [],
         isAnalysisLoading: false,
+        isExtraDataLoading: false,
       };
     case 'UPDATE_TICKER':
       return { ...state, tickerData: action.payload };
@@ -102,9 +89,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, coinInput: action.payload, error: state.status === AppStatus.Error ? null : state.error };
     case 'RESET':
       return {
-          ...initialState,
-          analysisCache: state.analysisCache,
-          coinInput: state.coinInput,
+        ...initialState,
+        analysisCache: state.analysisCache,
+        coinInput: state.coinInput,
       };
     default:
       return state;
@@ -113,20 +100,24 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, isAnalysisLoading, error, analysisCache } = state;
+  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, isAnalysisLoading, error, analysisCache, news, isExtraDataLoading } = state;
   const inputRef = useRef<HTMLInputElement>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
-
+  
   // Main analysis logic
   useEffect(() => {
     if (status !== AppStatus.Loading || !analyzedCoin) return;
-
     let isCancelled = false;
 
     const analyzeCoin = async () => {
       try {
         mainContentRef.current?.scrollIntoView({ behavior: 'smooth' });
         
+        // Fetch coin-specific news in parallel with price data for better performance
+        const baseCoin = analyzedCoin.split('/')[0];
+        dispatch({ type: 'START_EXTRA_DATA_FETCH' });
+        const newsPromise = fetchNews(baseCoin);
+
         const [priceData1Y, priceData3M, priceData7D] = await Promise.all([
             fetchHistoricalData(analyzedCoin, '1Y'),
             fetchHistoricalData(analyzedCoin, '3M'),
@@ -134,8 +125,13 @@ const App: React.FC = () => {
         ]);
 
         if (isCancelled) return;
-
         dispatch({ type: 'SET_PRICE_DATA', payload: priceData3M });
+
+        // Handle news data
+        const newsData = await newsPromise;
+        if (!isCancelled) {
+            dispatch({ type: 'SET_NEWS', payload: newsData });
+        }
 
         if (analysisCache[analyzedCoin]) {
             console.log(`Using cached analysis for ${analyzedCoin}`);
@@ -157,18 +153,15 @@ const App: React.FC = () => {
     };
 
     analyzeCoin();
-    
     return () => { isCancelled = true; };
   }, [status, analyzedCoin, analysisCache]);
 
   // WebSocket for live ticker data
   useEffect(() => {
     if (!analyzedCoin) return;
-
     const symbol = analyzedCoin.replace('/', '').toLowerCase();
     let ws: WebSocket;
     let connectTimeout: number;
-
     const connect = () => {
         ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol}@ticker`);
         ws.onmessage = (event) => {
@@ -224,7 +217,7 @@ const App: React.FC = () => {
       return <DashboardSkeleton />;
     }
     
-    if (status === AppStatus.Error) {
+    if (status === AppStatus.Error && error) {
       return (
         <div className="flex justify-center items-center py-10 animate-fade-in">
           <div className="w-full max-w-3xl glassmorphism rounded-xl p-8 text-center">
@@ -246,6 +239,7 @@ const App: React.FC = () => {
           </div>
           <div className="lg:col-span-2 space-y-8">
             <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
+            <NewsFeed news={news} isLoading={isExtraDataLoading} />
             <BinanceReferral />
             <SupportProject />
           </div>
@@ -265,7 +259,7 @@ const App: React.FC = () => {
            <MotivationalTicker />
         </div>
         <div className="mt-8 max-w-2xl mx-auto">
-          <SupportProject />
+            <SupportProject />
         </div>
       </div>
     );
