@@ -9,11 +9,10 @@ import { fetchNews } from './services/newsService';
 import PriceChart from './components/PriceChart';
 import AnalysisDisplay from './components/AnalysisDisplay';
 import Disclaimer from './components/Disclaimer';
-import SupportProject from './components/SupportProject';
 import DashboardSkeleton from './components/DashboardSkeleton';
-import BinanceReferral from './components/BinanceReferral';
 import MotivationalTicker from './components/MotivationalTicker';
 import NewsFeed from './components/NewsFeed';
+import ActionCenter from './components/ActionCenter';
 
 import { COIN_PAIRS } from './constants';
 import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
@@ -239,9 +238,8 @@ const App: React.FC = () => {
           </div>
           <div className="lg:col-span-2 space-y-8">
             <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
+            <ActionCenter />
             <NewsFeed news={news} isLoading={isExtraDataLoading} />
-            <BinanceReferral />
-            <SupportProject />
           </div>
         </div>
       );
@@ -259,7 +257,7 @@ const App: React.FC = () => {
            <MotivationalTicker />
         </div>
         <div className="mt-8 max-w-2xl mx-auto">
-            <SupportProject />
+            <ActionCenter />
         </div>
       </div>
     );
