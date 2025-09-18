@@ -1,12 +1,11 @@
-
 import React from 'react';
 
 const Box: React.FC<{ className?: string }> = ({ className = '' }) => (
-    <div className={`bg-gray-800/60 rounded-lg ${className}`}></div>
+    <div className={`shimmer-bg rounded-lg ${className}`}></div>
 );
 
 const DashboardSkeleton: React.FC = () => (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 animate-pulse" aria-label="Đang tải bảng điều khiển">
+    <div className="grid grid-cols-1 lg:grid-cols-5 gap-8" aria-label="Đang tải bảng điều khiển">
         {/* Left Column Skeleton (Chart) */}
         <div className="lg:col-span-3">
             <Box className="h-[600px]" />
@@ -22,8 +21,8 @@ const DashboardSkeleton: React.FC = () => (
                         <Box className="h-4 w-5/6" />
                     </div>
                     <div className="flex gap-2">
-                        <Box className="h-9 w-9" />
-                        <Box className="h-9 w-9" />
+                        <Box className="h-9 w-9 rounded-md" />
+                        <Box className="h-9 w-9 rounded-md" />
                     </div>
                 </div>
                 <div className="flex space-x-2">

@@ -18,7 +18,7 @@ const TabButton: React.FC<{
 }> = ({ active, onClick, children, activeClass }) => (
   <button
     onClick={onClick}
-    className={`w-1/2 py-3 text-sm font-bold transition-all duration-300 rounded-t-lg focus:outline-none border-b-2
+    className={`w-1/2 py-3 text-sm font-bold duration-300 rounded-t-lg focus:outline-none border-b-2
       ${active ? `${activeClass} text-white` : 'border-transparent text-gray-400 hover:text-white'}`}
   >
     {children}
@@ -41,7 +41,7 @@ const SupportTab: React.FC = () => {
     };
 
     return (
-        <div className="p-6 animate-fade-in">
+        <div className="p-6 animate-fade-in-up">
              <div className="flex flex-col md:flex-row items-center gap-6">
                 <div className="flex-shrink-0 bg-gray-900 p-2 rounded-lg border border-gray-700">
                     <img src={qrCodeUrl} alt="QR Code ủng hộ" width="128" height="128" />
@@ -61,7 +61,7 @@ const SupportTab: React.FC = () => {
                             <span className="font-mono text-base text-orange-300 flex-grow">{accountNumber}</span>
                             <button
                                 onClick={handleCopy}
-                                className="p-2 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-colors"
+                                className="p-2 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white"
                                 title="Sao chép số tài khoản"
                             >
                                 {copied ? <CheckIcon className="w-5 h-5 text-green-400" /> : <ClipboardIcon className="w-5 h-5" />}
@@ -94,7 +94,7 @@ const BinanceTab: React.FC = () => {
     ];
 
     return (
-         <div className="p-6 animate-fade-in">
+         <div className="p-6 animate-fade-in-up">
              <ul className="space-y-2 mb-6">
                 {benefits.map((benefit, index) => (
                     <li key={index} className="flex items-center gap-2">
@@ -111,7 +111,7 @@ const BinanceTab: React.FC = () => {
                         <span className="font-mono text-base text-yellow-300 flex-grow tracking-wider">{referralCode}</span>
                         <button
                             onClick={handleCopy}
-                            className="p-2 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-colors"
+                            className="p-2 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white"
                             title="Sao chép mã mời"
                         >
                             {copied ? <CheckIcon className="w-5 h-5 text-green-400" /> : <ClipboardIcon className="w-5 h-5" />}
@@ -124,7 +124,7 @@ const BinanceTab: React.FC = () => {
                     href={referralLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full flex items-center justify-center gap-2 px-8 py-3 font-bold text-gray-900 bg-gradient-to-r from-yellow-400 to-amber-400 rounded-lg hover:shadow-lg hover:shadow-yellow-500/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-amber-500 transition-all duration-300 transform hover:scale-105"
+                    className="w-full flex items-center justify-center gap-2 px-8 py-3 font-bold text-gray-900 bg-gradient-to-r from-yellow-400 to-amber-400 rounded-lg hover:shadow-lg hover:shadow-yellow-500/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-amber-500 transform hover:scale-105"
                 >
                     Mở Tài Khoản Ngay <ArrowUpRightIcon className="w-5 h-5" />
                 </a>
@@ -138,7 +138,7 @@ const ActionCenter: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>('binance');
 
   return (
-    <section className="glassmorphism rounded-lg shadow-2xl animate-fade-in">
+    <section className="glassmorphism rounded-lg shadow-2xl interactive-card card-glow-hover">
         <header className="flex items-stretch border-b border-gray-700/50">
             <TabButton 
                 active={activeTab === 'binance'} 

@@ -35,6 +35,11 @@
         border: 1px solid rgba(255, 100, 100, 0.1);
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
       }
+      
+      /* Global transitions for interactive elements */
+      button, a, .interactive-card {
+        transition: all 0.3s ease-in-out;
+      }
 
       /* Custom scrollbar for a more modern look */
       /* For Webkit Browsers */
@@ -60,14 +65,22 @@
         scrollbar-color: #7e22ce rgb(var(--background-start-rgb));
       }
       
-      /* Fade-in animation */
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(1rem); }
+      /* Enhanced Fade-in-up animation */
+      @keyframes fadeInUp {
+        from { opacity: 0; transform: translateY(20px); }
         to { opacity: 1; transform: translateY(0); }
       }
-      .animate-fade-in {
-        animation: fadeIn 0.5s ease-out forwards;
+      .animate-fade-in-up {
+        animation: fadeInUp 0.6s ease-out forwards;
       }
+      
+      /* Staggered animation delay utilities */
+      .stagger-delay-1 { animation-delay: 100ms; }
+      .stagger-delay-2 { animation-delay: 200ms; }
+      .stagger-delay-3 { animation-delay: 300ms; }
+      .stagger-delay-4 { animation-delay: 400ms; }
+      .stagger-delay-5 { animation-delay: 500ms; }
+      .stagger-delay-6 { animation-delay: 600ms; }
 
       /* Price ticker animations */
       @keyframes priceUp {
@@ -148,6 +161,53 @@
         background-position: 0% 50%;
         animation: thinking-dots 1.5s infinite;
       }
+
+      /* Shimmer effect for skeleton loaders */
+      @keyframes shimmer {
+        100% {
+          transform: translateX(100%);
+        }
+      }
+
+      .shimmer-bg {
+        position: relative;
+        overflow: hidden;
+        background-color: rgba(107, 114, 128, 0.2); /* gray-500 with alpha */
+      }
+
+      .shimmer-bg::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        transform: translateX(-100%);
+        background-image: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0) 0,
+          rgba(255, 255, 255, 0.05) 20%,
+          rgba(255, 255, 255, 0.1) 60%,
+          rgba(255, 255, 255, 0)
+        );
+        animation: shimmer 2s infinite;
+      }
+
+      /* Card glow effect on hover */
+      @keyframes glow {
+        from {
+          box-shadow: 0 0 10px -10px #f87171, 0 0 20px -20px #f87171;
+        }
+        to {
+          box-shadow: 0 0 10px 0px #f87171, 0 0 20px 5px #f8717166;
+        }
+      }
+      .card-glow-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+        border-color: rgba(255, 100, 100, 0.3);
+      }
+
 
     </style>
   <script type="importmap">

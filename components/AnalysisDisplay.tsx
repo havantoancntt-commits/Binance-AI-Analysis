@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import type { AnalysisResult, Recommendation, TrendInfo } from '../types';
 import AnalysisDisplaySkeleton from './AnalysisDisplaySkeleton';
@@ -21,7 +20,7 @@ interface AnalysisDisplayProps {
 }
 
 const StatCard: React.FC<{ title: string; children: React.ReactNode; icon: React.ReactNode; className?: string }> = ({ title, children, icon, className = '' }) => (
-    <div className={`bg-gray-900/50 rounded-lg p-4 border border-gray-700 h-full ${className}`}>
+    <div className={`bg-gray-900/50 rounded-lg p-4 border border-gray-700 h-full interactive-card card-glow-hover ${className}`}>
         <div className="flex items-center text-gray-400 text-sm mb-3">
             {icon}
             <span className="ml-2 font-semibold uppercase tracking-wider">{title}</span>
@@ -34,7 +33,7 @@ const TabButton: React.FC<{ label: string; icon: React.ReactNode; isActive: bool
   const activeClasses = `border-b-2 ${activeColor} text-white`;
   const inactiveClasses = 'border-b-2 border-transparent text-gray-400 hover:text-white hover:border-gray-600/50';
   return (
-    <button onClick={onClick} className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 font-semibold text-sm transition-all duration-300 focus:outline-none ${isActive ? activeClasses : inactiveClasses}`} role="tab" aria-selected={isActive} >
+    <button onClick={onClick} className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3 font-semibold text-sm focus:outline-none ${isActive ? activeClasses : inactiveClasses}`} role="tab" aria-selected={isActive} >
       {icon}
       <span>{label}</span>
     </button>
@@ -42,17 +41,17 @@ const TabButton: React.FC<{ label: string; icon: React.ReactNode; isActive: bool
 };
 
 const RecommendationCard: React.FC<{ recommendation: Recommendation }> = ({ recommendation }) => {
-    let icon, text, mainColor, gradientFrom, gradientTo, borderColor;
+    let icon, text, mainColor, gradientFrom, gradientTo, borderColor, shadowColor;
     switch (recommendation.signal) {
-        case 'Strong Buy': icon = <RocketLaunchIcon />; text = 'MUA MẠNH'; mainColor='text-red-400'; gradientFrom='from-red-500/20'; gradientTo='to-red-500/0'; borderColor='border-red-500/50'; break;
-        case 'Buy': icon = <ArrowTrendingUpIcon />; text = 'MUA'; mainColor='text-orange-400'; gradientFrom='from-orange-500/20'; gradientTo='to-orange-500/0'; borderColor='border-orange-500/50'; break;
-        case 'Hold': icon = <HandRaisedIcon />; text = 'NẮM GIỮ'; mainColor='text-amber-300'; gradientFrom='from-amber-500/20'; gradientTo='to-amber-500/0'; borderColor='border-amber-400/50'; break;
-        case 'Sell': icon = <ArrowTrendingDownIcon />; text = 'BÁN'; mainColor='text-purple-400'; gradientFrom='from-purple-500/20'; gradientTo='to-purple-500/0'; borderColor='border-purple-500/50'; break;
-        case 'Strong Sell': icon = <ArrowDownCircleIcon />; text = 'BÁN MẠNH'; mainColor='text-fuchsia-400'; gradientFrom='from-fuchsia-500/20'; gradientTo='to-fuchsia-500/0'; borderColor='border-fuchsia-500/50'; break;
-        default: icon = <HandRaisedIcon />; text = 'TRÁNH'; mainColor='text-gray-400'; gradientFrom='from-gray-600/20'; gradientTo='to-gray-600/0'; borderColor='border-gray-600/50';
+        case 'Strong Buy': icon = <RocketLaunchIcon />; text = 'MUA MẠNH'; mainColor='text-red-400'; gradientFrom='from-red-500/20'; gradientTo='to-red-500/0'; borderColor='border-red-500/50'; shadowColor='shadow-red-500/20'; break;
+        case 'Buy': icon = <ArrowTrendingUpIcon />; text = 'MUA'; mainColor='text-orange-400'; gradientFrom='from-orange-500/20'; gradientTo='to-orange-500/0'; borderColor='border-orange-500/50'; shadowColor='shadow-orange-500/20'; break;
+        case 'Hold': icon = <HandRaisedIcon />; text = 'NẮM GIỮ'; mainColor='text-amber-300'; gradientFrom='from-amber-500/20'; gradientTo='to-amber-500/0'; borderColor='border-amber-400/50'; shadowColor='shadow-amber-400/20'; break;
+        case 'Sell': icon = <ArrowTrendingDownIcon />; text = 'BÁN'; mainColor='text-purple-400'; gradientFrom='from-purple-500/20'; gradientTo='to-purple-500/0'; borderColor='border-purple-500/50'; shadowColor='shadow-purple-500/20'; break;
+        case 'Strong Sell': icon = <ArrowDownCircleIcon />; text = 'BÁN MẠNH'; mainColor='text-fuchsia-400'; gradientFrom='from-fuchsia-500/20'; gradientTo='to-fuchsia-500/0'; borderColor='border-fuchsia-500/50'; shadowColor='shadow-fuchsia-500/20'; break;
+        default: icon = <HandRaisedIcon />; text = 'TRÁNH'; mainColor='text-gray-400'; gradientFrom='from-gray-600/20'; gradientTo='to-gray-600/0'; borderColor='border-gray-600/50'; shadowColor='shadow-gray-600/20';
     }
     return (
-        <div className={`bg-gradient-to-br ${gradientFrom} ${gradientTo} rounded-xl p-5 border ${borderColor} flex items-center space-x-4 shadow-lg shadow-black/20`}>
+        <div className={`bg-gradient-to-br ${gradientFrom} ${gradientTo} rounded-xl p-5 border ${borderColor} flex items-center space-x-4 shadow-lg ${shadowColor} interactive-card card-glow-hover`}>
             <div className={`p-2 sm:p-3 rounded-full bg-gray-900/50 border ${borderColor} flex-shrink-0`}>
                 {React.cloneElement(icon, { className: `w-10 h-10 sm:w-12 h-12 ${mainColor}` })}
             </div>
@@ -216,7 +215,7 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
   };
   
   return (
-    <div className="glassmorphism rounded-lg animate-fade-in w-full h-full flex flex-col">
+    <div className="glassmorphism rounded-lg animate-fade-in-up w-full h-full flex flex-col">
       <div id="analysis-report" ref={exportContainerRef} className="flex-grow flex flex-col">
         <header className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
@@ -224,8 +223,8 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
                 <p className="text-gray-400 mt-1">Phân tích AI cho <span className="font-bold text-orange-400">{coinPair}</span></p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-                <button onClick={() => handleExport(false)} disabled={isExporting} className="p-2 text-gray-300 bg-gray-800/50 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-wait" aria-label="Lưu PDF"><DocumentArrowDownIcon className="w-5 h-5" /></button>
-                <button onClick={() => handleExport(true)} disabled={isExporting} className="p-2 text-gray-300 bg-gray-800/50 hover:bg-gray-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-wait" aria-label="Lưu ảnh"><PhotoIcon className="w-5 h-5" /></button>
+                <button onClick={() => handleExport(false)} disabled={isExporting} className="p-2 text-gray-300 bg-gray-800/50 hover:bg-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-wait transform hover:scale-110" aria-label="Lưu PDF"><DocumentArrowDownIcon className="w-5 h-5" /></button>
+                <button onClick={() => handleExport(true)} disabled={isExporting} className="p-2 text-gray-300 bg-gray-800/50 hover:bg-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-wait transform hover:scale-110" aria-label="Lưu ảnh"><PhotoIcon className="w-5 h-5" /></button>
             </div>
         </header>
 
@@ -237,24 +236,26 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
           </nav>
         </div>
 
-        <main className="flex-grow p-4 sm:p-6 animate-fade-in">
-            {activeTab === 'overview' && (
-                <div className="space-y-6">
-                    <RecommendationCard recommendation={analysis.recommendation} />
-                    <StatCard title="Triển vọng Chiến lược" icon={<PencilSquareIcon className="w-5 h-5" />}><p className="text-sm text-gray-300 leading-relaxed">{analysis.summary}</p></StatCard>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><ConfidenceGauge score={analysis.confidenceScore} reason={analysis.confidenceReason} /><SentimentIndicator sentiment={analysis.marketSentiment} /></div>
-                    <MultiTimeframeTrend trendAnalysis={analysis.trendAnalysis} />
-                </div>
-            )}
-            {activeTab === 'setup' && (
-                <TradingSetupPanel analysis={analysis} />
-            )}
-            {activeTab === 'deepDive' && (
-                <div className="space-y-6">
-                    <DeeperAnalysis analysis={analysis} />
-                    <KeyTakeaways takeaways={analysis.keyTakeaways} />
-                </div>
-            )}
+        <main className="flex-grow p-4 sm:p-6">
+            <div key={activeTab} className="animate-fade-in-up">
+              {activeTab === 'overview' && (
+                  <div className="space-y-6">
+                      <RecommendationCard recommendation={analysis.recommendation} />
+                      <StatCard title="Triển vọng Chiến lược" icon={<PencilSquareIcon className="w-5 h-5" />}><p className="text-sm text-gray-300 leading-relaxed">{analysis.summary}</p></StatCard>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6"><ConfidenceGauge score={analysis.confidenceScore} reason={analysis.confidenceReason} /><SentimentIndicator sentiment={analysis.marketSentiment} /></div>
+                      <MultiTimeframeTrend trendAnalysis={analysis.trendAnalysis} />
+                  </div>
+              )}
+              {activeTab === 'setup' && (
+                  <TradingSetupPanel analysis={analysis} />
+              )}
+              {activeTab === 'deepDive' && (
+                  <div className="space-y-6">
+                      <DeeperAnalysis analysis={analysis} />
+                      <KeyTakeaways takeaways={analysis.keyTakeaways} />
+                  </div>
+              )}
+            </div>
         </main>
       </div>
     </div>
