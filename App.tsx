@@ -1,17 +1,14 @@
-
 import React, { useReducer, useCallback, useEffect, useRef } from 'react';
 import type { AppState, AppAction } from './types';
 import { AppStatus } from './types';
 import { fetchAIAnalysis } from './services/geminiService';
 import { fetchHistoricalData } from './services/binanceService';
-import { fetchNews } from './services/newsService';
 
 import PriceChart from './components/PriceChart';
 import AnalysisDisplay from './components/AnalysisDisplay';
 import Disclaimer from './components/Disclaimer';
 import DashboardSkeleton from './components/DashboardSkeleton';
 import MotivationalTicker from './components/MotivationalTicker';
-import NewsFeed from './components/NewsFeed';
 import ActionCenter from './components/ActionCenter';
 import Chatbot from './components/Chatbot';
 
@@ -25,9 +22,7 @@ const initialState: AppState = {
   priceData: [],
   analysis: null,
   tickerData: null,
-  news: [],
   isAnalysisLoading: false,
-  isExtraDataLoading: false,
   error: null,
   analysisCache: {},
 };
@@ -44,7 +39,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         analysis: null,
         priceData: [],
         tickerData: null,
-        news: [],
         isAnalysisLoading: true,
       };
     case 'SET_PRICE_DATA':
@@ -65,14 +59,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         analyzedCoin: action.payload.coin,
         isAnalysisLoading: false,
       };
-    case 'START_EXTRA_DATA_FETCH':
-      return { ...state, isExtraDataLoading: true };
-    case 'SET_NEWS':
-      return {
-        ...state,
-        news: action.payload,
-        isExtraDataLoading: false,
-      };
     case 'FETCH_ERROR':
       return {
         ...state,
@@ -81,7 +67,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         analysis: null,
         priceData: [],
         isAnalysisLoading: false,
-        isExtraDataLoading: false,
       };
     case 'UPDATE_TICKER':
       return { ...state, tickerData: action.payload };
@@ -100,7 +85,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, isAnalysisLoading, error, analysisCache, news, isExtraDataLoading } = state;
+  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, isAnalysisLoading, error, analysisCache } = state;
   const inputRef = useRef<HTMLInputElement>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
   
@@ -112,11 +97,6 @@ const App: React.FC = () => {
     const analyzeCoin = async () => {
       try {
         mainContentRef.current?.scrollIntoView({ behavior: 'smooth' });
-        
-        // Fetch coin-specific news in parallel with price data for better performance
-        const baseCoin = analyzedCoin.split('/')[0];
-        dispatch({ type: 'START_EXTRA_DATA_FETCH' });
-        const newsPromise = fetchNews(baseCoin);
 
         const [priceData1Y, priceData3M, priceData7D] = await Promise.all([
             fetchHistoricalData(analyzedCoin, '1Y'),
@@ -126,12 +106,6 @@ const App: React.FC = () => {
 
         if (isCancelled) return;
         dispatch({ type: 'SET_PRICE_DATA', payload: priceData3M });
-
-        // Handle news data
-        const newsData = await newsPromise;
-        if (!isCancelled) {
-            dispatch({ type: 'SET_NEWS', payload: newsData });
-        }
 
         if (analysisCache[analyzedCoin]) {
             console.log(`Using cached analysis for ${analyzedCoin}`);
@@ -240,7 +214,6 @@ const App: React.FC = () => {
           <div className="lg:col-span-2 space-y-8">
             <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
             <ActionCenter />
-            <NewsFeed news={news} isLoading={isExtraDataLoading} />
           </div>
         </div>
       );
