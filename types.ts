@@ -72,6 +72,11 @@ export interface DelistingCoin {
   reason: string;
 }
 
+export interface ChatMessage {
+  role: 'user' | 'model';
+  text: string;
+}
+
 // Centralized state and action types for the application
 export interface AppState {
   status: AppStatus;

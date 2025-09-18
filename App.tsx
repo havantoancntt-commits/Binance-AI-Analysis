@@ -13,6 +13,7 @@ import DashboardSkeleton from './components/DashboardSkeleton';
 import MotivationalTicker from './components/MotivationalTicker';
 import NewsFeed from './components/NewsFeed';
 import ActionCenter from './components/ActionCenter';
+import Chatbot from './components/Chatbot';
 
 import { COIN_PAIRS } from './constants';
 import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
@@ -332,6 +333,7 @@ const App: React.FC = () => {
         </div>
         
       </main>
+      <Chatbot />
       <Disclaimer />
     </div>
   );

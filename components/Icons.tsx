@@ -151,3 +151,22 @@ export const CheckBadgeIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) =
     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
   </svg>
 );
+
+export const ChatBubbleBottomCenterTextIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.006 3 11.5c0 2.583 1.455 4.91 3.626 6.385.49.266.626.877.32 1.355-.305.478-.834.623-1.31.32A9.907 9.907 0 0 1 3 11.5c0-5.523 4.477-10 10-10s10 4.477 10 10-4.477 10-10 10z" />
+    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-3 3h.008v.008H12v-.008z" />
+  </svg>
+);
+
+export const PaperAirplaneIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" />
+  </svg>
+);
+
+export const XMarkIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+  </svg>
+);
