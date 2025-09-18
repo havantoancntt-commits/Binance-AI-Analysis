@@ -207,12 +207,14 @@ const App: React.FC = () => {
     
     if (status === AppStatus.Success && analyzedCoin && analysis) {
       return (
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 animate-fade-in">
-          <div className="lg:col-span-3 h-[450px] sm:h-[500px] lg:h-[600px]">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in">
+          <div className="lg:col-span-6 h-[450px] sm:h-[500px] lg:h-[600px]">
             <PriceChart priceData={priceData} analysis={analysis} tickerData={tickerData} coinPair={analyzedCoin} />
           </div>
-          <div className="lg:col-span-2 space-y-8">
+          <div className="lg:col-span-3">
             <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
+          </div>
+          <div className="lg:col-span-3">
             <ActionCenter />
           </div>
         </div>
@@ -221,16 +223,16 @@ const App: React.FC = () => {
     
     // Idle State
     return (
-      <div className="animate-fade-in">
-        <div className="text-center p-8 max-w-3xl mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in">
+        <div className="flex flex-col justify-center text-center p-8">
            <CpuChipIcon className="w-16 h-16 mx-auto text-red-400/70" />
            <h2 className="text-3xl font-bold text-gray-100 mt-4">Chào mừng đến với Bảng điều khiển Phân tích AI</h2>
-           <p className="text-gray-400 mt-2">
+           <p className="text-gray-400 mt-2 max-w-xl mx-auto">
                Nhận thông tin chi tiết về thị trường tức thì. Bắt đầu bằng cách chọn một cặp phổ biến hoặc nhập một cặp tùy chỉnh ở trên.
            </p>
            <MotivationalTicker />
         </div>
-        <div className="mt-8 max-w-2xl mx-auto">
+        <div className="flex items-center">
             <ActionCenter />
         </div>
       </div>
