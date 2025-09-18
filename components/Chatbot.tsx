@@ -120,7 +120,7 @@ const Chatbot: React.FC = () => {
     };
 
     return (
-        <div className="fixed bottom-6 right-6 z-50">
+        <div className="fixed bottom-6 right-6 z-[100]">
             {/* Chat Window */}
             <div className={`
                 ${isOpen ? 'animate-slide-in-bottom-right' : 'hidden'}
@@ -214,14 +214,14 @@ const Chatbot: React.FC = () => {
             <button
                 onClick={() => setIsOpen(true)}
                 className={`
-                    ${!isOpen ? 'block' : 'hidden'}
+                    ${!isOpen ? 'block animate-pulse-shadow' : 'hidden'}
                     p-4 bg-gradient-to-r from-red-600 to-orange-500 text-white rounded-full shadow-lg
                     hover:scale-110 hover:shadow-red-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-red-500
                     transition-all duration-200
                 `}
                 aria-label="Mở Trợ lý AI"
             >
-                <SparklesIcon className="w-8 h-8" />
+                <SparklesIcon className="w-10 h-10" />
             </button>
         </div>
     );

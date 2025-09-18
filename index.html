@@ -208,6 +208,22 @@
         border-color: rgba(255, 100, 100, 0.3);
       }
 
+      /* Pulsing animation for FAB */
+      @keyframes pulse-shadow {
+        0% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+        }
+      }
+      .animate-pulse-shadow {
+        animation: pulse-shadow 2.5s infinite;
+      }
+
 
     </style>
   <script type="importmap">
