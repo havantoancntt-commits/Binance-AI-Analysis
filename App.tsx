@@ -1,8 +1,9 @@
-import React, { useReducer, useCallback, useEffect, useRef, useMemo } from 'react';
-import type { AppState, AppAction, ChartTimeframe } from './types';
+import React, { useReducer, useCallback, useEffect, useRef, useMemo, useState } from 'react';
+import type { AppState, AppAction, ChartTimeframe, NewsArticle } from './types';
 import { AppStatus } from './types';
 import { fetchAIAnalysis } from './services/geminiService';
 import { fetchHistoricalData } from './services/binanceService';
+import { fetchNews } from './services/newsService';
 import { useTranslation } from './hooks/useTranslation';
 
 import PriceChart from './components/PriceChart';
@@ -13,6 +14,7 @@ import MotivationalTicker from './components/MotivationalTicker';
 import FloatingActionMenu from './components/FloatingActionMenu';
 import Chatbot from './components/Chatbot';
 import Logo from './components/Logo';
+import NewsFeed from './components/NewsFeed';
 
 import { COIN_PAIRS } from './constants';
 import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
@@ -104,9 +106,24 @@ const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
   const { status, coinInput, analyzedCoin, priceData7D, priceData3M, priceData1Y, chartTimeframe, analysis, tickerData, isAnalysisLoading, error, analysisCache } = state;
   const { t, locale } = useTranslation();
+  
+  const [news, setNews] = useState<NewsArticle[]>([]);
+  const [isNewsLoading, setIsNewsLoading] = useState<boolean>(true);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
   
+  // Fetch initial data for idle dashboard
+  useEffect(() => {
+    const fetchIdleData = async () => {
+      setIsNewsLoading(true);
+      const newsData = await fetchNews('BTC'); // Fetch general news initially
+      setNews(newsData);
+      setIsNewsLoading(false);
+    };
+    fetchIdleData();
+  }, []);
+
   // Main analysis logic
   useEffect(() => {
     if (status !== AppStatus.Loading || !analyzedCoin) return;
@@ -115,6 +132,13 @@ const App: React.FC = () => {
     const analyzeCoin = async () => {
       try {
         mainContentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        const baseCoin = analyzedCoin.split('/')[0];
+        setIsNewsLoading(true);
+        fetchNews(baseCoin).then(newsData => {
+          if (!isCancelled) setNews(newsData);
+          setIsNewsLoading(false);
+        });
 
         const [priceData1Y, priceData3M, priceData7D] = await Promise.all([
             fetchHistoricalData(analyzedCoin, '1Y'),
@@ -125,13 +149,6 @@ const App: React.FC = () => {
         if (isCancelled) return;
         dispatch({ type: 'SET_ALL_PRICE_DATA', payload: { priceData7D, priceData3M, priceData1Y } });
         
-        if (analysisCache[analyzedCoin]) {
-            console.log(`Using cached analysis for ${analyzedCoin}`);
-            dispatch({ type: 'USE_CACHED_ANALYSIS', payload: { analysis: analysisCache[analyzedCoin], coin: analyzedCoin } });
-            return;
-        }
-        
-        console.log(`Fetching new analysis for ${analyzedCoin}`);
         const aiAnalysis = await fetchAIAnalysis(analyzedCoin, { priceData1Y, priceData3M, priceData7D }, locale);
         
         if (isCancelled) return;
@@ -146,7 +163,7 @@ const App: React.FC = () => {
 
     analyzeCoin();
     return () => { isCancelled = true; };
-  }, [status, analyzedCoin, analysisCache, locale, t]);
+  }, [status, analyzedCoin, locale, t]);
 
   // WebSocket for live ticker data
   useEffect(() => {
@@ -218,7 +235,7 @@ const App: React.FC = () => {
   }, []);
 
   const renderContent = () => {
-    if (status === AppStatus.Loading && !analysis) { // Show skeleton only when there's no old data
+    if (status === AppStatus.Loading && !analysis) {
       return <DashboardSkeleton />;
     }
     
@@ -256,15 +273,17 @@ const App: React.FC = () => {
       );
     }
     
-    // Idle State
     return (
-      <div className="flex flex-col items-center text-center p-4 sm:p-8 mt-4 sm:mt-8 animate-fade-in-up">
-         <Logo className="w-20 h-20" />
-         <h2 className="text-3xl sm:text-4xl font-bold text-gray-100 mt-6">{t('dashboard.welcome.title')}</h2>
-         <p className="text-gray-400 mt-2 max-w-lg mx-auto">
-             {t('dashboard.welcome.subtitle')}
-         </p>
-         <MotivationalTicker />
+      <div className="animate-fade-in-up">
+         <div className="flex flex-col items-center text-center p-4 sm:p-8 mt-4 sm:mt-8">
+            <Logo className="w-20 h-20" />
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-100 mt-6">{t('dashboard.welcome.title')}</h2>
+            <p className="text-gray-400 mt-2 max-w-lg mx-auto">{t('dashboard.welcome.subtitle')}</p>
+            <MotivationalTicker />
+         </div>
+         <div className="grid grid-cols-1 gap-8 mt-8 max-w-4xl mx-auto">
+            <NewsFeed news={news} isLoading={isNewsLoading} />
+         </div>
       </div>
     );
   };
@@ -295,7 +314,7 @@ const App: React.FC = () => {
                       <button
                           type="button"
                           onClick={handleReset}
-                          className="px-5 py-2.5 font-semibold text-teal-300 bg-gray-800/80 rounded-lg border border-gray-700 hover:bg-gray-700/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-teal-500 flex-shrink-0 flex items-center justify-center gap-2 hover:-translate-y-0.5 transform shimmer-button"
+                          className="px-5 py-2.5 font-semibold text-teal-300 bg-gray-800/80 rounded-lg border border-gray-700 hover:bg-gray-700/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[rgb(var(--background-rgb))] focus:ring-teal-500 flex-shrink-0 flex items-center justify-center gap-2 hover:-translate-y-0.5 transform shimmer-button"
                       >
                           <ArrowPathIcon className="w-5 h-5" />
                           {t('dashboard.button.newAnalysis')}
@@ -305,7 +324,7 @@ const App: React.FC = () => {
                   <>
                       <div className="flex items-center gap-2 text-violet-300 text-sm font-semibold mb-3">
                         <CpuChipIcon className="w-5 h-5" />
-                        <span>AI Command Center</span>
+                        <span>{t('form.commandCenter')}</span>
                       </div>
                       <form onSubmit={handleFormSubmit} className="flex flex-col sm:flex-row items-stretch justify-center gap-3">
                           <div className="relative flex-grow">
@@ -314,7 +333,7 @@ const App: React.FC = () => {
                                   onChange={(e) => dispatch({ type: 'SET_COIN_INPUT', payload: e.target.value })}
                                   placeholder={t('form.placeholder')}
                                   className="w-full bg-gray-900/70 text-gray-100 placeholder-gray-500 px-5 py-4 rounded-lg border-2 border-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent pr-10"
-                                  aria-label="Cặp coin"
+                                  aria-label={t('form.coinPairLabel')}
                               />
                               {coinInput && status !== AppStatus.Loading && (
                                   <button type="button" onClick={handleClearInput} className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-white" aria-label={t('form.button.clear')}>
@@ -324,7 +343,7 @@ const App: React.FC = () => {
                           </div>
                           <button 
                               type="submit" disabled={status === AppStatus.Loading || !coinInput}
-                              className="px-8 py-3 font-bold text-white bg-gradient-to-r from-teal-500 to-violet-500 rounded-lg hover:from-teal-400 hover:to-violet-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 transform hover:scale-105 shimmer-button"
+                              className="px-8 py-3 font-bold text-white bg-gradient-to-r from-teal-500 to-violet-500 rounded-lg hover:from-teal-400 hover:to-violet-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[rgb(var(--background-rgb))] focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 transform hover:scale-105 shimmer-button"
                           >
                               {status === AppStatus.Loading ? t('form.button.analyzing') : t('form.button.analyze')}
                           </button>

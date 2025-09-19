@@ -1,4 +1,3 @@
-
 import React from 'react';
 import type { NewsArticle } from '../types';
 import { NewspaperIcon } from './Icons';
@@ -9,7 +8,11 @@ const formatTimeAgo = (timestamp: number, locale: 'vi' | 'en') => {
   const past = new Date(timestamp * 1000);
   const seconds = Math.floor((now.getTime() - past.getTime()) / 1000);
 
-  const intervals = {
+  if (seconds < 60) {
+      return locale === 'vi' ? 'vài giây trước' : 'a few seconds ago';
+  }
+
+  const intervals: { [key: string]: number } = {
     year: 31536000,
     month: 2592000,
     day: 86400,
@@ -17,42 +20,27 @@ const formatTimeAgo = (timestamp: number, locale: 'vi' | 'en') => {
     minute: 60,
   };
 
-  let counter;
+  const translations = {
+    en: { year: 'year', month: 'month', day: 'day', hour: 'hour', minute: 'minute' },
+    vi: { year: 'năm', month: 'tháng', day: 'ngày', hour: 'giờ', minute: 'phút' },
+  };
 
-  if (seconds >= intervals.year) {
-    counter = Math.floor(seconds / intervals.year);
-    if (locale === 'en') return counter === 1 ? `${counter} year ago` : `${counter} years ago`;
-    return `${counter} năm trước`;
+  for (const intervalName in intervals) {
+    const intervalValue = intervals[intervalName];
+    if (seconds >= intervalValue) {
+      const counter = Math.floor(seconds / intervalValue);
+      const singular = translations[locale][intervalName as keyof typeof translations.en];
+      if (locale === 'en') {
+          return `${counter} ${singular}${counter !== 1 ? 's' : ''} ago`;
+      }
+      return `${counter} ${singular} trước`;
+    }
   }
-  if (seconds >= intervals.month) {
-    counter = Math.floor(seconds / intervals.month);
-    if (locale === 'en') return counter === 1 ? `${counter} month ago` : `${counter} months ago`;
-    return `${counter} tháng trước`;
-  }
-  if (seconds >= intervals.day) {
-    counter = Math.floor(seconds / intervals.day);
-    if (locale === 'en') return counter === 1 ? `${counter} day ago` : `${counter} days ago`;
-    return `${counter} ngày trước`;
-  }
-  if (seconds >= intervals.hour) {
-    counter = Math.floor(seconds / intervals.hour);
-    if (locale === 'en') return counter === 1 ? `${counter} hour ago` : `${counter} hours ago`;
-    return `${counter} giờ trước`;
-  }
-  if (seconds >= intervals.minute) {
-    counter = Math.floor(seconds / intervals.minute);
-    if (locale === 'en') return counter === 1 ? `${counter} minute ago` : `${counter} minutes ago`;
-    return `${counter} phút trước`;
-  }
-  
-  counter = Math.floor(seconds);
-  if (locale === 'en') return counter <= 1 ? `a few seconds ago` : `${counter} seconds ago`;
-  return `${counter} giây trước`;
+  return '';
 };
 
-
 const NewsSkeleton: React.FC = () => (
-    <div className="bg-gray-900/50 rounded-lg p-4 animate-pulse">
+    <div className="bg-gray-900/50 rounded-lg p-4 shimmer-bg">
         <div className="flex items-start space-x-4">
             <div className="rounded-md bg-gray-700 h-20 w-20 sm:h-24 sm:w-24 flex-shrink-0"></div>
             <div className="flex-1 space-y-4 py-1">
@@ -66,7 +54,6 @@ const NewsSkeleton: React.FC = () => (
     </div>
 );
 
-// FIX: Define the props interface for the NewsFeed component.
 interface NewsFeedProps {
   news: NewsArticle[];
   isLoading: boolean;
@@ -75,12 +62,12 @@ interface NewsFeedProps {
 const NewsFeed: React.FC<NewsFeedProps> = ({ news, isLoading }) => {
   const { t, locale } = useTranslation();
   return (
-    <section className="glassmorphism p-6 rounded-lg shadow-2xl animate-fade-in h-full">
-        <div className="flex items-center gap-3">
-            <NewspaperIcon className="w-6 h-6 text-red-400"/>
-            <h3 className="text-xl font-bold text-gray-200">Tin tức thị trường liên quan</h3>
+    <section className="glassmorphism aurora-card p-6 rounded-xl h-full flex flex-col">
+        <div className="flex items-center gap-3 mb-4 flex-shrink-0">
+            <NewspaperIcon className="w-6 h-6 text-teal-400"/>
+            <h3 className="text-xl font-bold text-gray-200">{t('news.title')}</h3>
         </div>
-      <div className="mt-6 space-y-4 max-h-[400px] md:max-h-[500px] overflow-y-auto pr-2">
+      <div className="overflow-y-auto pr-2 space-y-4 flex-grow no-scrollbar">
         {isLoading ? (
           <>
             <NewsSkeleton />
@@ -88,7 +75,9 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ news, isLoading }) => {
             <NewsSkeleton />
           </>
         ) : news.length === 0 ? (
-          <p className="text-gray-500 text-center py-4">Không tìm thấy tin tức gần đây.</p>
+          <div className="flex items-center justify-center h-full text-gray-500">
+            <p>{t('news.empty')}</p>
+          </div>
         ) : (
           news.map((article) => (
             <a
@@ -105,7 +94,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ news, isLoading }) => {
                   className="w-20 h-20 sm:w-24 sm:h-24 object-cover rounded-md flex-shrink-0 border border-gray-700" 
                 />
                 <div className="flex flex-col flex-1">
-                  <h4 className="text-sm sm:text-md font-bold text-gray-100 group-hover:text-red-400 transition-colors">
+                  <h4 className="text-sm sm:text-md font-bold text-gray-100 group-hover:text-teal-400 transition-colors">
                     {article.title}
                   </h4>
                   <div className="flex-grow"></div>

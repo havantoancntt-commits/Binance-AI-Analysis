@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, FormEvent } from 'react';
 import { GoogleGenAI, Chat } from '@google/genai';
 import type { ChatMessage, GroundingChunk } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
-// FIX: Import missing ArrowUpRightIcon
 import { SparklesIcon, XMarkIcon, PaperAirplaneIcon, CpuChipIcon, UserCircleIcon, LinkIcon, ArrowUpRightIcon } from './Icons';
 
 const createMarkup = (text: string) => {

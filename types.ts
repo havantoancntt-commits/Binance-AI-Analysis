@@ -65,12 +65,6 @@ export interface TickerData {
   isPositive: boolean;
 }
 
-export interface DelistingCoin {
-  coinPair: string;
-  delistingDate: string;
-  reason: string;
-}
-
 export interface GroundingChunk {
   web: {
     uri: string;

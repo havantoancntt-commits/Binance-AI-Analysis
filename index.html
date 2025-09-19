@@ -12,12 +12,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
       :root {
-        --background-rgb: 8, 5, 12; /* Rich, dark space black */
-        --accent-start: #14b8a6; /* Cosmic Teal */
-        --accent-end: #8b5cf6; /* Electric Violet */
-        --card-bg: rgba(20, 16, 26, 0.5);
-        --border-color: rgba(139, 92, 246, 0.15);
-        --glow-color: #8b5cf6;
+        --background-rgb: 8, 5, 12;
+        --accent-start: #14b8a6; /* Teal */
+        --accent-end: #8b5cf6; /* Violet */
+        --card-bg: rgba(20, 16, 26, 0.6);
+        --border-color: rgba(139, 92, 246, 0.2);
+        --glow-color: rgba(139, 92, 246, 0.15);
       }
 
       body {
@@ -26,7 +26,6 @@
           radial-gradient(circle at 15% 15%, rgba(20, 184, 166, 0.1), transparent 40%),
           radial-gradient(circle at 85% 80%, rgba(139, 92, 246, 0.12), transparent 50%),
           url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"%3E%3Cg fill-rule="evenodd"%3E%3Cg fill="%239ca3af" fill-opacity="0.04"%3E%3Cpath d="M0 38.59l2.83-2.83 1.41 1.41L1.41 40H0v-1.41zM0 1.4l2.83 2.83 1.41-1.41L1.41 0H0v1.41zM38.59 40l-2.83-2.83 1.41-1.41L40 38.59V40h-1.41zM40 1.41l-2.83 2.83-1.41-1.41L38.59 0H40v1.41z"/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');
-        background-repeat: no-repeat, no-repeat, repeat;
         background-attachment: fixed;
         font-family: 'Inter', sans-serif;
         overscroll-behavior: none;
@@ -34,13 +33,13 @@
       
       .glassmorphism {
         background: var(--card-bg);
-        backdrop-filter: blur(25px);
-        -webkit-backdrop-filter: blur(25px);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
         border: 1px solid var(--border-color);
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
       }
       
-      button, a, .interactive-card {
+      button, a {
         transition: all 0.2s ease-in-out;
       }
 
@@ -57,7 +56,7 @@
       }
       .animate-fade-in-up {
         animation: fadeInUp 0.6s ease-out forwards;
-        opacity: 0; /* Start hidden */
+        opacity: 0;
       }
       
       /* Staggered animation delay utilities */
@@ -69,18 +68,18 @@
       /* Price ticker animations */
       @keyframes priceUp {
         0% { background-color: transparent; }
-        50% { background-color: rgba(20, 184, 166, 0.3); } /* Teal */
+        50% { background-color: rgba(20, 184, 166, 0.3); }
         100% { background-color: transparent; }
       }
       .animate-price-up { animation: priceUp 0.7s ease-out; }
       @keyframes priceDown {
         0% { background-color: transparent; }
-        50% { background-color: rgba(244, 63, 94, 0.3); } /* Rose */
+        50% { background-color: rgba(244, 63, 94, 0.3); }
         100% { background-color: transparent; }
       }
       .animate-price-down { animation: priceDown 0.7s ease-out; }
 
-      /* Hide scrollbar */
+      /* Hide scrollbar for specific elements */
       .no-scrollbar::-webkit-scrollbar { display: none; }
       .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -105,30 +104,10 @@
       }
 
       /* Card glow effect on hover */
-      .card-glow-hover {
-        position: relative;
-        overflow: hidden;
-      }
-      .card-glow-hover::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
-        border-radius: inherit;
-        padding: 1px;
-        background: linear-gradient(120deg, transparent, var(--border-color), transparent);
-        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-        -webkit-mask-composite: xor;
-        mask-composite: exclude;
-        opacity: 0;
-        transition: opacity 0.3s ease-in-out;
-      }
-      .card-glow-hover:hover::before {
-        opacity: 1;
-      }
       .card-glow-hover:hover {
         transform: translateY(-4px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 0 25px rgba(var(--glow-color), 0.15);
-        border-color: rgba(139, 92, 246, 0.3);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 0 25px var(--glow-color);
+        border-color: rgba(139, 92, 246, 0.4);
       }
       
       /* Aurora Background for Cards */

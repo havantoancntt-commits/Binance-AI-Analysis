@@ -353,7 +353,6 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
   ];
 
   React.useEffect(() => {
-    // FIX: Cast the result of querySelector to HTMLElement to access offsetLeft and offsetWidth properties.
     const activeTabElement = tabsRef.current?.querySelector<HTMLElement>(`[role="tab"][aria-selected="true"]`);
     if (activeTabElement) {
       setSliderStyle({
@@ -398,7 +397,7 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
           </div>
         </div>
 
-        <main className="flex-grow p-4 sm:p-6 space-y-6">
+        <main className="flex-grow p-4 sm:p-6 space-y-6 overflow-y-auto no-scrollbar">
             <MarketAlert sentiment={analysis.marketSentiment} coinPair={coinPair} />
             <div key={activeTab} className="animate-fade-in-up">
               {activeTab === 'overview' && (

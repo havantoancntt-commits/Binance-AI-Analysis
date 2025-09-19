@@ -1,4 +1,3 @@
-
 // This is a Vercel Serverless Function that acts as a secure proxy to the Google Gemini API.
 // It has been optimized to use the official @google/genai Node.js SDK.
 
