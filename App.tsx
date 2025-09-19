@@ -1,3 +1,4 @@
+
 import React, { useReducer, useCallback, useEffect, useRef, useMemo } from 'react';
 import type { AppState, AppAction, ChartTimeframe, PriceDataPoint } from './types';
 import { AppStatus } from './types';
@@ -15,7 +16,7 @@ import Chatbot from './components/Chatbot';
 import Logo from './components/Logo';
 
 import { COIN_PAIRS } from './constants';
-import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
+import { XCircleIcon, ArrowPathIcon } from './components/Icons';
 
 const initialState: AppState = {
   status: AppStatus.Idle,
@@ -264,7 +265,7 @@ const App: React.FC = () => {
     // Idle State
     return (
       <div className="flex flex-col items-center text-center p-4 sm:p-8 mt-4 sm:mt-8 animate-fade-in-up">
-         <CpuChipIcon className="w-20 h-20 text-red-500/50" />
+         <Logo className="w-20 h-20" />
          <h2 className="text-3xl sm:text-4xl font-bold text-gray-100 mt-6">{t('dashboard.welcome.title')}</h2>
          <p className="text-gray-400 mt-2 max-w-lg mx-auto">
              {t('dashboard.welcome.subtitle')}

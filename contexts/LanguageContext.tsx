@@ -29,8 +29,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     const loadTranslations = async () => {
       try {
-        // The file path needs to be absolute from the root
-        const response = await fetch(`/locales/${locale}.json`);
+        // The file path needs to be relative from the root HTML file
+        const response = await fetch(`./locales/${locale}.json`);
         if (!response.ok) {
           throw new Error(`Could not load ${locale}.json`);
         }
@@ -40,7 +40,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         console.error("Failed to load translations:", error);
         if (locale !== 'vi') {
            try {
-             const fallbackResponse = await fetch(`/locales/vi.json`);
+             const fallbackResponse = await fetch(`./locales/vi.json`);
              const data = await fallbackResponse.json();
              setTranslations(data);
            } catch (fallbackError) {
