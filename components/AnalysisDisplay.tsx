@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
+import ReactDOM from 'react-dom/client';
 import type { AnalysisResult, Recommendation, TrendInfo } from '../types';
 import AnalysisDisplaySkeleton from './AnalysisDisplaySkeleton';
 import { 
     ArrowTrendingUpIcon, ArrowTrendingDownIcon, ArrowsRightLeftIcon, ShieldCheckIcon, 
     RocketLaunchIcon, HandRaisedIcon, ArrowDownCircleIcon, LightBulbIcon, 
-    ChartBarSquareIcon, DocumentArrowDownIcon, PhotoIcon, 
+    ChartBarSquareIcon, DocumentArrowDownIcon,
     ClipboardIcon, CheckIcon, SparklesIcon, TableCellsIcon, PencilSquareIcon,
     InformationCircleIcon, ClipboardDocumentListIcon, CheckBadgeIcon
 } from './Icons';
@@ -12,12 +13,6 @@ import {
 declare var html2pdf: any;
 
 type ActiveTab = 'overview' | 'setup' | 'deepDive';
-
-interface AnalysisDisplayProps {
-  analysis: AnalysisResult | null;
-  coinPair: string | null;
-  isLoading: boolean;
-}
 
 const StatCard: React.FC<{ title: string; children: React.ReactNode; icon: React.ReactNode; className?: string }> = ({ title, children, icon, className = '' }) => (
     <div className={`bg-gray-900/50 rounded-lg p-4 border border-gray-700 h-full interactive-card card-glow-hover ${className}`}>
@@ -179,52 +174,181 @@ const TradingSetupPanel: React.FC<{analysis: AnalysisResult}> = ({ analysis }) =
     );
 };
 
+interface AnalysisDisplayProps {
+  analysis: AnalysisResult | null;
+  coinPair: string | null;
+  isLoading: boolean;
+}
+
+// A dedicated component for the PDF report layout and styling.
+const AnalysisReportPDF: React.FC<Omit<AnalysisDisplayProps, 'isLoading'>> = ({ analysis, coinPair }) => {
+    if (!analysis || !coinPair) return null;
+
+    const formatPrice = (price: number) => `$${price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 })}`;
+    
+    const getSignalStyle = (signal: Recommendation['signal']): React.CSSProperties => {
+        const styles: Record<string, React.CSSProperties> = {
+            'Strong Buy': { color: '#dc2626', fontWeight: 'bold' },
+            'Buy': { color: '#ea580c', fontWeight: 'bold' },
+            'Hold': { color: '#ca8a04' },
+            'Sell': { color: '#9333ea' },
+            'Strong Sell': { color: '#c026d3' },
+            'Avoid': { color: '#52525b' },
+        };
+        return styles[signal] || {};
+    };
+
+    const styles: { [key: string]: React.CSSProperties } = {
+        container: { fontFamily: 'Helvetica, Arial, sans-serif', fontSize: '12px', lineHeight: '1.6', color: '#333', backgroundColor: '#fff', padding: '40px', width: '8.5in' },
+        header: { textAlign: 'center', borderBottom: '2px solid #ef4444', paddingBottom: '15px', marginBottom: '25px' },
+        h1: { fontSize: '28px', color: '#ef4444', margin: '0' },
+        h2: { fontSize: '20px', color: '#111827', margin: '5px 0' },
+        h3: { fontSize: '18px', color: '#ef4444', borderBottom: '1px solid #fca5a5', paddingBottom: '5px', marginTop: '30px', marginBottom: '15px' },
+        h4: { fontSize: '14px', color: '#1f2937', margin: '15px 0 5px 0', fontWeight: 'bold' },
+        section: { marginBottom: '20px' },
+        p: { margin: '0 0 10px 0' },
+        strong: { color: '#111827' },
+        ul: { paddingLeft: '20px', listStyleType: 'disc' },
+        li: { marginBottom: '5px' },
+        table: { width: '100%', borderCollapse: 'collapse', marginTop: '15px' },
+        td: { padding: '10px', border: '1px solid #e5e7eb', textAlign: 'left' },
+        tdLabel: { fontWeight: 'bold', width: '40%', backgroundColor: '#f9fafb' },
+        grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' },
+        card: { border: '1px solid #e5e7eb', borderRadius: '8px', padding: '15px', backgroundColor: '#f9fafb' },
+        footer: { textAlign: 'center', marginTop: '40px', paddingTop: '20px', borderTop: '1px solid #e5e7eb', fontSize: '10px', color: '#6b7280' },
+    };
+
+    return (
+        <div style={styles.container}>
+            <header style={styles.header}>
+                <h1 style={styles.h1}>Meta Mind Crypto</h1>
+                <h2 style={styles.h2}>Báo cáo Phân tích AI cho {coinPair}</h2>
+                <p>Ngày xuất báo cáo: {new Date().toLocaleDateString('vi-VN')}</p>
+            </header>
+
+            <section style={styles.section}>
+                <h3 style={styles.h3}>Tổng quan & Khuyến nghị</h3>
+                <p style={styles.p}><strong>Tín hiệu:</strong> <span style={getSignalStyle(analysis.recommendation.signal)}>{analysis.recommendation.reason}</span></p>
+                <p style={styles.p}><strong>Triển vọng Chiến lược:</strong> {analysis.summary}</p>
+                 <div style={styles.grid}>
+                    <div style={styles.card}>
+                        <h4 style={{...styles.h4, marginTop: 0}}>Độ tin cậy</h4>
+                        <p style={styles.p}><strong style={{fontSize: '24px', color: '#ef4444'}}>{analysis.confidenceScore}%</strong> - {analysis.confidenceReason}</p>
+                    </div>
+                    <div style={styles.card}>
+                        <h4 style={{...styles.h4, marginTop: 0}}>Tâm lý Thị trường</h4>
+                        <p style={{...styles.p, fontWeight: 'bold', fontSize: '18px'}}>{analysis.marketSentiment}</p>
+                    </div>
+                </div>
+            </section>
+            
+            <section style={styles.section}>
+                <h3 style={styles.h3}>Thiết lập Giao dịch & Các mức giá quan trọng</h3>
+                 <div style={styles.grid}>
+                    <table style={{...styles.table, marginTop: 0}}><tbody>
+                        <tr><td style={styles.tdLabel}>Vùng Mua</td><td style={styles.td}>{formatPrice(analysis.buyZone.from)} - {formatPrice(analysis.buyZone.to)}</td></tr>
+                        {analysis.takeProfitLevels.map((lvl, i) => <tr key={i}><td style={styles.tdLabel}>Chốt lời {i+1}</td><td style={styles.td}>{formatPrice(lvl)}</td></tr>)}
+                        <tr><td style={{...styles.tdLabel, color: '#dc2626'}}>Cắt lỗ</td><td style={{...styles.td, fontWeight: 'bold'}}>{formatPrice(analysis.stopLoss)}</td></tr>
+                    </tbody></table>
+                    <table style={{...styles.table, marginTop: 0}}><tbody>
+                        {analysis.supportLevels.map((lvl, i) => <tr key={i}><td style={styles.tdLabel}>Hỗ trợ {i+1}</td><td style={styles.td}>{formatPrice(lvl)}</td></tr>)}
+                        {analysis.resistanceLevels.map((lvl, i) => <tr key={i}><td style={styles.tdLabel}>Kháng cự {i+1}</td><td style={styles.td}>{formatPrice(lvl)}</td></tr>)}
+                    </tbody></table>
+                 </div>
+            </section>
+
+             <section style={styles.section}>
+                <h3 style={styles.h3}>Phân tích Xu hướng Đa khung Thời gian</h3>
+                <table style={styles.table}><tbody>
+                    <tr><td style={styles.tdLabel}>Ngắn hạn</td><td style={styles.td}><strong>{analysis.trendAnalysis.shortTerm.trend}</strong>: {analysis.trendAnalysis.shortTerm.reason}</td></tr>
+                    <tr><td style={styles.tdLabel}>Trung hạn</td><td style={styles.td}><strong>{analysis.trendAnalysis.mediumTerm.trend}</strong>: {analysis.trendAnalysis.mediumTerm.reason}</td></tr>
+                    <tr><td style={styles.tdLabel}>Dài hạn</td><td style={styles.td}><strong>{analysis.trendAnalysis.longTerm.trend}</strong>: {analysis.trendAnalysis.longTerm.reason}</td></tr>
+                </tbody></table>
+            </section>
+
+            <section style={styles.section}>
+                <h3 style={styles.h3}>Phân tích Sâu</h3>
+                <h4 style={styles.h4}>Động lực Kỹ thuật Chính:</h4>
+                <p style={styles.p}>{analysis.marketDriver}</p>
+                <div style={styles.grid}>
+                    <div>
+                        <h4 style={styles.h4}>Kịch bản Tăng giá (Bull Case)</h4>
+                        <p style={styles.p}>{analysis.detailedAnalysis.bullCase}</p>
+                    </div>
+                    <div>
+                        <h4 style={styles.h4}>Kịch bản Giảm giá (Bear Case)</h4>
+                        <p style={styles.p}>{analysis.detailedAnalysis.bearCase}</p>
+                    </div>
+                </div>
+                 <h4 style={styles.h4}>Điểm Mấu Chốt:</h4>
+                <ul style={styles.ul}>{analysis.keyTakeaways.map((item, i) => <li key={i} style={styles.li}>{item}</li>)}</ul>
+            </section>
+
+            <footer style={styles.footer}>
+                <p><strong>Miễn trừ trách nhiệm:</strong> Thông tin được cung cấp bởi ứng dụng này chỉ dành cho mục đích thông tin và không phải là lời khuyên tài chính. Giao dịch tiền điện tử có rủi ro cao. Hãy tự nghiên cứu trước khi đưa ra quyết định đầu tư.</p>
+            </footer>
+        </div>
+    );
+}
+
 
 const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, isLoading }) => {
   const [isExporting, setIsExporting] = useState(false);
-  const exportContainerRef = useRef<HTMLDivElement>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>('overview');
   
   if (isLoading) return <AnalysisDisplaySkeleton />;
   if (!analysis || !coinPair) return null;
   
-  const handleExport = async (asImage: boolean) => {
-    if (!exportContainerRef.current) return;
+  const handleExportPDF = async () => {
+    if (!analysis || !coinPair) return;
     setIsExporting(true);
-    await new Promise(resolve => setTimeout(resolve, 50));
-    const element = exportContainerRef.current;
+
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'absolute';
+    tempContainer.style.left = '-9999px';
+    document.body.appendChild(tempContainer);
+
+    const root = ReactDOM.createRoot(tempContainer);
+    root.render(<AnalysisReportPDF analysis={analysis} coinPair={coinPair} />);
+    
+    // Allow time for render
+    await new Promise(resolve => setTimeout(resolve, 200));
+
     const date = new Date().toISOString().split('T')[0];
-    const filename = `Analysis-${coinPair.replace('/', '-')}-${date}`;
-    const opt = { margin: 0.5, filename: `${filename}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#140a0a' }, jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' } };
-    const pdfPromise = html2pdf().set(opt).from(element);
+    const filename = `MetaMind-Analysis-${coinPair.replace('/', '-')}-${date}.pdf`;
+    const opt = {
+        margin: 0,
+        filename: filename,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true, logging: false },
+        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
+    };
+    
     try {
-        if (asImage) {
-            const canvas = await pdfPromise.toCanvas();
-            const link = document.createElement('a');
-            link.download = `${filename}.png`;
-            link.href = canvas.toDataURL('image/png', 1.0);
-            link.click();
-        } else {
-            await pdfPromise.save();
-        }
+        await html2pdf().from(tempContainer.children[0]).set(opt).save();
     } catch (error) {
-        console.error("Export failed:", error);
+        console.error("PDF Export failed:", error);
     } finally {
+        root.unmount();
+        document.body.removeChild(tempContainer);
         setIsExporting(false);
     }
   };
   
   return (
     <div className="glassmorphism rounded-lg animate-fade-in-up w-full h-full flex flex-col">
-      <div id="analysis-report" ref={exportContainerRef} className="flex-grow flex flex-col">
+      <div className="flex-grow flex flex-col">
         <header className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>
                 <h2 className="text-2xl sm:text-3xl font-bold text-white">Bảng Điều Khiển Chiến Lược</h2>
                 <p className="text-gray-400 mt-1">Phân tích AI cho <span className="font-bold text-orange-400">{coinPair}</span></p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-                <button onClick={() => handleExport(false)} disabled={isExporting} className="p-2 text-gray-300 bg-gray-800/50 hover:bg-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-wait transform hover:scale-110" aria-label="Lưu PDF"><DocumentArrowDownIcon className="w-5 h-5" /></button>
-                <button onClick={() => handleExport(true)} disabled={isExporting} className="p-2 text-gray-300 bg-gray-800/50 hover:bg-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-wait transform hover:scale-110" aria-label="Lưu ảnh"><PhotoIcon className="w-5 h-5" /></button>
+                <button onClick={handleExportPDF} disabled={isExporting} className="p-2 text-gray-300 bg-gray-800/50 hover:bg-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-wait transform hover:scale-110" aria-label="Lưu PDF">
+                   {isExporting ? 
+                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    : <DocumentArrowDownIcon className="w-5 h-5" />}
+                </button>
             </div>
         </header>
 
