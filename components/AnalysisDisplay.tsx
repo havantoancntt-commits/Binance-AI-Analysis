@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import type { AnalysisResult, Recommendation, TrendInfo } from '../types';
 import AnalysisDisplaySkeleton from './AnalysisDisplaySkeleton';
+import MarketAlert from './MarketAlert'; // Import the new component
 import { 
     ArrowTrendingUpIcon, ArrowTrendingDownIcon, ArrowsRightLeftIcon, ShieldCheckIcon, 
     RocketLaunchIcon, HandRaisedIcon, ArrowDownCircleIcon, LightBulbIcon, 
@@ -360,7 +361,8 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
           </nav>
         </div>
 
-        <main className="flex-grow p-4 sm:p-6">
+        <main className="flex-grow p-4 sm:p-6 space-y-6">
+            <MarketAlert sentiment={analysis.marketSentiment} coinPair={coinPair} />
             <div key={activeTab} className="animate-fade-in-up">
               {activeTab === 'overview' && (
                   <div className="space-y-6">
