@@ -80,11 +80,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     document.documentElement.lang = locale;
   }, [locale]);
 
-  // Prevent rendering children until translations are loaded
-  if (translations === null) {
-      return null;
-  }
-
+  // By removing the null return while loading, the app renders immediately
+  // with keys and updates when translations are fetched, fixing the display bug.
   return (
     <LanguageContext.Provider value={{ locale, setLocale, t }}>
       {children}
