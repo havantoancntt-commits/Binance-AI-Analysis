@@ -1,4 +1,3 @@
-
 import React, { useReducer, useCallback, useEffect, useRef, useMemo } from 'react';
 import type { AppState, AppAction, ChartTimeframe, PriceDataPoint } from './types';
 import { AppStatus } from './types';
@@ -264,18 +263,13 @@ const App: React.FC = () => {
     
     // Idle State
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in-up">
-        <div className="flex flex-col justify-center text-center p-8 opacity-0 animate-fade-in-up stagger-delay-1" style={{animationFillMode: 'forwards'}}>
-           <CpuChipIcon className="w-16 h-16 mx-auto text-red-400/70" />
-           <h2 className="text-3xl font-bold text-gray-100 mt-4">{t('dashboard.welcome.title')}</h2>
-           <p className="text-gray-400 mt-2 max-w-xl mx-auto">
-               {t('dashboard.welcome.subtitle')}
-           </p>
-           <MotivationalTicker />
-        </div>
-        <div className="flex items-center opacity-0 animate-fade-in-up stagger-delay-2" style={{animationFillMode: 'forwards'}}>
-            <ActionCenter />
-        </div>
+      <div className="flex flex-col items-center text-center p-4 sm:p-8 mt-4 sm:mt-8 animate-fade-in-up">
+         <CpuChipIcon className="w-20 h-20 text-red-500/50" />
+         <h2 className="text-3xl sm:text-4xl font-bold text-gray-100 mt-6">{t('dashboard.welcome.title')}</h2>
+         <p className="text-gray-400 mt-2 max-w-lg mx-auto">
+             {t('dashboard.welcome.subtitle')}
+         </p>
+         <MotivationalTicker />
       </div>
     );
   };
@@ -283,18 +277,20 @@ const App: React.FC = () => {
   return (
     <>
       <main className="p-4 sm:p-6 lg:p-8 max-w-screen-2xl mx-auto w-full">
-        <header className="text-center mb-8 opacity-0 animate-fade-in-up" style={{animationFillMode: 'forwards'}}>
-          <div className="flex items-center justify-center gap-3 sm:gap-4 mb-2">
+        <header className="flex flex-col items-center text-center mb-8 opacity-0 animate-fade-in-up" style={{animationFillMode: 'forwards'}}>
+          <div className="flex items-center justify-center gap-3 sm:gap-4">
             <Logo className="w-12 h-12 sm:w-14 sm:h-14" />
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
-              {t('header.title')}
-            </h1>
+            <div>
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
+                  {t('header.title')}
+                </h1>
+                <p className="mt-1 text-base sm:text-lg text-orange-100/70">{t('header.subtitle')}</p>
+            </div>
           </div>
-          <p className="mt-2 text-base sm:text-lg text-orange-100/80">{t('header.subtitle')}</p>
         </header>
         
-        <div className="p-4 glassmorphism rounded-xl max-w-4xl mx-auto sticky top-4 z-40 opacity-0 animate-fade-in-up stagger-delay-1" style={{animationFillMode: 'forwards'}}>
-            {analyzedCoin && status !== AppStatus.Idle ? (
+        <div className="p-4 sm:p-6 glassmorphism rounded-xl max-w-4xl mx-auto opacity-0 animate-fade-in-up stagger-delay-1" style={{animationFillMode: 'forwards'}}>
+            {analyzedCoin && status !== AppStatus.Idle && status !== AppStatus.Error ? (
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
                         <span className="text-gray-400 text-sm">{t('dashboard.viewingAnalysisFor')}</span>
@@ -317,7 +313,7 @@ const App: React.FC = () => {
                                 ref={inputRef} type="text" value={coinInput}
                                 onChange={(e) => dispatch({ type: 'SET_COIN_INPUT', payload: e.target.value })}
                                 placeholder={t('form.placeholder')}
-                                className="w-full bg-gray-800/80 text-gray-100 placeholder-gray-500 px-4 py-3 rounded-lg border-2 border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent pr-10"
+                                className="w-full bg-gray-900/70 text-gray-100 placeholder-gray-500 px-5 py-4 rounded-lg border-2 border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent pr-10"
                                 aria-label="Cặp coin"
                             />
                             {coinInput && status !== AppStatus.Loading && (
@@ -334,10 +330,9 @@ const App: React.FC = () => {
                         </button>
                     </form>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 mt-4">
-                        {COIN_PAIRS.slice(0, 6).map((pair, i) => (
+                        {COIN_PAIRS.slice(0, 6).map((pair) => (
                             <button key={pair} onClick={() => handleAnalysisRequest(pair)}
-                                className={`px-3 py-2 text-sm font-semibold text-orange-300 bg-gray-900/50 rounded-md border border-gray-700 hover:bg-red-900/50 hover:text-white hover:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-500 disabled:opacity-50 transform hover:-translate-y-0.5 opacity-0 animate-fade-in-up stagger-delay-${i + 1}`}
-                                style={{animationFillMode: 'forwards'}}
+                                className="px-3 py-2 text-sm font-semibold text-orange-300/90 bg-gray-900/50 rounded-md border border-gray-700/80 hover:bg-gray-800/70 hover:text-white hover:border-orange-500/50 focus:outline-none focus:ring-1 focus:ring-orange-500 disabled:opacity-50 transform hover:-translate-y-0.5"
                                 disabled={status === AppStatus.Loading}
                             >
                                 {pair}

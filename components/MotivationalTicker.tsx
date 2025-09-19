@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 
@@ -56,7 +55,7 @@ const MotivationalTicker: React.FC = () => {
 
   return (
     <div className="text-center mt-8 h-12 flex items-center justify-center">
-      <p className="text-md sm:text-lg italic text-orange-200/80 font-medium">
+      <p className="text-md sm:text-lg italic text-orange-200/90 font-medium">
         "{displayedText}
         <span className="animate-pulse text-orange-400">|</span>"
       </p>
