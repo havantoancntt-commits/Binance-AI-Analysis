@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ClipboardIcon, CpuChipIcon } from './Icons';
 
@@ -9,7 +8,7 @@ const SupportProject: React.FC = () => {
   const accountName = 'HA VAN TOAN';
   const bankName = 'Vietcombank';
   const qrData = `Vietcombank | ${accountName} | ${accountNumber}`;
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrData)}&bgcolor=140a0a&color=f97316&qzone=1`;
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(qrData)}&bgcolor=14101a&color=8b5cf6&qzone=1`;
 
   const handleCopy = () => {
     navigator.clipboard.writeText(accountNumber).then(() => {
@@ -22,7 +21,7 @@ const SupportProject: React.FC = () => {
     <section className="glassmorphism p-6 rounded-lg shadow-2xl animate-fade-in h-full flex flex-col justify-between">
       <div>
         <div className="flex items-center gap-3 mb-4">
-            <CpuChipIcon className="w-8 h-8 text-red-400"/>
+            <CpuChipIcon className="w-8 h-8 text-violet-400"/>
             <div>
                 <h3 className="text-lg sm:text-xl font-bold text-gray-200">Hỗ trợ dự án</h3>
                 <p className="text-sm text-gray-400">Nếu thấy công cụ này hữu ích, bạn có thể ủng hộ nhà phát triển.</p>
@@ -44,7 +43,7 @@ const SupportProject: React.FC = () => {
               <div className="space-y-1">
                 <span className="text-sm font-semibold text-gray-400">Số tài khoản:</span>
                 <div className="flex items-center gap-2 bg-gray-800 p-2.5 rounded-lg">
-                  <span className="font-mono text-lg text-orange-300 flex-grow">{accountNumber}</span>
+                  <span className="font-mono text-lg text-teal-300 flex-grow">{accountNumber}</span>
                   <button
                     onClick={handleCopy}
                     className="p-2 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-colors"
@@ -53,7 +52,7 @@ const SupportProject: React.FC = () => {
                     <ClipboardIcon className="w-5 h-5" />
                   </button>
                 </div>
-                {copied && <p className="text-yellow-400 text-xs text-right mt-1">Đã sao chép!</p>}
+                {copied && <p className="text-green-400 text-xs text-right mt-1">Đã sao chép!</p>}
               </div>
             </div>
         </div>

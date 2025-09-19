@@ -1,6 +1,3 @@
-
-
-
 import React, { useRef, useEffect, useMemo } from 'react';
 import { ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea, Scatter, Cell, Label } from 'recharts';
 import type { PriceDataPoint, AnalysisResult, TickerData, ChartTimeframe } from '../types';
@@ -27,9 +24,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     const pricePayload = payload.find(p => p.dataKey === 'price');
     const volumePayload = payload.find(p => p.dataKey === 'volume');
     return (
-      <div className="glassmorphism p-3 rounded-lg shadow-lg border border-gray-700/50" style={{background: 'rgba(10, 5, 5, 0.8)'}}>
+      <div className="glassmorphism p-3 rounded-lg shadow-lg border-gray-700/50" style={{background: 'rgba(10, 5, 5, 0.8)'}}>
         <p className="label text-sm text-gray-400 font-semibold mb-2">{t('chart.tooltip.date', { label })}</p>
-        {pricePayload && <p className="intro text-md font-bold text-orange-400">{t('chart.tooltip.price', { price: pricePayload.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) })}</p>}
+        {pricePayload && <p className="intro text-md font-bold text-teal-400">{t('chart.tooltip.price', { price: pricePayload.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) })}</p>}
         {volumePayload && <p className="intro text-sm text-gray-500">{t('chart.tooltip.volume', { volume: formatLargeNumber(volumePayload.value) })}</p>}
       </div>
     );
@@ -192,12 +189,12 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
             >
                 <defs>
                     <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#f97316" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#f97316" stopOpacity={0}/>
+                        <stop offset="5%" stopColor="var(--accent-start)" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="var(--accent-start)" stopOpacity={0}/>
                     </linearGradient>
                     <linearGradient id="chartBackground" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="rgba(239, 68, 68, 0.03)" />
-                        <stop offset="100%" stopColor="rgba(239, 68, 68, 0)" />
+                        <stop offset="0%" stopColor="rgba(20, 184, 166, 0.05)" />
+                        <stop offset="100%" stopColor="rgba(20, 184, 166, 0)" />
                     </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
@@ -231,12 +228,12 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
                 
                 <Tooltip 
                     content={<CustomTooltip />} 
-                    cursor={{ stroke: '#f97316', strokeWidth: 1, strokeDasharray: '3 3' }}
+                    cursor={{ stroke: 'var(--accent-start)', strokeWidth: 1, strokeDasharray: '3 3' }}
                 />
                 
                 <Area yAxisId="right" type="monotone" dataKey={() => priceDomain[1]} stroke="none" fill="url(#chartBackground)" />
 
-                <Area type="monotone" dataKey="price" name="Giá" stroke="#f97316" strokeWidth={2.5} fillOpacity={1} fill="url(#colorPrice)" yAxisId="right" isAnimationActive={true} animationDuration={700} animationEasing="ease-in-out" activeDot={{ r: 6, stroke: '#140a0a', strokeWidth: 2, fill: '#f97316' }} />
+                <Area type="monotone" dataKey="price" name="Giá" stroke="var(--accent-start)" strokeWidth={2.5} fillOpacity={1} fill="url(#colorPrice)" yAxisId="right" isAnimationActive={true} animationDuration={700} animationEasing="ease-in-out" activeDot={{ r: 6, stroke: '#140a0a', strokeWidth: 2, fill: 'var(--accent-start)' }} />
                 
                 <Bar dataKey="volume" name="Khối Lượng" barSize={30} yAxisId="left" fillOpacity={0.5} isAnimationActive={true} animationDuration={700} animationEasing="ease-in-out">
                     {processedData.map((entry, index) => (
@@ -282,7 +279,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
                     <button 
                       key={tf.value} 
                       onClick={() => onTimeframeChange(tf.value)} 
-                      className={`px-3 py-1 text-xs font-bold rounded-md transition-colors duration-200 ${activeTimeframe === tf.value ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-700/50'}`}
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition-colors duration-200 ${activeTimeframe === tf.value ? 'bg-gradient-to-r from-teal-500 to-violet-500 text-white shadow-md' : 'text-gray-400 hover:bg-gray-700/50'}`}
                     >
                         {tf.label}
                     </button>

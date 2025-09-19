@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect, useRef, FormEvent } from 'react';
 import { GoogleGenAI, Chat } from '@google/genai';
 import type { ChatMessage, GroundingChunk } from '../types';
 import { useTranslation } from '../hooks/useTranslation';
+// FIX: Import missing ArrowUpRightIcon
 import { SparklesIcon, XMarkIcon, PaperAirplaneIcon, CpuChipIcon, UserCircleIcon, LinkIcon, ArrowUpRightIcon } from './Icons';
 
 const createMarkup = (text: string) => {
@@ -14,7 +14,7 @@ const createMarkup = (text: string) => {
   html = html
     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code class="bg-gray-900/80 px-1.5 py-0.5 rounded-md text-sm text-red-400 font-mono">$1</code>');
+    .replace(/`([^`]+)`/g, '<code class="bg-gray-900/80 px-1.5 py-0.5 rounded-md text-sm text-teal-400 font-mono">$1</code>');
     
   return { __html: html };
 };
@@ -138,9 +138,9 @@ const Chatbot: React.FC = () => {
                 flex flex-col glassmorphism rounded-xl shadow-2xl overflow-hidden
             `}>
                 {/* Header */}
-                <header className="flex items-center justify-between p-4 bg-gray-900/50 border-b border-red-500/30 flex-shrink-0">
+                <header className="flex items-center justify-between p-4 bg-gray-900/50 border-b border-violet-500/30 flex-shrink-0">
                     <div className="flex items-center gap-3">
-                        <SparklesIcon className="w-6 h-6 text-red-400" />
+                        <SparklesIcon className="w-6 h-6 text-teal-400" />
                         <h3 className="font-bold text-lg text-white">{t('chatbot.header')}</h3>
                     </div>
                     <button onClick={() => setIsOpen(false)} className="p-1 text-gray-400 hover:text-white rounded-full hover:bg-gray-700">
@@ -154,13 +154,13 @@ const Chatbot: React.FC = () => {
                         <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                             {msg.role === 'model' && (
                                 <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0 mt-1">
-                                    <CpuChipIcon className="w-5 h-5 text-red-400" />
+                                    <CpuChipIcon className="w-5 h-5 text-teal-400" />
                                 </div>
                             )}
                              <div className={`max-w-[85%] flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
                                 <div className={`px-4 py-2 rounded-2xl ${
                                     msg.role === 'user' 
-                                    ? 'bg-red-600 text-white rounded-br-none' 
+                                    ? 'bg-violet-600 text-white rounded-br-none' 
                                     : 'bg-gray-800 text-gray-200 rounded-bl-none'
                                 }`}>
                                     <div className="text-sm whitespace-pre-wrap leading-relaxed" dangerouslySetInnerHTML={createMarkup(msg.text)} />
@@ -173,7 +173,7 @@ const Chatbot: React.FC = () => {
                                         </div>
                                         <div className="grid grid-cols-1 gap-1.5 pl-2 border-l border-gray-700">
                                         {msg.groundingChunks.map(chunk => (
-                                            <a href={chunk.web.uri} key={chunk.web.uri} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-red-400 transition-colors truncate">
+                                            <a href={chunk.web.uri} key={chunk.web.uri} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 hover:text-teal-400 transition-colors truncate">
                                                 <span className="truncate">{chunk.web.title || chunk.web.uri}</span>
                                                 <ArrowUpRightIcon className="w-3 h-3 flex-shrink-0"/>
                                             </a>
@@ -183,8 +183,8 @@ const Chatbot: React.FC = () => {
                                 )}
                             </div>
                             {msg.role === 'user' && (
-                                <div className="w-8 h-8 rounded-full bg-red-800/80 flex items-center justify-center flex-shrink-0 mt-1">
-                                    <UserCircleIcon className="w-5 h-5 text-red-200" />
+                                <div className="w-8 h-8 rounded-full bg-violet-800/80 flex items-center justify-center flex-shrink-0 mt-1">
+                                    <UserCircleIcon className="w-5 h-5 text-violet-200" />
                                 </div>
                             )}
                         </div>
@@ -192,7 +192,7 @@ const Chatbot: React.FC = () => {
                     {isLoading && !messages.some(m => m.role === 'model' && m.text === '') && (
                          <div className="flex items-start gap-3 justify-start">
                              <div className="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center flex-shrink-0 mt-1">
-                                <CpuChipIcon className="w-5 h-5 text-red-400" />
+                                <CpuChipIcon className="w-5 h-5 text-teal-400" />
                              </div>
                              <div className="max-w-[85%] px-4 py-3 rounded-2xl bg-gray-800 rounded-bl-none flex items-center">
                                  <div className="thinking-dots text-gray-400"></div>
@@ -203,7 +203,7 @@ const Chatbot: React.FC = () => {
                 </div>
 
                 {/* Input */}
-                <footer className="p-4 bg-gray-900/50 border-t border-red-500/30 flex-shrink-0">
+                <footer className="p-4 bg-gray-900/50 border-t border-violet-500/30 flex-shrink-0">
                     <form onSubmit={handleSendMessage} className="flex items-center gap-2">
                         <input
                             type="text"
@@ -211,9 +211,9 @@ const Chatbot: React.FC = () => {
                             onChange={(e) => setInput(e.target.value)}
                             placeholder={t('chatbot.input.placeholder')}
                             disabled={isLoading}
-                            className="w-full bg-gray-800 text-gray-100 placeholder-gray-500 px-4 py-2 rounded-full border-2 border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                            className="w-full bg-gray-800 text-gray-100 placeholder-gray-500 px-4 py-2 rounded-full border-2 border-gray-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all"
                         />
-                        <button type="submit" disabled={isLoading || !input.trim()} className="p-2.5 text-white bg-red-600 rounded-full hover:bg-red-500 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex-shrink-0">
+                        <button type="submit" disabled={isLoading || !input.trim()} className="p-2.5 text-white bg-teal-600 rounded-full hover:bg-teal-500 disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors flex-shrink-0">
                             <PaperAirplaneIcon className="w-5 h-5" />
                         </button>
                     </form>
@@ -225,8 +225,8 @@ const Chatbot: React.FC = () => {
                 onClick={() => setIsOpen(true)}
                 className={`
                     ${!isOpen ? 'block animate-pulse-shadow' : 'hidden'}
-                    p-4 bg-gradient-to-r from-red-600 to-orange-500 text-white rounded-full shadow-lg
-                    hover:scale-110 hover:shadow-red-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-red-500
+                    p-4 bg-gradient-to-r from-teal-500 to-violet-500 text-white rounded-full shadow-lg
+                    hover:scale-110 hover:shadow-teal-500/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[rgb(var(--background-rgb))] focus:ring-teal-500
                     transition-all duration-200
                 `}
                 aria-label={t('chatbot.fab.label')}

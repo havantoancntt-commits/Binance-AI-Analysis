@@ -11,8 +11,8 @@ const Logo: React.FC<{ className?: string }> = ({ className }) => (
   >
     <defs>
       <linearGradient id="icon-gradient" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0%" stopColor="#f97316" />
-        <stop offset="100%" stopColor="#ef4444" />
+        <stop offset="0%" stopColor="#14b8a6" />
+        <stop offset="100%" stopColor="#8b5cf6" />
       </linearGradient>
     </defs>
     <g>

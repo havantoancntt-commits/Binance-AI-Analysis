@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import type { TickerData } from '../types';
 import { ArrowTrendingUpIcon, ArrowTrendingDownIcon } from './Icons';
@@ -38,7 +37,7 @@ const Ticker: React.FC<TickerProps> = ({ coinPair, tickerData }) => {
     return null;
   }
 
-  const changeColor = tickerData?.isPositive ? 'text-yellow-400' : 'text-red-400';
+  const changeColor = tickerData?.isPositive ? 'text-teal-300' : 'text-rose-400';
   const Icon = tickerData?.isPositive ? ArrowTrendingUpIcon : ArrowTrendingDownIcon;
 
   return (
