@@ -1,6 +1,314 @@
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import type { Locale } from '../types';
 
+// Embed translation data directly to avoid fetch/import issues
+const enTranslations = {
+  "header.title": "Meta Mind Crypto",
+  "header.subtitle": "Navigating Crypto Markets with Artificial Intelligence",
+  "form.placeholder": "Enter coin pair (e.g., BTC/USDT)",
+  "form.commandCenter": "AI Command Center",
+  "form.coinPairLabel": "Coin Pair",
+  "form.button.analyze": "Analyze",
+  "form.button.analyzing": "Processing...",
+  "form.button.clear": "Clear input",
+  "form.error.invalidPair": "Invalid coin pair format. Please use 'COIN/QUOTE', e.g., BTC/USDT.",
+  "form.error.unknown": "An unknown error occurred.",
+  "dashboard.viewingAnalysisFor": "Viewing analysis for",
+  "dashboard.button.newAnalysis": "Analyze New Pair",
+  "dashboard.welcome.title": "Welcome to the AI Analysis Dashboard",
+  "dashboard.welcome.subtitle": "Get instant market insights. Start by selecting a popular pair or entering a custom one above.",
+  "dashboard.error.title": "Oops, an error occurred",
+  "chart.loading": "Loading chart data...",
+  "chart.label.date": "Date",
+  "chart.label.volume": "Volume",
+  "chart.label.price": "Price (USDT)",
+  "chart.tooltip.date": "Date: {{label}}",
+  "chart.tooltip.price": "Price: ${{price}}",
+  "chart.tooltip.volume": "Volume: {{volume}}",
+  "chart.signal.buy": "BUY",
+  "chart.signal.sell": "SELL",
+  "chart.timeframe.7d": "7D",
+  "chart.timeframe.3m": "3M",
+  "chart.timeframe.1y": "1Y",
+  "chart.ref.buyZone": "Buy Zone",
+  "chart.ref.support": "Support {{index}}",
+  "chart.ref.resistance": "Resistance {{index}}",
+  "chart.ref.takeProfit": "Take Profit {{index}}",
+  "chart.ref.stopLoss": "Stop Loss",
+  "ticker.loading": "Loading data...",
+  "ticker.change24h": "24h",
+  "analysis.title": "Strategy Dashboard",
+  "analysis.subtitle": "AI Analysis for {{coinPair}}",
+  "analysis.button.savePdf": "Save as PDF",
+  "analysis.tabs.overview": "Overview",
+  "analysis.tabs.setup": "Trade Setup",
+  "analysis.tabs.deepDive": "Deep Dive",
+  "analysis.card.title.recommendation": "Recommendation",
+  "analysis.card.title.confidence": "Confidence Score",
+  "analysis.card.title.sentiment": "Market Sentiment",
+  "analysis.card.title.trend": "Trend Forecast",
+  "analysis.card.title.strategicOutlook": "Strategic Outlook",
+  "analysis.card.title.deepAnalysis": "Deeper Analysis",
+  "analysis.card.title.keyTakeaways": "Key Takeaways",
+  "analysis.card.title.tradeZone": "Trading Zones",
+  "analysis.card.title.keyLevels": "Key Levels",
+  "analysis.recommendation.strongBuy": "STRONG BUY",
+  "analysis.recommendation.buy": "BUY",
+  "analysis.recommendation.hold": "HOLD",
+  "analysis.recommendation.sell": "SELL",
+  "analysis.recommendation.strongSell": "STRONG SELL",
+  "analysis.recommendation.avoid": "AVOID",
+  "analysis.sentiment.extremeFear": "Extreme Fear",
+  "analysis.sentiment.fear": "Fear",
+  "analysis.sentiment.neutral": "Neutral",
+  "analysis.sentiment.greed": "Greed",
+  "analysis.sentiment.extremeGreed": "Extreme Greed",
+  "analysis.sentiment.scale.fear": "Fear",
+  "analysis.sentiment.scale.greed": "Greed",
+  "analysis.trend.short": "Short-Term",
+  "analysis.trend.medium": "Mid-Term",
+  "analysis.trend.long": "Long-Term",
+  "analysis.deepDive.driver": "Key Driver:",
+  "analysis.deepDive.bullCase": "Bull Case:",
+  "analysis.deepDive.bearCase": "Bear Case:",
+  "analysis.levels.buyZone": "Buy Zone",
+  "analysis.levels.takeProfit": "Take Profit {{index}}",
+  "analysis.levels.stopLoss": "Stop Loss",
+  "analysis.levels.support": "Support {{index}}",
+  "analysis.levels.resistance": "Resistance {{index}}",
+  "pdf.title": "AI Analysis Report for {{coinPair}}",
+  "pdf.generatedDate": "Report Generated:",
+  "pdf.section.overview": "Overview & Recommendation",
+  "pdf.signal": "Signal:",
+  "pdf.outlook": "Strategic Outlook:",
+  "pdf.confidence": "Confidence",
+  "pdf.sentiment": "Market Sentiment",
+  "pdf.section.tradeSetup": "Trade Setup & Key Levels",
+  "pdf.buyZone": "Buy Zone",
+  "pdf.takeProfit": "Take Profit {{index}}",
+  "pdf.stopLoss": "Stop Loss",
+  "pdf.support": "Support {{index}}",
+  "pdf.resistance": "Resistance {{index}}",
+  "pdf.section.trend": "Multi-Timeframe Trend Analysis",
+  "pdf.trend.short": "Short-Term",
+  "pdf.trend.medium": "Mid-Term",
+  "pdf.trend.long": "Long-Term",
+  "pdf.section.deepDive": "In-Depth Analysis",
+  "pdf.driver": "Key Technical Driver:",
+  "pdf.bullCase": "Bull Case",
+  "pdf.bearCase": "Bear Case",
+  "pdf.takeaways": "Key Takeaways:",
+  "pdf.disclaimer.title": "Disclaimer:",
+  "pdf.disclaimer.text": "The information provided by this application is for informational purposes only and does not constitute financial advice. Cryptocurrency trading involves high risk. Always conduct your own research before making investment decisions.",
+  "marketAlert.extremeFear.title": "Alert: Extreme Market Fear",
+  "marketAlert.extremeFear.message": "Extreme volatility may occur in {{coinPair}}. Manage risk tightly and avoid impulsive trading decisions. This is a time for maximum caution.",
+  "marketAlert.fear.title": "Attention: Fearful Sentiment Prevails",
+  "marketAlert.fear.message": "The market for {{coinPair}} is showing hesitation. Consider reducing exposure and waiting for clearer confirmation signals before entering new positions.",
+  "marketAlert.neutral.title": "Notice: Market is Sideways",
+  "marketAlert.neutral.message": "The {{coinPair}} market is in an indecisive phase. This is a good time to observe and plan for the next move, rather than acting hastily.",
+  "marketAlert.greed.title": "Caution: Greed Sentiment is Rising",
+  "marketAlert.greed.message": "Euphoria is building for {{coinPair}}. Be wary of FOMO (Fear of Missing Out) and ensure you stick to your take-profit plan.",
+  "marketAlert.extremeGreed.title": "Warning: Extreme Greed in Market",
+  "marketAlert.extremeGreed.message": "Market euphoria for {{coinPair}} is at an extreme, which could lead to a sudden correction. Consider taking partial profits and avoid chasing pumps.",
+  "chatbot.welcome": "Hello! I'm the Meta Mind AI assistant. How can I help you today? You can ask me things like:\n\n- Analyze the trend for BTC/USDT.\n- What is the RSI indicator?\n- Compare SOL vs ETH.",
+  "chatbot.error.init": "Sorry, there was an error connecting to the AI assistant. Please check your API configuration.",
+  "chatbot.error.send": "My apologies, an error occurred while processing your request. Please try again.",
+  "chatbot.input.placeholder": "Ask me anything...",
+  "chatbot.fab.label": "Open AI Assistant",
+  "chatbot.header": "Meta Mind Assistant",
+  "chatbot.sources": "Sources:",
+  "news.title": "Related Market News",
+  "news.empty": "No recent news found for this asset.",
+  "disclaimer.title": "Disclaimer:",
+  "disclaimer.text": "The information provided by this application is for informational purposes only and does not constitute financial advice. Cryptocurrency trading involves high risk. Always conduct your own research before making investment decisions.",
+  "motivationalTicker.1": "An investment in knowledge pays the best interest.",
+  "motivationalTicker.2": "Wealth is not about having a lot of money, it's about having a lot of options.",
+  "motivationalTicker.3": "Opportunities don't happen, you create them.",
+  "motivationalTicker.4": "The pessimist sees difficulty in every opportunity. The optimist sees opportunity in every difficulty.",
+  "motivationalTicker.5": "Success is walking from failure to failure with no loss of enthusiasm.",
+  "motivationalTicker.6": "The market is a device for transferring money from the impatient to the patient.",
+  "motivationalTicker.7": "Rule No. 1: Never lose money. Rule No. 2: Never forget Rule No. 1. - Warren Buffett",
+  "motivationalTicker.8": "Wealth is the ability to fully experience life.",
+  "motivationalTicker.9": "Be fearful when others are greedy and greedy only when others are fearful.",
+  "motivationalTicker.10": "Discipline is the bridge between goals and accomplishment.",
+  "utilities.title": "Utilities & Settings",
+  "utilities.close": "Close",
+  "utilities.menu.label": "Open Utilities Menu",
+  "binance.title": "Gateway to Pro Trading",
+  "binance.subtitle": "Trade smarter with lower fees.",
+  "binance.benefit1": "#1 Trusted Exchange Worldwide",
+  "binance.benefit2": "Lifetime Trading Fee Discount",
+  "binance.benefit3": "Top-Tier Asset Security",
+  "binance.referralCode": "Referral Code (exclusive offer):",
+  "binance.copyTitle": "Copy referral code",
+  "binance.copied": "Copied to clipboard!",
+  "binance.button": "Open Account Now",
+  "support.title": "Support the Project",
+  "support.subtitle": "If you find this tool useful, you can support the developer.",
+  "support.qrAlt": "Donation QR Code",
+  "support.bank": "Bank:",
+  "support.accountName": "Account Name:",
+  "support.accountNumber": "Account Number:",
+  "support.copyTitle": "Copy account number",
+  "support.copied": "Copied!"
+};
+
+const viTranslations = {
+  "header.title": "Meta Mind Crypto",
+  "header.subtitle": "Dẫn Lối Thị Trường Tiền Điện Tử Bằng Trí Tuệ Nhân Tạo",
+  "form.placeholder": "Nhập cặp coin (ví dụ: BTC/USDT)",
+  "form.commandCenter": "Trung tâm Lệnh AI",
+  "form.coinPairLabel": "Cặp Coin",
+  "form.button.analyze": "Phân tích",
+  "form.button.analyzing": "Đang xử lý...",
+  "form.button.clear": "Xóa nội dung",
+  "form.error.invalidPair": "Định dạng cặp coin không hợp lệ. Vui lòng sử dụng 'COIN/QUOTE', ví dụ: BTC/USDT.",
+  "form.error.unknown": "Đã xảy ra lỗi không xác định.",
+  "dashboard.viewingAnalysisFor": "Đang xem phân tích cho",
+  "dashboard.button.newAnalysis": "Phân tích Cặp Mới",
+  "dashboard.welcome.title": "Chào mừng đến với Bảng điều khiển Phân tích AI",
+  "dashboard.welcome.subtitle": "Nhận thông tin chi tiết về thị trường tức thì. Bắt đầu bằng cách chọn một cặp phổ biến hoặc nhập một cặp tùy chỉnh ở trên.",
+  "dashboard.error.title": "Rất tiếc, đã xảy ra lỗi",
+  "chart.loading": "Đang tải dữ liệu biểu đồ...",
+  "chart.label.date": "Ngày",
+  "chart.label.volume": "Khối Lượng Giao Dịch",
+  "chart.label.price": "Giá (USDT)",
+  "chart.tooltip.date": "Ngày: {{label}}",
+  "chart.tooltip.price": "Giá: ${{price}}",
+  "chart.tooltip.volume": "KLGD: {{volume}}",
+  "chart.signal.buy": "MUA",
+  "chart.signal.sell": "BÁN",
+  "chart.timeframe.7d": "7N",
+  "chart.timeframe.3m": "3T",
+  "chart.timeframe.1y": "1N",
+  "chart.ref.buyZone": "Vùng Mua",
+  "chart.ref.support": "Hỗ trợ {{index}}",
+  "chart.ref.resistance": "Kháng cự {{index}}",
+  "chart.ref.takeProfit": "Chốt lời {{index}}",
+  "chart.ref.stopLoss": "Cắt lỗ",
+  "ticker.loading": "Đang tải dữ liệu...",
+  "ticker.change24h": "24h",
+  "analysis.title": "Bảng Điều Khiển Chiến Lược",
+  "analysis.subtitle": "Phân tích AI cho {{coinPair}}",
+  "analysis.button.savePdf": "Lưu PDF",
+  "analysis.tabs.overview": "Tổng Quan",
+  "analysis.tabs.setup": "Thiết Lập Giao Dịch",
+  "analysis.tabs.deepDive": "Phân Tích Sâu",
+  "analysis.card.title.recommendation": "Khuyến nghị",
+  "analysis.card.title.confidence": "Độ Tin Cậy",
+  "analysis.card.title.sentiment": "Tâm Lý Thị Trường",
+  "analysis.card.title.trend": "Dự báo Xu hướng",
+  "analysis.card.title.strategicOutlook": "Triển vọng Chiến lược",
+  "analysis.card.title.deepAnalysis": "Phân Tích Sâu",
+  "analysis.card.title.keyTakeaways": "Điểm Mấu Chốt",
+  "analysis.card.title.tradeZone": "Vùng Giao Dịch",
+  "analysis.card.title.keyLevels": "Các Mức Cản Chính",
+  "analysis.recommendation.strongBuy": "MUA MẠNH",
+  "analysis.recommendation.buy": "MUA",
+  "analysis.recommendation.hold": "NẮM GIỮ",
+  "analysis.recommendation.sell": "BÁN",
+  "analysis.recommendation.strongSell": "BÁN MẠNH",
+  "analysis.recommendation.avoid": "TRÁNH",
+  "analysis.sentiment.extremeFear": "Sợ hãi tột độ",
+  "analysis.sentiment.fear": "Sợ hãi",
+  "analysis.sentiment.neutral": "Trung lập",
+  "analysis.sentiment.greed": "Tham lam",
+  "analysis.sentiment.extremeGreed": "Tham lam tột độ",
+  "analysis.sentiment.scale.fear": "Sợ hãi",
+  "analysis.sentiment.scale.greed": "Tham lam",
+  "analysis.trend.short": "Ngắn hạn",
+  "analysis.trend.medium": "Trung hạn",
+  "analysis.trend.long": "Dài hạn",
+  "analysis.deepDive.driver": "Động Lực Chính:",
+  "analysis.deepDive.bullCase": "Kịch bản Tăng giá:",
+  "analysis.deepDive.bearCase": "Kịch bản Giảm giá:",
+  "analysis.levels.buyZone": "Vùng Mua",
+  "analysis.levels.takeProfit": "Chốt Lời {{index}}",
+  "analysis.levels.stopLoss": "Cắt Lỗ",
+  "analysis.levels.support": "Hỗ Trợ {{index}}",
+  "analysis.levels.resistance": "Kháng Cự {{index}}",
+  "pdf.title": "Báo cáo Phân tích AI cho {{coinPair}}",
+  "pdf.generatedDate": "Ngày xuất báo cáo:",
+  "pdf.section.overview": "Tổng quan & Khuyến nghị",
+  "pdf.signal": "Tín hiệu:",
+  "pdf.outlook": "Triển vọng Chiến lược:",
+  "pdf.confidence": "Độ tin cậy",
+  "pdf.sentiment": "Tâm lý Thị trường",
+  "pdf.section.tradeSetup": "Thiết lập Giao dịch & Các mức giá quan trọng",
+  "pdf.buyZone": "Vùng Mua",
+  "pdf.takeProfit": "Chốt lời {{index}}",
+  "pdf.stopLoss": "Cắt lỗ",
+  "pdf.support": "Hỗ trợ {{index}}",
+  "pdf.resistance": "Kháng cự {{index}}",
+  "pdf.section.trend": "Phân tích Xu hướng Đa khung Thời gian",
+  "pdf.trend.short": "Ngắn hạn",
+  "pdf.trend.medium": "Trung hạn",
+  "pdf.trend.long": "Dài hạn",
+  "pdf.section.deepDive": "Phân tích Sâu",
+  "pdf.driver": "Động lực Kỹ thuật Chính:",
+  "pdf.bullCase": "Kịch bản Tăng giá (Bull Case)",
+  "pdf.bearCase": "Kịch bản Giảm giá (Bear Case)",
+  "pdf.takeaways": "Điểm Mấu Chốt:",
+  "pdf.disclaimer.title": "Miễn trừ trách nhiệm:",
+  "pdf.disclaimer.text": "Thông tin được cung cấp bởi ứng dụng này chỉ dành cho mục đích thông tin và không phải là lời khuyên tài chính. Giao dịch tiền điện tử có rủi ro cao. Hãy tự nghiên cứu trước khi đưa ra quyết định đầu tư.",
+  "marketAlert.extremeFear.title": "Cảnh Báo: Thị Trường Sợ Hãi Tột Độ",
+  "marketAlert.extremeFear.message": "Biến động cực cao có thể xảy ra với {{coinPair}}. Hãy quản lý rủi ro chặt chẽ và tránh các quyết định giao dịch bốc đồng. Đây là thời điểm cần hết sức thận trọng.",
+  "marketAlert.fear.title": "Chú Ý: Tâm Lý Sợ Hãi Chiếm Ưu Thế",
+  "marketAlert.fear.message": "Thị trường {{coinPair}} đang cho thấy sự do dự. Cân nhắc giảm thiểu rủi ro và chờ đợi tín hiệu xác nhận rõ ràng hơn trước khi vào lệnh mới.",
+  "marketAlert.neutral.title": "Thông Báo: Thị Trường Đang Đi Ngang",
+  "marketAlert.neutral.message": "Thị trường {{coinPair}} đang trong giai đoạn thiếu quyết đoán. Đây là thời điểm tốt để quan sát và lập kế hoạch cho động thái tiếp theo, thay vì hành động vội vàng.",
+  "marketAlert.greed.title": "Lưu Ý: Tâm Lý Tham Lam Đang Tăng",
+  "marketAlert.greed.message": "Sự hưng phấn đang tăng lên đối với {{coinPair}}. Hãy cẩn thận với FOMO (Hội chứng sợ bỏ lỡ) và đảm bảo tuân thủ kế hoạch chốt lời của bạn.",
+  "marketAlert.extremeGreed.title": "Cảnh Báo: Thị Trường Tham Lam Tột Độ",
+  "marketAlert.extremeGreed.message": "Sự hưng phấn của thị trường {{coinPair}} đang ở mức cực đoan, có thể dẫn đến một đợt điều chỉnh đột ngột. Hãy cân nhắc chốt lời một phần và tránh vào lệnh mua đuổi.",
+  "chatbot.welcome": "Xin chào! Tôi là trợ lý AI của Meta Mind. Tôi có thể giúp gì cho bạn hôm nay? Bạn có thể hỏi tôi những câu như:\n\n- Phân tích xu hướng của BTC/USDT.\n- Giải thích chỉ báo RSI là gì?\n- So sánh giữa SOL và ETH.",
+  "chatbot.error.init": "Rất tiếc, đã xảy ra lỗi khi kết nối với trợ lý AI. Vui lòng kiểm tra lại cấu hình API.",
+  "chatbot.error.send": "Xin lỗi, đã có lỗi xảy ra khi xử lý yêu cầu của bạn. Vui lòng thử lại.",
+  "chatbot.input.placeholder": "Hỏi bất cứ điều gì...",
+  "chatbot.fab.label": "Mở Trợ lý AI",
+  "chatbot.header": "Trợ lý Meta Mind",
+  "chatbot.sources": "Nguồn:",
+  "news.title": "Tin Tức Thị Trường Liên Quan",
+  "news.empty": "Không tìm thấy tin tức gần đây cho tài sản này.",
+  "disclaimer.title": "Miễn trừ trách nhiệm:",
+  "disclaimer.text": "Thông tin được cung cấp bởi ứng dụng này chỉ dành cho mục đích thông tin và không phải là lời khuyên tài chính. Giao dịch tiền điện tử có rủi ro cao. Hãy tự nghiên cứu trước khi đưa ra quyết định đầu tư.",
+  "motivationalTicker.1": "Đầu tư vào kiến thức mang lại lợi nhuận cao nhất.",
+  "motivationalTicker.2": "Sự giàu có không phải là có nhiều tiền, mà là có nhiều lựa chọn.",
+  "motivationalTicker.3": "Cơ hội không tự đến, bạn phải tạo ra chúng.",
+  "motivationalTicker.4": "Người bi quan nhìn thấy khó khăn trong mọi cơ hội. Người lạc quan nhìn thấy cơ hội trong mọi khó khăn.",
+  "motivationalTicker.5": "Thành công là đi từ thất bại này đến thất bại khác mà không mất đi lòng nhiệt huyết.",
+  "motivationalTicker.6": "Thị trường là công cụ để chuyển tiền từ người thiếu kiên nhẫn sang người kiên nhẫn.",
+  "motivationalTicker.7": "Quy tắc số 1: Không bao giờ để mất tiền. Quy tắc số 2: Không bao giờ quên Quy tắc số 1. - Warren Buffett",
+  "motivationalTicker.8": "Sự giàu có là khả năng trải nghiệm cuộc sống một cách trọn vẹn.",
+  "motivationalTicker.9": "Hãy tham lam khi người khác sợ hãi và chỉ sợ hãi khi người khác tham lam.",
+  "motivationalTicker.10": "Kỷ luật là cầu nối giữa mục tiêu và thành tựu.",
+  "utilities.title": "Tiện ích & Cài đặt",
+  "utilities.close": "Đóng",
+  "utilities.menu.label": "Mở Menu Tiện ích",
+  "binance.title": "Cổng Vào Giao Dịch Đẳng Cấp",
+  "binance.subtitle": "Giao dịch thông minh hơn với chi phí thấp hơn.",
+  "binance.benefit1": "Sàn giao dịch uy tín #1 thế giới",
+  "binance.benefit2": "Giảm phí giao dịch trọn đời",
+  "binance.benefit3": "Bảo mật tài sản hàng đầu",
+  "binance.referralCode": "Mã mời (ưu đãi độc quyền):",
+  "binance.copyTitle": "Sao chép mã mời",
+  "binance.copied": "Đã sao chép vào bộ nhớ tạm!",
+  "binance.button": "Mở Tài Khoản Ngay",
+  "support.title": "Hỗ trợ Dự án",
+  "support.subtitle": "Nếu thấy công cụ này hữu ích, bạn có thể ủng hộ nhà phát triển.",
+  "support.qrAlt": "Mã QR ủng hộ",
+  "support.bank": "Ngân hàng:",
+  "support.accountName": "Chủ tài khoản:",
+  "support.accountNumber": "Số tài khoản:",
+  "support.copyTitle": "Sao chép số tài khoản",
+  "support.copied": "Đã sao chép!"
+};
+
+const translationsData: Record<Locale, Record<string, string>> = {
+    en: enTranslations,
+    vi: viTranslations,
+};
+
 interface LanguageContextType {
   locale: Locale;
   setLocale: (locale: Locale) => void;
@@ -23,54 +331,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   });
   
-  const [translations, setTranslations] = useState<Record<string, string> | null>(null);
-
-  useEffect(() => {
-    let isCancelled = false;
-    const loadTranslations = async () => {
-      try {
-        // Use an absolute path to ensure files are found on deployment platforms like Vercel
-        const response = await fetch(`/locales/${locale}.json`);
-        if (!response.ok) {
-          throw new Error(`Could not load ${locale}.json`);
-        }
-        const data = await response.json();
-        if (!isCancelled) {
-          setTranslations(data);
-        }
-      } catch (error) {
-        console.error("Failed to load translations:", error);
-        if (locale !== 'vi') {
-           try {
-             // Use an absolute path for the fallback as well
-             const fallbackResponse = await fetch(`/locales/vi.json`);
-             const data = await fallbackResponse.json();
-             if (!isCancelled) {
-               setTranslations(data);
-             }
-           } catch (fallbackError) {
-             console.error("Failed to load fallback translations:", fallbackError);
-             if (!isCancelled) {
-                setTranslations({}); // Prevent render blocking on error
-             }
-           }
-        } else {
-          if (!isCancelled) {
-            setTranslations({}); // Prevent render blocking on error
-          }
-        }
-      }
-    };
-    loadTranslations();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [locale]);
+  const translations = translationsData[locale];
 
   const setLocale = useCallback((newLocale: Locale) => {
     if (newLocale !== locale) {
-        setTranslations(null); // Reset to trigger loading state
         setLocaleState(newLocale);
         try {
           localStorage.setItem('meta-mind-crypto-locale', newLocale);
@@ -81,9 +345,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [locale]);
 
   const t = useCallback((key: string, replacements?: Record<string, string | number>): string => {
-    // The parent component will prevent rendering until translations are loaded.
-    const currentTranslations = translations || {};
-    let translation = currentTranslations[key] || key;
+    let translation = translations[key] || key;
     if (replacements) {
       Object.keys(replacements).forEach(placeholder => {
         translation = translation.replace(`{{${placeholder}}}`, String(replacements[placeholder]));
@@ -96,11 +358,6 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
-
-  // Do not render children until translations are loaded to prevent a flash of untranslated content.
-  if (!translations) {
-    return null;
-  }
 
   return (
     <LanguageContext.Provider value={{ locale, setLocale, t }}>
