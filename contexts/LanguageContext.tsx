@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import type { Locale } from '../types';
 
@@ -24,7 +23,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     }
   });
   
-  const [translations, setTranslations] = useState<Record<string, string>>({});
+  const [translations, setTranslations] = useState<Record<string, string> | null>(null);
 
   useEffect(() => {
     const loadTranslations = async () => {
@@ -45,7 +44,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
              setTranslations(data);
            } catch (fallbackError) {
              console.error("Failed to load fallback translations:", fallbackError);
+             setTranslations({}); // Prevent render blocking on error
            }
+        } else {
+            setTranslations({}); // Prevent render blocking on error
         }
       }
     };
@@ -53,6 +55,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [locale]);
 
   const setLocale = useCallback((newLocale: Locale) => {
+    setTranslations(null); // Reset to trigger loading state
     setLocaleState(newLocale);
     try {
       localStorage.setItem('meta-mind-crypto-locale', newLocale);
@@ -62,7 +65,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, []);
 
   const t = useCallback((key: string, replacements?: Record<string, string | number>): string => {
-    let translation = translations[key] || key;
+    const currentTranslations = translations || {};
+    let translation = currentTranslations[key] || key;
     if (replacements) {
       Object.keys(replacements).forEach(placeholder => {
         translation = translation.replace(`{{${placeholder}}}`, String(replacements[placeholder]));
@@ -75,6 +79,11 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
+
+  // Prevent rendering children until translations are loaded
+  if (translations === null) {
+      return null;
+  }
 
   return (
     <LanguageContext.Provider value={{ locale, setLocale, t }}>
