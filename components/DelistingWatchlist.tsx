@@ -1,6 +1,7 @@
 import React from 'react';
 import type { DelistingCoin } from '../types';
 import { ArchiveBoxXMarkIcon, ArrowPathIcon } from './Icons';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface DelistingWatchlistProps {
   watchlist: DelistingCoin[];
@@ -23,24 +24,25 @@ const WatchlistSkeleton: React.FC = () => (
 );
 
 const DelistingWatchlist: React.FC<DelistingWatchlistProps> = ({ watchlist, isLoading, onRefresh }) => {
+  const { t } = useTranslation();
   return (
     <section className="glassmorphism p-6 rounded-lg shadow-2xl animate-fade-in">
         <header className="flex justify-between items-center mb-4">
             <div className="flex items-center gap-3">
                 <ArchiveBoxXMarkIcon className="w-6 h-6 text-orange-400"/>
-                <h3 className="text-xl font-bold text-gray-200">Theo dõi hủy niêm yết</h3>
+                <h3 className="text-xl font-bold text-gray-200">{t('delisting.title')}</h3>
             </div>
             <button
                 onClick={onRefresh}
                 disabled={isLoading}
                 className="p-2 text-gray-400 rounded-full hover:bg-gray-700 hover:text-white transition-colors disabled:opacity-50 disabled:cursor-wait"
-                aria-label="Làm mới danh sách"
+                aria-label={t('delisting.refresh')}
             >
                 <ArrowPathIcon className={`w-5 h-5 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
         </header>
         <p className="text-xs text-gray-500 mb-4 -mt-2">
-            AI tổng hợp các thông báo gần đây. Luôn kiểm tra thông báo chính thức từ Binance.
+            {t('delisting.subtitle')}
         </p>
 
       <div className="max-h-[250px] overflow-y-auto pr-2 space-y-3">
@@ -48,7 +50,7 @@ const DelistingWatchlist: React.FC<DelistingWatchlistProps> = ({ watchlist, isLo
             <WatchlistSkeleton />
         ) : watchlist.length === 0 ? (
           <div className="flex items-center justify-center h-24 text-gray-500">
-            Không tìm thấy thông báo hủy niêm yết nào gần đây.
+            {t('delisting.empty')}
           </div>
         ) : (
           watchlist.map((item, index) => (
@@ -58,7 +60,7 @@ const DelistingWatchlist: React.FC<DelistingWatchlistProps> = ({ watchlist, isLo
                 <p className="text-xs text-gray-400 truncate" title={item.reason}>{item.reason}</p>
               </div>
               <div className="text-right flex-shrink-0">
-                <p className="text-sm font-semibold text-orange-300">Ngày hủy: {item.delistingDate}</p>
+                <p className="text-sm font-semibold text-orange-300">{t('delisting.date')} {item.delistingDate}</p>
               </div>
             </div>
           ))

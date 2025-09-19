@@ -18,7 +18,7 @@ const FloatingActionMenu: React.FC = () => {
                 <button
                     onClick={openModal}
                     className="p-4 bg-gradient-to-r from-teal-500 to-violet-600 text-white rounded-full shadow-lg hover:scale-110 hover:shadow-violet-500/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[rgb(var(--background-rgb))] focus:ring-teal-400 transition-all duration-200 animate-pulse-shadow"
-                    aria-label={t('actionCenter.tabs.settings')}
+                    aria-label={t('utilities.menu.label')}
                 >
                     <Squares2X2Icon className="w-8 h-8" />
                 </button>
@@ -42,13 +42,13 @@ const FloatingActionMenu: React.FC = () => {
                             <div className="flex items-center gap-3">
                                 <Squares2X2Icon className="w-6 h-6 text-teal-300"/>
                                 <div>
-                                    <h3 id="utilities-modal-title" className="text-lg font-bold text-gray-100">Utilities & Settings</h3>
+                                    <h3 id="utilities-modal-title" className="text-lg font-bold text-gray-100">{t('utilities.title')}</h3>
                                 </div>
                             </div>
                             <button 
                                 onClick={closeModal} 
                                 className="p-2 text-gray-400 rounded-full hover:bg-gray-700 hover:text-white transition-colors"
-                                aria-label="Close"
+                                aria-label={t('utilities.close')}
                             >
                                 <XMarkIcon className="w-6 h-6"/>
                             </button>

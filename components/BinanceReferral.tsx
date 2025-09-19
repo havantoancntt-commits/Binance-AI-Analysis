@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { BinanceIcon, ClipboardIcon, CheckIcon, ArrowUpRightIcon, CheckBadgeIcon } from './Icons';
+import { useTranslation } from '../hooks/useTranslation';
 
 const BinanceReferral: React.FC = () => {
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const referralCode = 'I5ZHQCRB';
@@ -15,9 +17,9 @@ const BinanceReferral: React.FC = () => {
   };
 
   const benefits = [
-    'Sàn giao dịch uy tín #1 thế giới',
-    'Giảm phí giao dịch trọn đời',
-    'Bảo mật tài sản hàng đầu',
+    t('binance.benefit1'),
+    t('binance.benefit2'),
+    t('binance.benefit3'),
   ];
 
   return (
@@ -29,9 +31,9 @@ const BinanceReferral: React.FC = () => {
             </div>
             <div>
                 <h3 className="text-lg sm:text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500">
-                    Cổng Vào Giao Dịch Đẳng Cấp
+                    {t('binance.title')}
                 </h3>
-                <p className="text-sm text-gray-400">Giao dịch thông minh hơn với chi phí thấp hơn.</p>
+                <p className="text-sm text-gray-400">{t('binance.subtitle')}</p>
             </div>
         </div>
 
@@ -46,18 +48,18 @@ const BinanceReferral: React.FC = () => {
         
         <div className="space-y-4">
             <div className="space-y-1">
-                <span className="text-sm font-semibold text-gray-400">Mã mời (ưu đãi độc quyền):</span>
+                <span className="text-sm font-semibold text-gray-400">{t('binance.referralCode')}</span>
                 <div className="flex items-center gap-2 bg-gray-800 p-2.5 rounded-lg">
                   <span className="font-mono text-lg text-yellow-300 flex-grow tracking-wider">{referralCode}</span>
                   <button
                     onClick={handleCopy}
                     className="p-2 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white transition-colors"
-                    title="Sao chép mã mời"
+                    title={t('binance.copyTitle')}
                   >
                     {copied ? <CheckIcon className="w-5 h-5 text-green-400" /> : <ClipboardIcon className="w-5 h-5" />}
                   </button>
                 </div>
-                {copied && <p className="text-green-400 text-xs text-right mt-1">Đã sao chép vào bộ nhớ tạm!</p>}
+                {copied && <p className="text-green-400 text-xs text-right mt-1">{t('binance.copied')}</p>}
             </div>
 
             <a
@@ -66,7 +68,7 @@ const BinanceReferral: React.FC = () => {
                 rel="noopener noreferrer"
                 className="w-full flex items-center justify-center gap-2 px-8 py-3 font-bold text-gray-900 bg-gradient-to-r from-yellow-400 to-amber-400 rounded-lg hover:shadow-lg hover:shadow-yellow-500/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-amber-500 transition-all duration-300 transform hover:scale-105"
             >
-                Mở Tài Khoản Ngay <ArrowUpRightIcon className="w-5 h-5" />
+                {t('binance.button')} <ArrowUpRightIcon className="w-5 h-5" />
             </a>
         </div>
       </div>
