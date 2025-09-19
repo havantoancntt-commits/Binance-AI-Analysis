@@ -112,7 +112,7 @@ const analysisSchema = {
     type: Type.OBJECT,
     properties: {
         supportLevels: { type: Type.ARRAY, description: "Two key support price levels.", items: { type: Type.NUMBER } },
-        resistanceLevels: { type: Type.ARRAY, description: "Two key resistance price levels.", items: { Type.NUMBER } },
+        resistanceLevels: { type: Type.ARRAY, description: "Two key resistance price levels.", items: { type: Type.NUMBER } },
         buyZone: { type: Type.OBJECT, description: "A recommended price range for entry.", properties: { from: { type: Type.NUMBER }, to: { type: Type.NUMBER } }, required: ['from', 'to'] },
         takeProfitLevels: { type: Type.ARRAY, description: "Three recommended take-profit price levels.", items: { type: Type.NUMBER } },
         stopLoss: { type: Type.NUMBER, description: "A recommended stop-loss price level." },
