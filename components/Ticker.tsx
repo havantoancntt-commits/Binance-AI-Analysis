@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import type { TickerData } from '../types';
 import { ArrowTrendingUpIcon, ArrowTrendingDownIcon } from './Icons';
+import { useTranslation } from '../hooks/useTranslation';
 
 interface TickerProps {
   coinPair: string | null;
@@ -10,6 +12,7 @@ interface TickerProps {
 const Ticker: React.FC<TickerProps> = ({ coinPair, tickerData }) => {
   const [priceAnimation, setPriceAnimation] = useState('');
   const prevPriceRef = useRef<string | undefined>(undefined);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (tickerData?.price && prevPriceRef.current && tickerData.price !== prevPriceRef.current) {
@@ -52,12 +55,12 @@ const Ticker: React.FC<TickerProps> = ({ coinPair, tickerData }) => {
           <div className={`flex items-center font-semibold text-sm ${changeColor}`}>
             <Icon className="w-4 h-4 mr-1" />
             <span>{tickerData.change} ({tickerData.changePercent})</span>
-            <span className="text-gray-400 text-xs ml-2">24h</span>
+            <span className="text-gray-400 text-xs ml-2">{t('ticker.change24h')}</span>
           </div>
         </div>
       ) : (
         <div className="flex items-center justify-start h-10">
-            <div className="animate-pulse text-sm text-gray-500">Đang tải dữ liệu...</div>
+            <div className="animate-pulse text-sm text-gray-500">{t('ticker.loading')}</div>
         </div>
       )}
     </div>

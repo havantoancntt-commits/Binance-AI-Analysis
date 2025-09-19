@@ -1,6 +1,8 @@
+
 import React, { useState, useEffect, useRef, FormEvent } from 'react';
 import { GoogleGenAI, Chat } from '@google/genai';
 import type { ChatMessage, GroundingChunk } from '../types';
+import { useTranslation } from '../hooks/useTranslation';
 import { SparklesIcon, XMarkIcon, PaperAirplaneIcon, CpuChipIcon, UserCircleIcon, LinkIcon, ArrowUpRightIcon } from './Icons';
 
 const createMarkup = (text: string) => {
@@ -25,36 +27,44 @@ const Chatbot: React.FC = () => {
     const [messages, setMessages] = useState<ChatMessage[]>([]);
     const [chat, setChat] = useState<Chat | null>(null);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const { t, locale } = useTranslation();
 
     // Initialize Chat and Welcome Message
     useEffect(() => {
         try {
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+            const systemInstruction = locale === 'en'
+                ? `You are 'Meta Mind', an intelligent AI assistant specializing in the cryptocurrency market. 
+                   Your expertise includes technical analysis, market trends, and explaining complex financial concepts.
+                   When asked about recent events, news, or market data, use your search tool to provide the most accurate and up-to-date information.
+                   You must always communicate in English. Be helpful, insightful, and concise.`
+                : `Bạn là 'Meta Mind', một trợ lý AI thông minh chuyên về thị trường tiền điện tử. 
+                   Chuyên môn của bạn bao gồm phân tích kỹ thuật, xu hướng thị trường, và giải thích các khái niệm tài chính phức tạp. 
+                   Khi được hỏi về các sự kiện, tin tức hoặc dữ liệu thị trường gần đây, hãy sử dụng công cụ tìm kiếm của bạn để cung cấp thông tin chính xác và cập nhật nhất.
+                   Bạn phải luôn giao tiếp bằng tiếng Việt. Hãy trả lời một cách hữu ích, sâu sắc và súc tích.`;
+            
             const newChat = ai.chats.create({
                 model: 'gemini-2.5-flash',
                 config: {
-                    systemInstruction: `Bạn là 'Meta Mind', một trợ lý AI thông minh chuyên về thị trường tiền điện tử. 
-                    Chuyên môn của bạn bao gồm phân tích kỹ thuật, xu hướng thị trường, và giải thích các khái niệm tài chính phức tạp. 
-                    Khi được hỏi về các sự kiện, tin tức hoặc dữ liệu thị trường gần đây, hãy sử dụng công cụ tìm kiếm của bạn để cung cấp thông tin chính xác và cập nhật nhất.
-                    Bạn phải luôn giao tiếp bằng tiếng Việt. Hãy trả lời một cách hữu ích, sâu sắc và súc tích.`,
+                    systemInstruction,
                     tools: [{googleSearch: {}}],
                 },
             });
             setChat(newChat);
         } catch (error) {
-            console.error("Lỗi khởi tạo AI Chat:", error);
+            console.error("Error initializing AI Chat:", error);
             setMessages([{
                 role: 'model',
-                text: "Rất tiếc, đã xảy ra lỗi khi kết nối với trợ lý AI. Vui lòng kiểm tra lại cấu hình API."
+                text: t('chatbot.error.init')
             }]);
         }
         
         setMessages([{
             role: 'model',
-            text: "Xin chào! Tôi là trợ lý AI của Meta Mind. Tôi có thể giúp gì cho bạn hôm nay? Bạn có thể hỏi tôi những câu như:\n\n- Phân tích xu hướng của BTC/USDT.\n- Giải thích chỉ báo RSI là gì?\n- So sánh giữa SOL và ETH."
+            text: t('chatbot.welcome')
         }]);
 
-    }, []);
+    }, [t, locale]);
 
     // Auto-scroll to bottom of messages
     useEffect(() => {
@@ -102,8 +112,8 @@ const Chatbot: React.FC = () => {
             }
 
         } catch (error) {
-            console.error("Lỗi gửi tin nhắn:", error);
-            const errorMsg = { role: 'model', text: "Xin lỗi, đã có lỗi xảy ra khi xử lý yêu cầu của bạn. Vui lòng thử lại." } as ChatMessage;
+            console.error("Error sending message:", error);
+            const errorMsg = { role: 'model', text: t('chatbot.error.send') } as ChatMessage;
             setMessages(prev => {
                 const lastMsg = prev[prev.length - 1];
                 // If the last message was the empty placeholder, replace it. Otherwise, add a new one.
@@ -131,7 +141,7 @@ const Chatbot: React.FC = () => {
                 <header className="flex items-center justify-between p-4 bg-gray-900/50 border-b border-red-500/30 flex-shrink-0">
                     <div className="flex items-center gap-3">
                         <SparklesIcon className="w-6 h-6 text-red-400" />
-                        <h3 className="font-bold text-lg text-white">Meta Mind Assistant</h3>
+                        <h3 className="font-bold text-lg text-white">{t('chatbot.header')}</h3>
                     </div>
                     <button onClick={() => setIsOpen(false)} className="p-1 text-gray-400 hover:text-white rounded-full hover:bg-gray-700">
                         <XMarkIcon className="w-6 h-6" />
@@ -159,7 +169,7 @@ const Chatbot: React.FC = () => {
                                     <div className="mt-2.5 text-xs text-gray-400 w-full">
                                         <div className="flex items-center gap-1.5 mb-1.5 font-semibold">
                                             <LinkIcon className="w-3.5 h-3.5"/>
-                                            <span>Nguồn:</span>
+                                            <span>{t('chatbot.sources')}</span>
                                         </div>
                                         <div className="grid grid-cols-1 gap-1.5 pl-2 border-l border-gray-700">
                                         {msg.groundingChunks.map(chunk => (
@@ -199,7 +209,7 @@ const Chatbot: React.FC = () => {
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder="Hỏi bất cứ điều gì..."
+                            placeholder={t('chatbot.input.placeholder')}
                             disabled={isLoading}
                             className="w-full bg-gray-800 text-gray-100 placeholder-gray-500 px-4 py-2 rounded-full border-2 border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                         />
@@ -219,7 +229,7 @@ const Chatbot: React.FC = () => {
                     hover:scale-110 hover:shadow-red-500/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-red-500
                     transition-all duration-200
                 `}
-                aria-label="Mở Trợ lý AI"
+                aria-label={t('chatbot.fab.label')}
             >
                 <SparklesIcon className="w-10 h-10" />
             </button>

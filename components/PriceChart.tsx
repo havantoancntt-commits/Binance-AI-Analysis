@@ -1,8 +1,10 @@
 
+
 import React, { useRef, useEffect, useMemo } from 'react';
 import { ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea, Scatter, Cell, Label } from 'recharts';
 import type { PriceDataPoint, AnalysisResult, TickerData } from '../types';
 import Ticker from './Ticker';
+import { useTranslation } from '../hooks/useTranslation';
 
 const formatLargeNumber = (num: number) => {
     if (num >= 1_000_000_000) {
@@ -19,14 +21,15 @@ const formatLargeNumber = (num: number) => {
 
 
 const CustomTooltip = ({ active, payload, label }: any) => {
+  const { t } = useTranslation();
   if (active && payload && payload.length) {
     const pricePayload = payload.find(p => p.dataKey === 'price');
     const volumePayload = payload.find(p => p.dataKey === 'volume');
     return (
       <div className="glassmorphism p-3 rounded-lg shadow-lg border border-gray-700/50" style={{background: 'rgba(10, 5, 5, 0.8)'}}>
-        <p className="label text-sm text-gray-400 font-semibold mb-2">{`Ngày: ${label}`}</p>
-        {pricePayload && <p className="intro text-md font-bold text-orange-400">{`Giá: $${pricePayload.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}`}</p>}
-        {volumePayload && <p className="intro text-sm text-gray-500">{`KLGD: ${formatLargeNumber(volumePayload.value)}`}</p>}
+        <p className="label text-sm text-gray-400 font-semibold mb-2">{t('chart.tooltip.date', { label })}</p>
+        {pricePayload && <p className="intro text-md font-bold text-orange-400">{t('chart.tooltip.price', { price: pricePayload.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) })}</p>}
+        {volumePayload && <p className="intro text-sm text-gray-500">{t('chart.tooltip.volume', { volume: formatLargeNumber(volumePayload.value) })}</p>}
       </div>
     );
   }
@@ -94,6 +97,7 @@ interface PriceChartProps {
 
 const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData, coinPair }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (analysis && chartContainerRef.current) {
@@ -133,7 +137,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
     const buyCandidates = recentData.filter(p => p.price <= buyZoneTop * 1.05);
     if (buyCandidates.length > 0) {
         const buyPoint = buyCandidates.reduce((min, p) => p.price < min.price ? p : min, buyCandidates[0]);
-        points.push({ ...buyPoint, type: 'buy', label: 'MUA' });
+        points.push({ ...buyPoint, type: 'buy', label: t('chart.signal.buy') });
     }
 
     if (analysis.takeProfitLevels.length > 0) {
@@ -141,18 +145,18 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
         const sellCandidates = recentData.filter(p => p.price >= firstTakeProfit * 0.95);
         if (sellCandidates.length > 0) {
             const sellPoint = sellCandidates.reduce((max, p) => p.price > max.price ? p : max, sellCandidates[0]);
-            points.push({ ...sellPoint, type: 'sell', label: 'BÁN' });
+            points.push({ ...sellPoint, type: 'sell', label: t('chart.signal.sell') });
         }
     }
     
     const uniquePoints = Array.from(new Map(points.map(p => [p.date, p])).values());
     return uniquePoints;
-  }, [analysis, priceData]);
+  }, [analysis, priceData, t]);
 
 
   const renderChartSkeleton = () => (
     <div className="w-full h-full bg-gray-900/50 rounded-lg flex items-center justify-center animate-pulse">
-        <div className="text-gray-600 font-semibold">Đang tải dữ liệu biểu đồ...</div>
+        <div className="text-gray-600 font-semibold">{t('chart.loading')}</div>
     </div>
   );
 
@@ -189,7 +193,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />
                 <XAxis dataKey="date" stroke="#9ca3af" tick={{ fontSize: 12 }} dy={10}>
-                    <Label value="Ngày" offset={-15} position="insideBottom" fill="#888" fontSize={12} />
+                    <Label value={t('chart.label.date')} offset={-15} position="insideBottom" fill="#888" fontSize={12} />
                 </XAxis>
                 <YAxis
                     yAxisId="left"
@@ -201,7 +205,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
                     dx={-5}
                     width={60}
                 >
-                    <Label value="Khối Lượng Giao Dịch" angle={-90} position="insideLeft" style={{ textAnchor: 'middle', fill: '#888' }} fontSize={12} />
+                    <Label value={t('chart.label.volume')} angle={-90} position="insideLeft" style={{ textAnchor: 'middle', fill: '#888' }} fontSize={12} />
                 </YAxis>
                 <YAxis
                     yAxisId="right"
@@ -213,7 +217,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
                     dx={5}
                     width={80}
                 >
-                    <Label value="Giá (USDT)" angle={90} position="insideRight" style={{ textAnchor: 'middle', fill: '#888' }} fontSize={12} />
+                    <Label value={t('chart.label.price')} angle={90} position="insideRight" style={{ textAnchor: 'middle', fill: '#888' }} fontSize={12} />
                 </YAxis>
                 
                 <Tooltip 
@@ -233,21 +237,21 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
 
                 {analysis && (
                     <>
-                    <ReferenceArea yAxisId="right" y1={analysis.buyZone.from} y2={analysis.buyZone.to} stroke="#f59e0b" strokeDasharray="3 3" strokeOpacity={0.7} fill="#f59e0b" fillOpacity={0.2} label={{ value: 'Vùng Mua', position: 'insideTopLeft', fill: '#fcd34d', fontSize: 12, fontWeight: 'bold', dy: 10, dx: 10 }} />
+                    <ReferenceArea yAxisId="right" y1={analysis.buyZone.from} y2={analysis.buyZone.to} stroke="#f59e0b" strokeDasharray="3 3" strokeOpacity={0.7} fill="#f59e0b" fillOpacity={0.2} label={{ value: t('chart.ref.buyZone'), position: 'insideTopLeft', fill: '#fcd34d', fontSize: 12, fontWeight: 'bold', dy: 10, dx: 10 }} />
 
                     {analysis.supportLevels.map((level, index) => (
-                        <ReferenceLine yAxisId="right" key={`sup-${index}`} y={level} label={{ value: `Hỗ trợ ${index + 1}`, position: 'right', fill: '#67e8f9', fontSize: 12, dy: -5, dx: 10, fontWeight: 'bold' }} stroke="#22d3ee" strokeDasharray="4 4" strokeWidth={1.5} />
+                        <ReferenceLine yAxisId="right" key={`sup-${index}`} y={level} label={{ value: t('chart.ref.support', { index: index + 1 }), position: 'right', fill: '#67e8f9', fontSize: 12, dy: -5, dx: 10, fontWeight: 'bold' }} stroke="#22d3ee" strokeDasharray="4 4" strokeWidth={1.5} />
                     ))}
                     
                     {analysis.resistanceLevels.map((level, index) => (
-                        <ReferenceLine yAxisId="right" key={`res-${index}`} y={level} label={{ value: `Kháng cự ${index + 1}`, position: 'right', fill: '#d8b4fe', fontSize: 12, dy: -5, dx: 10, fontWeight: 'bold' }} stroke="#c084fc" strokeDasharray="4 4" strokeWidth={1.5} />
+                        <ReferenceLine yAxisId="right" key={`res-${index}`} y={level} label={{ value: t('chart.ref.resistance', { index: index + 1 }), position: 'right', fill: '#d8b4fe', fontSize: 12, dy: -5, dx: 10, fontWeight: 'bold' }} stroke="#c084fc" strokeDasharray="4 4" strokeWidth={1.5} />
                     ))}
 
                     {analysis.takeProfitLevels.map((level, index) => (
-                        <ReferenceLine yAxisId="right" key={`tp-${index}`} y={level} label={{ value: `Chốt lời ${index + 1}`, position: 'right', fill: '#4ade80', fontSize: 12, dy: -5, dx: 10, fontWeight: 'bold' }} stroke="#22c55e" strokeWidth={2} strokeDasharray="8 4"/>
+                        <ReferenceLine yAxisId="right" key={`tp-${index}`} y={level} label={{ value: t('chart.ref.takeProfit', { index: index + 1 }), position: 'right', fill: '#4ade80', fontSize: 12, dy: -5, dx: 10, fontWeight: 'bold' }} stroke="#22c55e" strokeWidth={2} strokeDasharray="8 4"/>
                     ))}
                     
-                    <ReferenceLine yAxisId="right" y={analysis.stopLoss} label={{ value: 'Cắt lỗ', position: 'right', fill: '#f87171', fontSize: 12, dy: -5, dx: 10, fontWeight: 'bold' }} stroke="#ef4444" strokeWidth={2} strokeDasharray="5 5"/>
+                    <ReferenceLine yAxisId="right" y={analysis.stopLoss} label={{ value: t('chart.ref.stopLoss'), position: 'right', fill: '#f87171', fontSize: 12, dy: -5, dx: 10, fontWeight: 'bold' }} stroke="#ef4444" strokeWidth={2} strokeDasharray="5 5"/>
                     
                     <Scatter yAxisId="right" data={signalPoints} shape={<CustomSignalShape />} />
                     </>

@@ -86,6 +86,8 @@ export interface ChatMessage {
   groundingChunks?: GroundingChunk[];
 }
 
+export type Locale = 'vi' | 'en';
+
 // Centralized state and action types for the application
 export interface AppState {
   status: AppStatus;

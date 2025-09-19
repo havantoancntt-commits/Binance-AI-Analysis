@@ -1,8 +1,10 @@
+
 import React, { useReducer, useCallback, useEffect, useRef } from 'react';
 import type { AppState, AppAction } from './types';
 import { AppStatus } from './types';
 import { fetchAIAnalysis } from './services/geminiService';
 import { fetchHistoricalData } from './services/binanceService';
+import { useTranslation } from './hooks/useTranslation';
 
 import PriceChart from './components/PriceChart';
 import AnalysisDisplay from './components/AnalysisDisplay';
@@ -87,6 +89,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
   const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, isAnalysisLoading, error, analysisCache } = state;
+  const { t, locale } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
   
@@ -115,7 +118,7 @@ const App: React.FC = () => {
         }
         
         console.log(`Fetching new analysis for ${analyzedCoin}`);
-        const aiAnalysis = await fetchAIAnalysis(analyzedCoin, { priceData1Y, priceData3M, priceData7D });
+        const aiAnalysis = await fetchAIAnalysis(analyzedCoin, { priceData1Y, priceData3M, priceData7D }, locale);
         
         if (isCancelled) return;
         dispatch({ type: 'SET_ANALYSIS', payload: { analysis: aiAnalysis, coin: analyzedCoin } });
@@ -123,13 +126,13 @@ const App: React.FC = () => {
       } catch (err: any) {
         if (isCancelled) return;
         console.error(err);
-        dispatch({ type: 'FETCH_ERROR', payload: err.message || 'Đã xảy ra lỗi không xác định.' });
+        dispatch({ type: 'FETCH_ERROR', payload: err.message || t('form.error.unknown') });
       }
     };
 
     analyzeCoin();
     return () => { isCancelled = true; };
-  }, [status, analyzedCoin, analysisCache]);
+  }, [status, analyzedCoin, analysisCache, locale, t]);
 
   // WebSocket for live ticker data
   useEffect(() => {
@@ -167,11 +170,11 @@ const App: React.FC = () => {
     if (!coin) return;
     const formattedCoin = coin.trim().toUpperCase().replace(/[^A-Z0-9/]/g, '');
     if (!/^[A-Z0-9]{2,}\/[A-Z0-9]{3,}$/.test(formattedCoin)) {
-        dispatch({ type: 'FETCH_ERROR', payload: "Định dạng cặp coin không hợp lệ. Vui lòng sử dụng 'COIN/QUOTE', ví dụ: BTC/USDT." });
+        dispatch({ type: 'FETCH_ERROR', payload: t('form.error.invalidPair') });
         return;
     }
     dispatch({ type: 'START_ANALYSIS', payload: formattedCoin });
-  }, []);
+  }, [t]);
 
   const handleFormSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -197,7 +200,7 @@ const App: React.FC = () => {
         <div className="flex justify-center items-center py-10 animate-fade-in-up">
           <div className="w-full max-w-3xl glassmorphism rounded-xl p-8 text-center">
               <XCircleIcon className="w-16 h-16 text-red-500/80 mx-auto" />
-              <h3 className="text-2xl font-bold text-red-400 mt-4">Rất tiếc, đã xảy ra lỗi</h3>
+              <h3 className="text-2xl font-bold text-red-400 mt-4">{t('dashboard.error.title')}</h3>
               <div className="mt-2 text-red-300 bg-red-500/10 p-3 rounded-lg max-w-lg mx-auto">
                   <p className="whitespace-pre-wrap">{error}</p>
               </div>
@@ -227,9 +230,9 @@ const App: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in-up">
         <div className="flex flex-col justify-center text-center p-8 animate-fade-in-up stagger-delay-1">
            <CpuChipIcon className="w-16 h-16 mx-auto text-red-400/70" />
-           <h2 className="text-3xl font-bold text-gray-100 mt-4">Chào mừng đến với Bảng điều khiển Phân tích AI</h2>
+           <h2 className="text-3xl font-bold text-gray-100 mt-4">{t('dashboard.welcome.title')}</h2>
            <p className="text-gray-400 mt-2 max-w-xl mx-auto">
-               Nhận thông tin chi tiết về thị trường tức thì. Bắt đầu bằng cách chọn một cặp phổ biến hoặc nhập một cặp tùy chỉnh ở trên.
+               {t('dashboard.welcome.subtitle')}
            </p>
            <MotivationalTicker />
         </div>
@@ -247,17 +250,17 @@ const App: React.FC = () => {
           <div className="flex items-center justify-center gap-3 sm:gap-4 mb-2">
             <Logo className="w-12 h-12 sm:w-14 sm:h-14" />
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
-              Meta Mind Crypto
+              {t('header.title')}
             </h1>
           </div>
-          <p className="mt-2 text-base sm:text-lg text-orange-100/80">Dẫn Lối Thị Trường Tiền Điện Tử Bằng Trí Tuệ Nhân Tạo</p>
+          <p className="mt-2 text-base sm:text-lg text-orange-100/80">{t('header.subtitle')}</p>
         </header>
         
         <div className="p-4 glassmorphism rounded-xl max-w-4xl mx-auto sticky top-4 z-40 animate-fade-in-up stagger-delay-1">
             {analyzedCoin && (status === AppStatus.Success || status === AppStatus.Loading || status === AppStatus.Error) ? (
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
-                        <span className="text-gray-400 text-sm">Đang xem phân tích cho</span>
+                        <span className="text-gray-400 text-sm">{t('dashboard.viewingAnalysisFor')}</span>
                         <h2 className="text-2xl font-bold text-white">{analyzedCoin}</h2>
                     </div>
                     <button
@@ -266,7 +269,7 @@ const App: React.FC = () => {
                         className="px-5 py-2.5 font-bold text-orange-300 bg-gray-700/50 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-red-500 flex-shrink-0 flex items-center justify-center gap-2 hover:-translate-y-0.5 transform"
                     >
                         <ArrowPathIcon className="w-5 h-5" />
-                        Phân tích Cặp Mới
+                        {t('dashboard.button.newAnalysis')}
                     </button>
                 </div>
             ) : (
@@ -276,12 +279,12 @@ const App: React.FC = () => {
                             <input
                                 ref={inputRef} type="text" value={coinInput}
                                 onChange={(e) => dispatch({ type: 'SET_COIN_INPUT', payload: e.target.value })}
-                                placeholder="Nhập cặp coin (ví dụ: BTC/USDT)"
+                                placeholder={t('form.placeholder')}
                                 className="w-full bg-gray-800/80 text-gray-100 placeholder-gray-500 px-4 py-3 rounded-lg border-2 border-gray-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent pr-10"
                                 aria-label="Cặp coin"
                             />
                             {coinInput && status !== AppStatus.Loading && (
-                                <button type="button" onClick={handleClearInput} className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-white" aria-label="Xóa nội dung">
+                                <button type="button" onClick={handleClearInput} className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-500 hover:text-white" aria-label={t('form.button.clear')}>
                                     <XCircleIcon className="h-5 w-5" />
                                 </button>
                             )}
@@ -290,7 +293,7 @@ const App: React.FC = () => {
                             type="submit" disabled={status === AppStatus.Loading || !coinInput}
                             className="px-8 py-3 font-bold text-white bg-gradient-to-r from-red-600 to-orange-500 rounded-lg hover:from-red-500 hover:to-orange-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed flex-shrink-0 transform hover:scale-105"
                         >
-                            {status === AppStatus.Loading ? 'Đang xử lý...' : 'Phân tích'}
+                            {status === AppStatus.Loading ? t('form.button.analyzing') : t('form.button.analyze')}
                         </button>
                     </form>
                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 mt-4">

@@ -1,4 +1,6 @@
+
 import React, { useState } from 'react';
+import { useTranslation } from '../hooks/useTranslation';
 import {
   ClipboardIcon,
   CpuChipIcon,
@@ -7,9 +9,10 @@ import {
   ArrowUpRightIcon,
   CheckBadgeIcon,
   XMarkIcon,
+  Cog6ToothIcon,
 } from './Icons';
 
-type ActiveTab = 'support' | 'binance';
+type ActiveTab = 'binance' | 'settings';
 
 const TabButton: React.FC<{
   active: boolean;
@@ -19,7 +22,7 @@ const TabButton: React.FC<{
 }> = ({ active, onClick, children, activeClass }) => (
   <button
     onClick={onClick}
-    className={`w-1/2 py-3 text-sm font-bold duration-300 rounded-t-lg focus:outline-none border-b-2
+    className={`flex-1 py-3 text-sm font-bold duration-300 rounded-t-lg focus:outline-none border-b-2
       ${active ? `${activeClass} text-white` : 'border-transparent text-gray-400 hover:text-white'}`}
   >
     {children}
@@ -28,6 +31,7 @@ const TabButton: React.FC<{
 
 
 const SupportModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+    const { t } = useTranslation();
     const [copied, setCopied] = useState(false);
     const accountNumber = '0501000160764';
     const accountName = 'HA VAN TOAN';
@@ -59,14 +63,14 @@ const SupportModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                     <div className="flex items-center gap-3">
                         <CpuChipIcon className="w-6 h-6 text-red-400"/>
                         <div>
-                            <h3 id="support-modal-title" className="text-lg font-bold text-gray-100">Hỗ trợ dự án</h3>
-                            <p className="text-sm text-gray-400">Sự ủng hộ của bạn là động lực để phát triển công cụ này.</p>
+                            <h3 id="support-modal-title" className="text-lg font-bold text-gray-100">{t('actionCenter.support.modal.title')}</h3>
+                            <p className="text-sm text-gray-400">{t('actionCenter.support.modal.subtitle')}</p>
                         </div>
                     </div>
                      <button 
                         onClick={onClose} 
                         className="absolute top-3 right-3 p-2 text-gray-400 rounded-full hover:bg-gray-700 hover:text-white transition-colors"
-                        aria-label="Đóng"
+                        aria-label={t('actionCenter.support.modal.close')}
                     >
                         <XMarkIcon className="w-5 h-5"/>
                     </button>
@@ -78,26 +82,26 @@ const SupportModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                         </div>
                         <div className="flex-1 space-y-3 text-gray-300 w-full">
                             <div>
-                                <span className="text-sm font-semibold text-gray-400">Ngân hàng:</span>
+                                <span className="text-sm font-semibold text-gray-400">{t('actionCenter.support.bank')}</span>
                                 <span className="font-bold text-white ml-2">{bankName}</span>
                             </div>
                             <div>
-                                <span className="text-sm font-semibold text-gray-400">Chủ tài khoản:</span>
+                                <span className="text-sm font-semibold text-gray-400">{t('actionCenter.support.accountName')}</span>
                                 <span className="font-bold text-white ml-2">{accountName}</span>
                             </div>
                             <div className="space-y-1">
-                                <span className="text-sm font-semibold text-gray-400">Số tài khoản:</span>
+                                <span className="text-sm font-semibold text-gray-400">{t('actionCenter.support.accountNumber')}</span>
                                 <div className="flex items-center gap-2 bg-gray-800 p-2.5 rounded-lg">
                                     <span className="font-mono text-base text-orange-300 flex-grow">{accountNumber}</span>
                                     <button
                                         onClick={handleCopy}
                                         className="p-2 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white"
-                                        title="Sao chép số tài khoản"
+                                        title={t('actionCenter.support.copyTitle')}
                                     >
                                         {copied ? <CheckIcon className="w-5 h-5 text-green-400" /> : <ClipboardIcon className="w-5 h-5" />}
                                     </button>
                                 </div>
-                                {copied && <p className="text-green-400 text-xs text-right mt-1">Đã sao chép!</p>}
+                                {copied && <p className="text-green-400 text-xs text-right mt-1">{t('actionCenter.support.copied')}</p>}
                             </div>
                         </div>
                     </div>
@@ -109,6 +113,7 @@ const SupportModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
 
 const BinanceTab: React.FC = () => {
+    const { t } = useTranslation();
     const [copied, setCopied] = useState(false);
     const referralCode = 'I5ZHQCRB';
     const referralLink = 'https://accounts.binance.com/register?ref=I5ZHQCRB';
@@ -121,9 +126,9 @@ const BinanceTab: React.FC = () => {
     };
 
      const benefits = [
-        'Sàn giao dịch uy tín #1 thế giới',
-        'Giảm phí giao dịch trọn đời',
-        'Bảo mật tài sản hàng đầu',
+        t('actionCenter.binance.benefit1'),
+        t('actionCenter.binance.benefit2'),
+        t('actionCenter.binance.benefit3'),
     ];
 
     return (
@@ -139,18 +144,18 @@ const BinanceTab: React.FC = () => {
 
             <div className="space-y-4">
                  <div className="space-y-1">
-                    <span className="text-sm font-semibold text-gray-400">Mã mời (ưu đãi độc quyền):</span>
+                    <span className="text-sm font-semibold text-gray-400">{t('actionCenter.binance.referralCode')}</span>
                     <div className="flex items-center gap-2 bg-gray-800 p-2.5 rounded-lg">
                         <span className="font-mono text-base text-yellow-300 flex-grow tracking-wider">{referralCode}</span>
                         <button
                             onClick={handleCopy}
                             className="p-2 rounded-md bg-gray-700 hover:bg-gray-600 text-gray-300 hover:text-white"
-                            title="Sao chép mã mời"
+                            title={t('actionCenter.binance.copyTitle')}
                         >
                             {copied ? <CheckIcon className="w-5 h-5 text-green-400" /> : <ClipboardIcon className="w-5 h-5" />}
                         </button>
                     </div>
-                     {copied && <p className="text-green-400 text-xs text-right mt-1">Đã sao chép!</p>}
+                     {copied && <p className="text-green-400 text-xs text-right mt-1">{t('actionCenter.binance.copied')}</p>}
                 </div>
 
                 <a
@@ -159,15 +164,40 @@ const BinanceTab: React.FC = () => {
                     rel="noopener noreferrer"
                     className="w-full flex items-center justify-center gap-2 px-8 py-3 font-bold text-gray-900 bg-gradient-to-r from-yellow-400 to-amber-400 rounded-lg hover:shadow-lg hover:shadow-yellow-500/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-amber-500 transform hover:scale-105"
                 >
-                    Mở Tài Khoản Ngay <ArrowUpRightIcon className="w-5 h-5" />
+                    {t('actionCenter.binance.button')} <ArrowUpRightIcon className="w-5 h-5" />
                 </a>
             </div>
          </div>
     );
 };
 
+const SettingsTab: React.FC = () => {
+    const { locale, setLocale, t } = useTranslation();
+
+    return (
+        <div className="p-6 animate-fade-in-up">
+            <h4 className="text-sm font-semibold text-gray-400 mb-3">{t('actionCenter.settings.language.title')}</h4>
+            <div className="flex space-x-2">
+                <button
+                    onClick={() => setLocale('vi')}
+                    className={`flex-1 py-2 text-sm font-bold rounded-md transition-colors ${locale === 'vi' ? 'bg-red-600 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'}`}
+                >
+                    Tiếng Việt
+                </button>
+                <button
+                    onClick={() => setLocale('en')}
+                    className={`flex-1 py-2 text-sm font-bold rounded-md transition-colors ${locale === 'en' ? 'bg-red-600 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-300'}`}
+                >
+                    English
+                </button>
+            </div>
+        </div>
+    );
+};
+
 
 const ActionCenter: React.FC = () => {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<ActiveTab>('binance');
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
 
@@ -182,7 +212,7 @@ const ActionCenter: React.FC = () => {
                 >
                     <div className="flex items-center justify-center gap-2">
                         <BinanceIcon className="w-5 h-5 text-yellow-400" />
-                        <span>Mở Tài khoản Binance</span>
+                        <span>{t('actionCenter.tabs.binance')}</span>
                     </div>
                 </TabButton>
                 <TabButton 
@@ -192,13 +222,24 @@ const ActionCenter: React.FC = () => {
                 >
                     <div className="flex items-center justify-center gap-2">
                         <CpuChipIcon className="w-5 h-5 text-red-400" />
-                        <span>Hỗ trợ Dự án</span>
+                        <span>{t('actionCenter.tabs.support')}</span>
+                    </div>
+                </TabButton>
+                <TabButton 
+                    active={activeTab === 'settings'} 
+                    onClick={() => setActiveTab('settings')}
+                    activeClass="border-cyan-400"
+                >
+                    <div className="flex items-center justify-center gap-2">
+                        <Cog6ToothIcon className="w-5 h-5 text-cyan-400" />
+                        <span>{t('actionCenter.tabs.settings')}</span>
                     </div>
                 </TabButton>
             </header>
 
             <div>
                 {activeTab === 'binance' && <BinanceTab />}
+                {activeTab === 'settings' && <SettingsTab />}
             </div>
         </section>
 

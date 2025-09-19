@@ -59,7 +59,7 @@ const calculateRSI = (data, period = 14) => {
     return 100 - (100 / (1 + rs));
 };
 
-const getAnalysisPrompt = (coinPair, data) => {
+const getAnalysisPrompt = (coinPair, data, locale) => {
   const { priceData7D, priceData3M, priceData1Y } = data;
 
   const getLatestPrice = (d) => d.length > 0 ? d[d.length - 1].price : 0;
@@ -76,6 +76,11 @@ const getAnalysisPrompt = (coinPair, data) => {
     sma50: calculateSMA(priceData3M, 50),
     rsi14: calculateRSI(priceData3M, 14),
   };
+
+  const languageInstruction = locale === 'en' 
+    ? "The entire text output within the JSON MUST be in **English**."
+    : "The entire text output within the JSON MUST be in **Vietnamese**.";
+
 
   return `
     **ROLE:** You are an expert financial market technical analyst. Your mission is to perform a comprehensive, multi-timeframe analysis to provide a precise forecast and an actionable trading plan.
@@ -98,7 +103,7 @@ const getAnalysisPrompt = (coinPair, data) => {
     2.  **Populate Schema:** Fill in ALL fields in the required JSON schema based on your synthesized analysis. All price levels must be derived from this analysis.
     3.  **Trend Forecast:** Provide a trend forecast ('Uptrend', 'Downtrend', 'Sideways') and a BRIEF reason for each timeframe (short, medium, long).
     4.  **Key Takeaways:** Identify the three most critical takeaways from your analysis.
-    5.  **Language:** The entire text output within the JSON MUST be in **Vietnamese**.
+    5.  **Language:** ${languageInstruction}
     6.  **Format:** You MUST respond with ONLY a single, valid JSON object that strictly adheres to the schema. NO other text, explanations, or markdown.
   `;
 };
@@ -106,14 +111,14 @@ const getAnalysisPrompt = (coinPair, data) => {
 const analysisSchema = {
     type: Type.OBJECT,
     properties: {
-        supportLevels: { type: Type.ARRAY, description: "Hai mức giá hỗ trợ chính.", items: { type: Type.NUMBER } },
-        resistanceLevels: { type: Type.ARRAY, description: "Hai mức giá kháng cự chính.", items: { type: Type.NUMBER } },
-        buyZone: { type: Type.OBJECT, description: "Một phạm vi giá được đề xuất để vào lệnh.", properties: { from: { type: Type.NUMBER }, to: { type: Type.NUMBER } }, required: ['from', 'to'] },
-        takeProfitLevels: { type: Type.ARRAY, description: "Ba mức giá chốt lời được đề xuất.", items: { type: Type.NUMBER } },
-        stopLoss: { type: Type.NUMBER, description: "Một mức giá dừng lỗ được đề xuất." },
+        supportLevels: { type: Type.ARRAY, description: "Two key support price levels.", items: { type: Type.NUMBER } },
+        resistanceLevels: { type: Type.ARRAY, description: "Two key resistance price levels.", items: { Type.NUMBER } },
+        buyZone: { type: Type.OBJECT, description: "A recommended price range for entry.", properties: { from: { type: Type.NUMBER }, to: { type: Type.NUMBER } }, required: ['from', 'to'] },
+        takeProfitLevels: { type: Type.ARRAY, description: "Three recommended take-profit price levels.", items: { type: Type.NUMBER } },
+        stopLoss: { type: Type.NUMBER, description: "A recommended stop-loss price level." },
         trendAnalysis: {
             type: Type.OBJECT,
-            description: "Phân tích xu hướng đa khung thời gian.",
+            description: "Multi-timeframe trend analysis.",
             properties: {
                 shortTerm: { type: Type.OBJECT, properties: { trend: { type: Type.STRING, enum: ['Uptrend', 'Downtrend', 'Sideways']}, reason: { type: Type.STRING } }, required: ['trend', 'reason'] },
                 mediumTerm: { type: Type.OBJECT, properties: { trend: { type: Type.STRING, enum: ['Uptrend', 'Downtrend', 'Sideways']}, reason: { type: Type.STRING } }, required: ['trend', 'reason'] },
@@ -121,13 +126,13 @@ const analysisSchema = {
             },
             required: ['shortTerm', 'mediumTerm', 'longTerm'],
         },
-        confidenceScore: { type: Type.NUMBER, description: "Điểm tin cậy từ 0 đến 100 cho phân tích." },
-        confidenceReason: { type: Type.STRING, description: "Lý do ngắn gọn cho điểm tin cậy." },
-        marketDriver: { type: Type.STRING, description: "Động lực kỹ thuật chính của thị trường." },
-        summary: { type: Type.STRING, description: "Triển vọng chiến lược tổng hợp kết hợp các khung thời gian." },
+        confidenceScore: { type: Type.NUMBER, description: "A confidence score from 0 to 100 for the analysis." },
+        confidenceReason: { type: Type.STRING, description: "A brief reason for the confidence score." },
+        marketDriver: { type: Type.STRING, description: "The primary technical driver for the market." },
+        summary: { type: Type.STRING, description: "A synthesized strategic outlook combining timeframes." },
         recommendation: {
             type: Type.OBJECT,
-            description: "Khuyến nghị giao dịch cuối cùng với tín hiệu và lý do.",
+            description: "The final trade recommendation with signal and reason.",
             properties: {
                 signal: { type: Type.STRING, enum: ['Strong Buy', 'Buy', 'Hold', 'Sell', 'Strong Sell', 'Avoid'] },
                 reason: { type: Type.STRING },
@@ -136,19 +141,19 @@ const analysisSchema = {
         },
         detailedAnalysis: {
             type: Type.OBJECT,
-            description: "Phân tích chi tiết về các kịch bản có thể xảy ra.",
+            description: "Detailed analysis of possible scenarios.",
             properties: {
-                bullCase: { type: Type.STRING, description: "Kịch bản và các yếu tố hỗ trợ cho xu hướng tăng giá." },
-                bearCase: { type: Type.STRING, description: "Kịch bản, rủi ro và các yếu tố hỗ trợ cho xu hướng giảm giá." },
+                bullCase: { type: Type.STRING, description: "The scenario and factors supporting an uptrend." },
+                bearCase: { type: Type.STRING, description: "The scenario, risks, and factors supporting a downtrend." },
             },
             required: ['bullCase', 'bearCase'],
         },
         marketSentiment: {
             type: Type.STRING,
-            description: "Tâm lý thị trường hiện tại dựa trên hành động giá.",
+            description: "The current market sentiment based on price action.",
             enum: ['Extreme Fear', 'Fear', 'Neutral', 'Greed', 'Extreme Greed']
         },
-        keyTakeaways: { type: Type.ARRAY, description: "Ba điểm quan trọng nhất từ phân tích.", items: { type: Type.STRING } },
+        keyTakeaways: { type: Type.ARRAY, description: "The three most important points from the analysis.", items: { type: Type.STRING } },
     },
     required: ['supportLevels', 'resistanceLevels', 'buyZone', 'takeProfitLevels', 'stopLoss', 'trendAnalysis', 'confidenceScore', 'confidenceReason', 'marketDriver', 'summary', 'recommendation', 'detailedAnalysis', 'marketSentiment', 'keyTakeaways'],
 };
@@ -158,20 +163,20 @@ export default async function handler(request, response) {
         return response.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    const { coinPair, priceData7D, priceData3M, priceData1Y } = request.body;
+    const { coinPair, priceData7D, priceData3M, priceData1Y, locale = 'vi' } = request.body;
     const apiKey = process.env.API_KEY;
 
     if (!apiKey) {
-        return response.status(500).json({ error: 'Thiếu API Key phía máy chủ. Vui lòng cấu hình biến môi trường API_KEY.' });
+        return response.status(500).json({ error: 'API Key is missing on the server. Please configure the API_KEY environment variable.' });
     }
 
     if (!coinPair || !priceData1Y || !priceData3M || !priceData7D) {
-        return response.status(400).json({ error: 'Thiếu dữ liệu giá cho một hoặc nhiều khung thời gian.' });
+        return response.status(400).json({ error: 'Missing price data for one or more timeframes.' });
     }
 
     try {
         const ai = new GoogleGenAI({ apiKey });
-        const prompt = getAnalysisPrompt(coinPair, { priceData7D, priceData3M, priceData1Y });
+        const prompt = getAnalysisPrompt(coinPair, { priceData7D, priceData3M, priceData1Y }, locale);
 
         const geminiResponse = await ai.models.generateContent({
             model: "gemini-2.5-flash",
@@ -192,7 +197,7 @@ export default async function handler(request, response) {
             parsedJson = JSON.parse(jsonText);
         } catch (e) {
             console.error("Failed to parse Gemini response as JSON:", jsonText);
-            throw new Error("Phản hồi AI không phải là JSON hợp lệ.");
+            throw new Error("AI response was not valid JSON.");
         }
         
         response.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120');
@@ -200,7 +205,7 @@ export default async function handler(request, response) {
 
     } catch (error) {
         console.error('Gemini API or internal error:', error);
-        const errorMessage = error.message || 'Đã xảy ra lỗi máy chủ nội bộ.';
-        return response.status(500).json({ error: `Lỗi phía máy chủ: ${errorMessage}` });
+        const errorMessage = error.message || 'An internal server error occurred.';
+        return response.status(500).json({ error: `Server-side error: ${errorMessage}` });
     }
 }
