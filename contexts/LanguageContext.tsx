@@ -26,6 +26,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [translations, setTranslations] = useState<Record<string, string> | null>(null);
 
   useEffect(() => {
+    let isCancelled = false;
     const loadTranslations = async () => {
       try {
         // The file path needs to be relative from the root HTML file
@@ -34,37 +35,52 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           throw new Error(`Could not load ${locale}.json`);
         }
         const data = await response.json();
-        setTranslations(data);
+        if (!isCancelled) {
+          setTranslations(data);
+        }
       } catch (error) {
         console.error("Failed to load translations:", error);
         if (locale !== 'vi') {
            try {
              const fallbackResponse = await fetch(`./locales/vi.json`);
              const data = await fallbackResponse.json();
-             setTranslations(data);
+             if (!isCancelled) {
+               setTranslations(data);
+             }
            } catch (fallbackError) {
              console.error("Failed to load fallback translations:", fallbackError);
-             setTranslations({}); // Prevent render blocking on error
+             if (!isCancelled) {
+                setTranslations({}); // Prevent render blocking on error
+             }
            }
         } else {
+          if (!isCancelled) {
             setTranslations({}); // Prevent render blocking on error
+          }
         }
       }
     };
     loadTranslations();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [locale]);
 
   const setLocale = useCallback((newLocale: Locale) => {
-    setTranslations(null); // Reset to trigger loading state
-    setLocaleState(newLocale);
-    try {
-      localStorage.setItem('meta-mind-crypto-locale', newLocale);
-    } catch (e) {
-      console.error("Could not save locale to localStorage:", e);
+    if (newLocale !== locale) {
+        setTranslations(null); // Reset to trigger loading state
+        setLocaleState(newLocale);
+        try {
+          localStorage.setItem('meta-mind-crypto-locale', newLocale);
+        } catch (e) {
+          console.error("Could not save locale to localStorage:", e);
+        }
     }
-  }, []);
+  }, [locale]);
 
   const t = useCallback((key: string, replacements?: Record<string, string | number>): string => {
+    // The parent component will prevent rendering until translations are loaded.
     const currentTranslations = translations || {};
     let translation = currentTranslations[key] || key;
     if (replacements) {
@@ -80,8 +96,11 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     document.documentElement.lang = locale;
   }, [locale]);
 
-  // By removing the null return while loading, the app renders immediately
-  // with keys and updates when translations are fetched, fixing the display bug.
+  // Do not render children until translations are loaded to prevent a flash of untranslated content.
+  if (!translations) {
+    return null;
+  }
+
   return (
     <LanguageContext.Provider value={{ locale, setLocale, t }}>
       {children}
