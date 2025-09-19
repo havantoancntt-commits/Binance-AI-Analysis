@@ -12,66 +12,65 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
       :root {
-        --background-start-rgb: 20, 10, 10;
-        --background-end-rgb: 35, 15, 15;
-        --accent-color: #ef4444; /* Fiery Red */
+        --background-rgb: 10, 5, 15; /* Deep purple/black */
+        --accent-start: #ef4444; /* Fiery Red */
+        --accent-end: #f97316; /* Bright Orange */
+        --card-bg: rgba(22, 16, 28, 0.6);
+        --border-color: rgba(255, 100, 100, 0.15);
+        --glow-color: #ef4444;
       }
 
       body {
-        background-color: rgb(var(--background-start-rgb));
-        background-image: radial-gradient(circle at top right, rgba(194, 65, 12, 0.3), transparent 40%),
-                          radial-gradient(circle at bottom left, rgba(133, 27, 27, 0.3), transparent 50%);
+        background-color: rgb(var(--background-rgb));
+        background-image: 
+            radial-gradient(circle at 100% 0%, rgba(126, 34, 206, 0.2), transparent 40%),
+            radial-gradient(circle at 0% 100%, rgba(220, 38, 38, 0.15), transparent 50%);
         background-repeat: no-repeat;
         background-attachment: fixed;
         font-family: 'Inter', sans-serif;
         overscroll-behavior: none; /* Prevents pull-to-refresh */
       }
       
-      /* Refined glassmorphism effect */
       .glassmorphism {
-        background: rgba(59, 18, 11, 0.5);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 100, 100, 0.1);
+        background: var(--card-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
         box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
       }
       
-      /* Global transitions for interactive elements */
       button, a, .interactive-card {
-        transition: all 0.3s ease-in-out;
+        transition: all 0.2s ease-in-out;
       }
 
-      /* Custom scrollbar for a more modern look */
-      /* For Webkit Browsers */
+      /* Custom scrollbar */
       ::-webkit-scrollbar {
         width: 8px;
         height: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: rgb(var(--background-start-rgb));
+        background: rgb(var(--background-rgb));
       }
       ::-webkit-scrollbar-thumb {
-        background-color: #7e22ce; /* A contrasting deep purple */
+        background-color: #8b5cf6; /* A contrasting deep purple */
         border-radius: 10px;
-        border: 2px solid rgb(var(--background-start-rgb));
+        border: 2px solid rgb(var(--background-rgb));
       }
       ::-webkit-scrollbar-thumb:hover {
-        background-color: #9333ea;
+        background-color: #a78bfa;
       }
-
-      /* For Firefox */
       html {
         scrollbar-width: thin;
-        scrollbar-color: #7e22ce rgb(var(--background-start-rgb));
+        scrollbar-color: #8b5cf6 rgb(var(--background-rgb));
       }
       
-      /* Enhanced Fade-in-up animation */
       @keyframes fadeInUp {
-        from { opacity: 0; transform: translateY(20px); }
+        from { opacity: 0; transform: translateY(15px); }
         to { opacity: 1; transform: translateY(0); }
       }
       .animate-fade-in-up {
-        animation: fadeInUp 0.6s ease-out forwards;
+        animation: fadeInUp 0.5s ease-out forwards;
+        opacity: 0; /* Start hidden */
       }
       
       /* Staggered animation delay utilities */
@@ -84,16 +83,17 @@
 
       /* Price ticker animations */
       @keyframes priceUp {
-        from { background-color: rgba(250, 204, 21, 0.3); } /* Yellow-400 */
-        to { background-color: transparent; }
+        0% { background-color: transparent; }
+        50% { background-color: rgba(74, 222, 128, 0.3); } /* Green-400 */
+        100% { background-color: transparent; }
       }
       .animate-price-up {
         animation: priceUp 0.7s ease-out;
       }
-
       @keyframes priceDown {
-        from { background-color: rgba(239, 68, 68, 0.3); } /* Red-500 */
-        to { background-color: transparent; }
+        0% { background-color: transparent; }
+        50% { background-color: rgba(239, 68, 68, 0.3); } /* Red-500 */
+        100% { background-color: transparent; }
       }
       .animate-price-down {
         animation: priceDown 0.7s ease-out;
@@ -117,8 +117,8 @@
 
       /* Hide scrollbar for IE, Edge and Firefox */
       .no-scrollbar {
-        -ms-overflow-style: none;  /* IE and Edge */
-        scrollbar-width: none;  /* Firefox */
+        -ms-overflow-style: none;
+        scrollbar-width: none;
       }
 
       /* Chatbot animations */
@@ -139,18 +139,10 @@
 
        /* Thinking animation for chatbot */
       @keyframes thinking-dots {
-        0%, 20% {
-          background-position: 0% 50%;
-        }
-        40% {
-          background-position: 33% 50%;
-        }
-        60% {
-          background-position: 66% 50%;
-        }
-        80%, 100% {
-          background-position: 100% 50%;
-        }
+        0%, 20% { background-position: 0% 50%; }
+        40% { background-position: 33% 50%; }
+        60% { background-position: 66% 50%; }
+        80%, 100% { background-position: 100% 50%; }
       }
       .thinking-dots {
         display: inline-block;
@@ -163,25 +155,16 @@
       }
 
       /* Shimmer effect for skeleton loaders */
-      @keyframes shimmer {
-        100% {
-          transform: translateX(100%);
-        }
-      }
-
+      @keyframes shimmer { 100% { transform: translateX(100%); } }
       .shimmer-bg {
         position: relative;
         overflow: hidden;
         background-color: rgba(107, 114, 128, 0.2); /* gray-500 with alpha */
       }
-
       .shimmer-bg::after {
         content: '';
         position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        top: 0; left: 0; right: 0; bottom: 0;
         transform: translateX(-100%);
         background-image: linear-gradient(
           90deg,
@@ -194,36 +177,21 @@
       }
 
       /* Card glow effect on hover */
-      @keyframes glow {
-        from {
-          box-shadow: 0 0 10px -10px #f87171, 0 0 20px -20px #f87171;
-        }
-        to {
-          box-shadow: 0 0 10px 0px #f87171, 0 0 20px 5px #f8717166;
-        }
-      }
       .card-glow-hover:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+        transform: translateY(-4px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4), 0 0 20px rgba(var(--glow-color), 0.2);
         border-color: rgba(255, 100, 100, 0.3);
       }
 
       /* Pulsing animation for FAB */
       @keyframes pulse-shadow {
-        0% {
-            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-        }
-        70% {
-            box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
-        }
-        100% {
-            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-        }
+        0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+        70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
       }
       .animate-pulse-shadow {
         animation: pulse-shadow 2.5s infinite;
       }
-
 
     </style>
   <script type="importmap">

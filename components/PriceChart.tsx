@@ -1,8 +1,9 @@
 
 
+
 import React, { useRef, useEffect, useMemo } from 'react';
 import { ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea, Scatter, Cell, Label } from 'recharts';
-import type { PriceDataPoint, AnalysisResult, TickerData } from '../types';
+import type { PriceDataPoint, AnalysisResult, TickerData, ChartTimeframe } from '../types';
 import Ticker from './Ticker';
 import { useTranslation } from '../hooks/useTranslation';
 
@@ -93,11 +94,19 @@ interface PriceChartProps {
   analysis: AnalysisResult | null;
   tickerData: TickerData | null;
   coinPair: string;
+  activeTimeframe: ChartTimeframe;
+  onTimeframeChange: (timeframe: ChartTimeframe) => void;
 }
 
-const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData, coinPair }) => {
+const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData, coinPair, activeTimeframe, onTimeframeChange }) => {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
+
+  const timeframes: {label: string, value: ChartTimeframe}[] = [
+      { label: t('chart.timeframe.7d'), value: '7D'},
+      { label: t('chart.timeframe.3m'), value: '3M'},
+      { label: t('chart.timeframe.1y'), value: '1Y'},
+  ];
 
   useEffect(() => {
     if (analysis && chartContainerRef.current) {
@@ -155,7 +164,7 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
 
 
   const renderChartSkeleton = () => (
-    <div className="w-full h-full bg-gray-900/50 rounded-lg flex items-center justify-center animate-pulse">
+    <div className="w-full h-full bg-gray-900/50 rounded-lg flex items-center justify-center shimmer-bg">
         <div className="text-gray-600 font-semibold">{t('chart.loading')}</div>
     </div>
   );
@@ -264,12 +273,23 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
 
   return (
     <div ref={chartContainerRef} className="glassmorphism p-4 rounded-lg h-full w-full flex flex-col relative">
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-2">
+        <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-2">
             <div className="w-full sm:w-auto">
                 <Ticker coinPair={coinPair} tickerData={tickerData} />
             </div>
+             <div className="bg-gray-900/60 p-1 rounded-lg flex items-center self-end sm:self-center flex-shrink-0">
+                {timeframes.map(tf => (
+                    <button 
+                      key={tf.value} 
+                      onClick={() => onTimeframeChange(tf.value)} 
+                      className={`px-3 py-1 text-xs font-bold rounded-md transition-colors duration-200 ${activeTimeframe === tf.value ? 'bg-red-600 text-white shadow-md' : 'text-gray-400 hover:bg-gray-700/50'}`}
+                    >
+                        {tf.label}
+                    </button>
+                ))}
+            </div>
         </div>
-        <div className="flex-grow w-full h-full">
+        <div className="flex-grow w-full h-full min-h-[300px]">
             {renderChartContent()}
         </div>
     </div>

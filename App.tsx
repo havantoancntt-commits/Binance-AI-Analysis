@@ -1,6 +1,6 @@
 
-import React, { useReducer, useCallback, useEffect, useRef } from 'react';
-import type { AppState, AppAction } from './types';
+import React, { useReducer, useCallback, useEffect, useRef, useMemo } from 'react';
+import type { AppState, AppAction, ChartTimeframe, PriceDataPoint } from './types';
 import { AppStatus } from './types';
 import { fetchAIAnalysis } from './services/geminiService';
 import { fetchHistoricalData } from './services/binanceService';
@@ -20,9 +20,12 @@ import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
 
 const initialState: AppState = {
   status: AppStatus.Idle,
-  coinInput: 'BTC/USDT',
+  coinInput: '',
   analyzedCoin: null,
-  priceData: [],
+  priceData7D: [],
+  priceData3M: [],
+  priceData1Y: [],
+  chartTimeframe: '3M',
   analysis: null,
   tickerData: null,
   isAnalysisLoading: false,
@@ -40,12 +43,22 @@ function appReducer(state: AppState, action: AppAction): AppState {
         coinInput: action.payload,
         error: null,
         analysis: null,
-        priceData: [],
+        priceData7D: [],
+        priceData3M: [],
+        priceData1Y: [],
         tickerData: null,
         isAnalysisLoading: true,
+        chartTimeframe: '3M',
       };
-    case 'SET_PRICE_DATA':
-      return { ...state, priceData: action.payload };
+    case 'SET_ALL_PRICE_DATA':
+      return { 
+          ...state, 
+          priceData7D: action.payload.priceData7D,
+          priceData3M: action.payload.priceData3M,
+          priceData1Y: action.payload.priceData1Y,
+      };
+    case 'SET_CHART_TIMEFRAME':
+        return { ...state, chartTimeframe: action.payload };
     case 'SET_ANALYSIS':
       return {
         ...state,
@@ -68,7 +81,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
         status: AppStatus.Error,
         error: action.payload,
         analysis: null,
-        priceData: [],
+        priceData7D: [],
+        priceData3M: [],
+        priceData1Y: [],
         isAnalysisLoading: false,
       };
     case 'UPDATE_TICKER':
@@ -79,7 +94,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return {
         ...initialState,
         analysisCache: state.analysisCache,
-        coinInput: state.coinInput,
+        coinInput: '',
       };
     default:
       return state;
@@ -88,7 +103,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const { status, coinInput, analyzedCoin, priceData, analysis, tickerData, isAnalysisLoading, error, analysisCache } = state;
+  const { status, coinInput, analyzedCoin, priceData7D, priceData3M, priceData1Y, chartTimeframe, analysis, tickerData, isAnalysisLoading, error, analysisCache } = state;
   const { t, locale } = useTranslation();
   const inputRef = useRef<HTMLInputElement>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
@@ -100,7 +115,7 @@ const App: React.FC = () => {
 
     const analyzeCoin = async () => {
       try {
-        mainContentRef.current?.scrollIntoView({ behavior: 'smooth' });
+        mainContentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
         const [priceData1Y, priceData3M, priceData7D] = await Promise.all([
             fetchHistoricalData(analyzedCoin, '1Y'),
@@ -109,8 +124,8 @@ const App: React.FC = () => {
         ]);
 
         if (isCancelled) return;
-        dispatch({ type: 'SET_PRICE_DATA', payload: priceData3M });
-
+        dispatch({ type: 'SET_ALL_PRICE_DATA', payload: { priceData7D, priceData3M, priceData1Y } });
+        
         if (analysisCache[analyzedCoin]) {
             console.log(`Using cached analysis for ${analyzedCoin}`);
             dispatch({ type: 'USE_CACHED_ANALYSIS', payload: { analysis: analysisCache[analyzedCoin], coin: analyzedCoin } });
@@ -190,8 +205,21 @@ const App: React.FC = () => {
     dispatch({ type: 'RESET' });
   }, []);
 
+  const chartData = useMemo(() => {
+    switch(chartTimeframe) {
+        case '7D': return priceData7D;
+        case '1Y': return priceData1Y;
+        case '3M':
+        default: return priceData3M;
+    }
+  }, [chartTimeframe, priceData7D, priceData3M, priceData1Y]);
+
+  const handleTimeframeChange = useCallback((tf: ChartTimeframe) => {
+    dispatch({ type: 'SET_CHART_TIMEFRAME', payload: tf });
+  }, []);
+
   const renderContent = () => {
-    if (status === AppStatus.Loading) {
+    if (status === AppStatus.Loading && !analysis) { // Show skeleton only when there's no old data
       return <DashboardSkeleton />;
     }
     
@@ -209,17 +237,24 @@ const App: React.FC = () => {
       );
     }
     
-    if (status === AppStatus.Success && analyzedCoin && analysis) {
+    if (analyzedCoin && (analysis || isAnalysisLoading)) {
       return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in-up">
-          <div className="lg:col-span-7 h-[450px] sm:h-[500px] lg:h-[600px] animate-fade-in-up stagger-delay-1">
-            <PriceChart priceData={priceData} analysis={analysis} tickerData={tickerData} coinPair={analyzedCoin} />
+          <div className="lg:col-span-7 h-[450px] sm:h-[500px] lg:h-[600px] opacity-0 animate-fade-in-up stagger-delay-1" style={{animationFillMode: 'forwards'}}>
+            <PriceChart 
+              priceData={chartData} 
+              analysis={analysis} 
+              tickerData={tickerData} 
+              coinPair={analyzedCoin}
+              activeTimeframe={chartTimeframe}
+              onTimeframeChange={handleTimeframeChange}
+            />
           </div>
           <div className="lg:col-span-5 flex flex-col gap-8">
-            <div className="animate-fade-in-up stagger-delay-2">
-                <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
+            <div className="opacity-0 animate-fade-in-up stagger-delay-2" style={{animationFillMode: 'forwards'}}>
+                <AnalysisDisplay isLoading={isAnalysisLoading && !analysis} analysis={analysis} coinPair={analyzedCoin} />
             </div>
-            <div className="animate-fade-in-up stagger-delay-3">
+            <div className="opacity-0 animate-fade-in-up stagger-delay-3" style={{animationFillMode: 'forwards'}}>
                 <ActionCenter />
             </div>
           </div>
@@ -230,7 +265,7 @@ const App: React.FC = () => {
     // Idle State
     return (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 animate-fade-in-up">
-        <div className="flex flex-col justify-center text-center p-8 animate-fade-in-up stagger-delay-1">
+        <div className="flex flex-col justify-center text-center p-8 opacity-0 animate-fade-in-up stagger-delay-1" style={{animationFillMode: 'forwards'}}>
            <CpuChipIcon className="w-16 h-16 mx-auto text-red-400/70" />
            <h2 className="text-3xl font-bold text-gray-100 mt-4">{t('dashboard.welcome.title')}</h2>
            <p className="text-gray-400 mt-2 max-w-xl mx-auto">
@@ -238,7 +273,7 @@ const App: React.FC = () => {
            </p>
            <MotivationalTicker />
         </div>
-        <div className="flex items-center animate-fade-in-up stagger-delay-2">
+        <div className="flex items-center opacity-0 animate-fade-in-up stagger-delay-2" style={{animationFillMode: 'forwards'}}>
             <ActionCenter />
         </div>
       </div>
@@ -246,9 +281,9 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen text-gray-100">
-      <main className="p-4 sm:p-6 lg:p-8 max-w-screen-2xl mx-auto pb-24">
-        <header className="text-center mb-8 animate-fade-in-up">
+    <>
+      <main className="p-4 sm:p-6 lg:p-8 max-w-screen-2xl mx-auto w-full">
+        <header className="text-center mb-8 opacity-0 animate-fade-in-up" style={{animationFillMode: 'forwards'}}>
           <div className="flex items-center justify-center gap-3 sm:gap-4 mb-2">
             <Logo className="w-12 h-12 sm:w-14 sm:h-14" />
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
@@ -258,8 +293,8 @@ const App: React.FC = () => {
           <p className="mt-2 text-base sm:text-lg text-orange-100/80">{t('header.subtitle')}</p>
         </header>
         
-        <div className="p-4 glassmorphism rounded-xl max-w-4xl mx-auto sticky top-4 z-40 animate-fade-in-up stagger-delay-1">
-            {analyzedCoin && (status === AppStatus.Success || status === AppStatus.Loading || status === AppStatus.Error) ? (
+        <div className="p-4 glassmorphism rounded-xl max-w-4xl mx-auto sticky top-4 z-40 opacity-0 animate-fade-in-up stagger-delay-1" style={{animationFillMode: 'forwards'}}>
+            {analyzedCoin && status !== AppStatus.Idle ? (
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
                         <span className="text-gray-400 text-sm">{t('dashboard.viewingAnalysisFor')}</span>
@@ -268,7 +303,7 @@ const App: React.FC = () => {
                     <button
                         type="button"
                         onClick={handleReset}
-                        className="px-5 py-2.5 font-bold text-orange-300 bg-gray-700/50 rounded-lg hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-red-500 flex-shrink-0 flex items-center justify-center gap-2 hover:-translate-y-0.5 transform"
+                        className="px-5 py-2.5 font-semibold text-orange-300 bg-gray-800/80 rounded-lg border border-gray-700 hover:bg-gray-700/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900 focus:ring-red-500 flex-shrink-0 flex items-center justify-center gap-2 hover:-translate-y-0.5 transform"
                     >
                         <ArrowPathIcon className="w-5 h-5" />
                         {t('dashboard.button.newAnalysis')}
@@ -317,10 +352,10 @@ const App: React.FC = () => {
           {renderContent()}
         </div>
         
+        <Disclaimer />
       </main>
       <Chatbot />
-      <Disclaimer />
-    </div>
+    </>
   );
 };
 

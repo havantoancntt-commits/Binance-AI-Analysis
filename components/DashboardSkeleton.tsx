@@ -9,7 +9,7 @@ const DashboardSkeleton: React.FC = () => (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8" aria-label="Đang tải bảng điều khiển">
         {/* Left Column Skeleton (Chart) */}
         <div className="lg:col-span-7">
-            <Box className="h-[600px]" />
+            <Box className="h-[450px] sm:h-[500px] lg:h-[600px]" />
         </div>
 
         {/* Right Column Skeleton (Analysis & Actions) */}
@@ -35,7 +35,7 @@ const DashboardSkeleton: React.FC = () => (
             </div>
 
             {/* Action Center Skeleton */}
-            <Box className="h-60 w-full" />
+            <Box className="h-80 w-full" />
         </div>
     </div>
 );

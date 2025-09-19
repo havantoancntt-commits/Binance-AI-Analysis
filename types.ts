@@ -86,12 +86,17 @@ export interface ChatMessage {
 
 export type Locale = 'vi' | 'en';
 
+export type ChartTimeframe = '7D' | '3M' | '1Y';
+
 // Centralized state and action types for the application
 export interface AppState {
   status: AppStatus;
   coinInput: string;
   analyzedCoin: string | null;
-  priceData: PriceDataPoint[];
+  priceData7D: PriceDataPoint[];
+  priceData3M: PriceDataPoint[];
+  priceData1Y: PriceDataPoint[];
+  chartTimeframe: ChartTimeframe;
   analysis: AnalysisResult | null;
   tickerData: TickerData | null;
   isAnalysisLoading: boolean; // For primary AI analysis
@@ -101,7 +106,8 @@ export interface AppState {
 
 export type AppAction =
   | { type: 'START_ANALYSIS'; payload: string }
-  | { type: 'SET_PRICE_DATA'; payload: PriceDataPoint[] }
+  | { type: 'SET_ALL_PRICE_DATA', payload: { priceData7D: PriceDataPoint[]; priceData3M: PriceDataPoint[]; priceData1Y: PriceDataPoint[] } }
+  | { type: 'SET_CHART_TIMEFRAME', payload: ChartTimeframe }
   | { type: 'SET_ANALYSIS'; payload: { analysis: AnalysisResult; coin: string } }
   | { type: 'USE_CACHED_ANALYSIS'; payload: { analysis: AnalysisResult; coin: string } }
   | { type: 'FETCH_ERROR'; payload: string }
