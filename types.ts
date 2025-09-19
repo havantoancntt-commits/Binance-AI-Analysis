@@ -42,7 +42,6 @@ export interface AnalysisResult {
   keyTakeaways: string[];
 }
 
-// FIX: Add missing NewsArticle interface.
 export interface NewsArticle {
   id: string;
   title: string;
@@ -66,7 +65,6 @@ export interface TickerData {
   isPositive: boolean;
 }
 
-// FIX: Add missing DelistingCoin interface.
 export interface DelistingCoin {
   coinPair: string;
   delistingDate: string;

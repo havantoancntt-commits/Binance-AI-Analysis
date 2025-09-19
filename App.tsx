@@ -212,14 +212,16 @@ const App: React.FC = () => {
     if (status === AppStatus.Success && analyzedCoin && analysis) {
       return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in-up">
-          <div className="lg:col-span-6 h-[450px] sm:h-[500px] lg:h-[600px] animate-fade-in-up stagger-delay-1">
+          <div className="lg:col-span-7 h-[450px] sm:h-[500px] lg:h-[600px] animate-fade-in-up stagger-delay-1">
             <PriceChart priceData={priceData} analysis={analysis} tickerData={tickerData} coinPair={analyzedCoin} />
           </div>
-          <div className="lg:col-span-3 animate-fade-in-up stagger-delay-2">
-            <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
-          </div>
-          <div className="lg:col-span-3 animate-fade-in-up stagger-delay-3">
-            <ActionCenter />
+          <div className="lg:col-span-5 flex flex-col gap-8">
+            <div className="animate-fade-in-up stagger-delay-2">
+                <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
+            </div>
+            <div className="animate-fade-in-up stagger-delay-3">
+                <ActionCenter />
+            </div>
           </div>
         </div>
       );

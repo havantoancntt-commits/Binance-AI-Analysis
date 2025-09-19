@@ -1,29 +1,55 @@
+
 import React from 'react';
 import type { NewsArticle } from '../types';
 import { NewspaperIcon } from './Icons';
+import { useTranslation } from '../hooks/useTranslation';
 
-interface NewsFeedProps {
-  news: NewsArticle[];
-  isLoading: boolean;
-}
-
-const formatTimeAgo = (timestamp: number) => {
+const formatTimeAgo = (timestamp: number, locale: 'vi' | 'en') => {
   const now = new Date();
   const past = new Date(timestamp * 1000);
   const seconds = Math.floor((now.getTime() - past.getTime()) / 1000);
 
-  let interval = seconds / 31536000;
-  if (interval > 1) return `${Math.floor(interval)} năm trước`;
-  interval = seconds / 2592000;
-  if (interval > 1) return `${Math.floor(interval)} tháng trước`;
-  interval = seconds / 86400;
-  if (interval > 1) return `${Math.floor(interval)} ngày trước`;
-  interval = seconds / 3600;
-  if (interval > 1) return `${Math.floor(interval)} giờ trước`;
-  interval = seconds / 60;
-  if (interval > 1) return `${Math.floor(interval)} phút trước`;
-  return `${Math.floor(seconds)} giây trước`;
+  const intervals = {
+    year: 31536000,
+    month: 2592000,
+    day: 86400,
+    hour: 3600,
+    minute: 60,
+  };
+
+  let counter;
+
+  if (seconds >= intervals.year) {
+    counter = Math.floor(seconds / intervals.year);
+    if (locale === 'en') return counter === 1 ? `${counter} year ago` : `${counter} years ago`;
+    return `${counter} năm trước`;
+  }
+  if (seconds >= intervals.month) {
+    counter = Math.floor(seconds / intervals.month);
+    if (locale === 'en') return counter === 1 ? `${counter} month ago` : `${counter} months ago`;
+    return `${counter} tháng trước`;
+  }
+  if (seconds >= intervals.day) {
+    counter = Math.floor(seconds / intervals.day);
+    if (locale === 'en') return counter === 1 ? `${counter} day ago` : `${counter} days ago`;
+    return `${counter} ngày trước`;
+  }
+  if (seconds >= intervals.hour) {
+    counter = Math.floor(seconds / intervals.hour);
+    if (locale === 'en') return counter === 1 ? `${counter} hour ago` : `${counter} hours ago`;
+    return `${counter} giờ trước`;
+  }
+  if (seconds >= intervals.minute) {
+    counter = Math.floor(seconds / intervals.minute);
+    if (locale === 'en') return counter === 1 ? `${counter} minute ago` : `${counter} minutes ago`;
+    return `${counter} phút trước`;
+  }
+  
+  counter = Math.floor(seconds);
+  if (locale === 'en') return counter <= 1 ? `a few seconds ago` : `${counter} seconds ago`;
+  return `${counter} giây trước`;
 };
+
 
 const NewsSkeleton: React.FC = () => (
     <div className="bg-gray-900/50 rounded-lg p-4 animate-pulse">
@@ -40,7 +66,14 @@ const NewsSkeleton: React.FC = () => (
     </div>
 );
 
+// FIX: Define the props interface for the NewsFeed component.
+interface NewsFeedProps {
+  news: NewsArticle[];
+  isLoading: boolean;
+}
+
 const NewsFeed: React.FC<NewsFeedProps> = ({ news, isLoading }) => {
+  const { t, locale } = useTranslation();
   return (
     <section className="glassmorphism p-6 rounded-lg shadow-2xl animate-fade-in h-full">
         <div className="flex items-center gap-3">
@@ -79,7 +112,7 @@ const NewsFeed: React.FC<NewsFeedProps> = ({ news, isLoading }) => {
                   <div className="flex items-center text-xs text-gray-400 mt-2">
                     <span>{article.source}</span>
                     <span className="mx-2">•</span>
-                    <span>{formatTimeAgo(article.publishedOn)}</span>
+                    <span>{formatTimeAgo(article.publishedOn, locale)}</span>
                   </div>
                 </div>
               </div>

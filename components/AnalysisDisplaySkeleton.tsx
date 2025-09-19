@@ -1,6 +1,6 @@
+
 import React from 'react';
 
-// FIX: Add `style` prop to Box component to allow inline styles.
 const Box: React.FC<{ className?: string; style?: React.CSSProperties }> = ({ className = '', style }) => (
     <div className={`shimmer-bg rounded-lg ${className}`} style={style}></div>
 );
@@ -14,7 +14,6 @@ const AnalysisDisplaySkeleton: React.FC = () => (
                 <Box className="h-4 w-5/6" />
             </div>
             <div className="flex gap-2">
-                <Box className="h-9 w-9 rounded-md" />
                 <Box className="h-9 w-9 rounded-md" />
             </div>
         </div>
