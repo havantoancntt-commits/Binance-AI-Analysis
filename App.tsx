@@ -1,20 +1,17 @@
-import React, { useReducer, useCallback, useEffect, useRef, useMemo, useState } from 'react';
-import type { AppState, AppAction, ChartTimeframe, NewsArticle } from './types';
+import React, { useReducer, useCallback, useEffect, useRef, useMemo } from 'react';
+import type { AppState, AppAction, ChartTimeframe } from './types';
 import { AppStatus } from './types';
 import { fetchAIAnalysis } from './services/geminiService';
 import { fetchHistoricalData } from './services/binanceService';
-import { fetchNews } from './services/newsService';
 import { useTranslation } from './hooks/useTranslation';
 
 import PriceChart from './components/PriceChart';
 import AnalysisDisplay from './components/AnalysisDisplay';
 import Disclaimer from './components/Disclaimer';
-import DashboardSkeleton from './components/DashboardSkeleton';
 import MotivationalTicker from './components/MotivationalTicker';
 import FloatingActionMenu from './components/FloatingActionMenu';
 import Chatbot from './components/Chatbot';
 import Logo from './components/Logo';
-import NewsFeed from './components/NewsFeed';
 
 import { COIN_PAIRS } from './constants';
 import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
@@ -112,23 +109,9 @@ const App: React.FC = () => {
   const { status, coinInput, analyzedCoin, priceData7D, priceData3M, priceData1Y, chartTimeframe, analysis, tickerData, isAnalysisLoading, error, isPanelOpen } = state;
   const { t, locale } = useTranslation();
   
-  const [news, setNews] = useState<NewsArticle[]>([]);
-  const [isNewsLoading, setIsNewsLoading] = useState<boolean>(true);
-
   const inputRef = useRef<HTMLInputElement>(null);
   const mainContentRef = useRef<HTMLDivElement>(null);
   
-  // Fetch initial data for idle dashboard
-  useEffect(() => {
-    const fetchIdleData = async () => {
-      setIsNewsLoading(true);
-      const newsData = await fetchNews('BTC'); // Fetch general news initially
-      setNews(newsData);
-      setIsNewsLoading(false);
-    };
-    fetchIdleData();
-  }, []);
-
   // Main analysis logic
   useEffect(() => {
     if (status !== AppStatus.Loading || !analyzedCoin) return;
@@ -138,13 +121,6 @@ const App: React.FC = () => {
       try {
         mainContentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         
-        const baseCoin = analyzedCoin.split('/')[0];
-        setIsNewsLoading(true);
-        fetchNews(baseCoin).then(newsData => {
-          if (!isCancelled) setNews(newsData);
-          setIsNewsLoading(false);
-        });
-
         const [priceData1Y, priceData3M, priceData7D] = await Promise.all([
             fetchHistoricalData(analyzedCoin, '1Y'),
             fetchHistoricalData(analyzedCoin, '3M'),
@@ -245,10 +221,6 @@ const App: React.FC = () => {
 
 
   const renderContent = () => {
-    if (status === AppStatus.Loading && !analysis) {
-      return <DashboardSkeleton />;
-    }
-    
     if (status === AppStatus.Error && error) {
       return (
         <div className="flex justify-center items-center py-10 animate-fade-in-up">
@@ -263,7 +235,7 @@ const App: React.FC = () => {
       );
     }
     
-    if (analyzedCoin && (analysis || isAnalysisLoading)) {
+    if (analyzedCoin) {
       return (
         <div className="relative h-[600px] animate-fade-in-up">
             <div className="absolute inset-0 opacity-0 animate-fade-in-up stagger-delay-1" style={{animationFillMode: 'forwards'}}>
@@ -280,7 +252,7 @@ const App: React.FC = () => {
             </div>
              <div className={`absolute top-0 right-0 h-full w-full lg:w-5/12 transition-transform duration-500 ease-in-out ${isPanelOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-[calc(100%+2rem)]'} ${isPanelOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
                 <div className={`h-full w-full transition-opacity duration-300 ease-in-out ${isPanelOpen ? 'opacity-100' : 'opacity-0'}`}>
-                    <AnalysisDisplay isLoading={isAnalysisLoading && !analysis} analysis={analysis} coinPair={analyzedCoin} />
+                    <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
                 </div>
             </div>
         </div>
@@ -294,9 +266,6 @@ const App: React.FC = () => {
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-100 mt-6">{t('dashboard.welcome.title')}</h2>
             <p className="text-gray-400 mt-2 max-w-lg mx-auto">{t('dashboard.welcome.subtitle')}</p>
             <MotivationalTicker />
-         </div>
-         <div className="grid grid-cols-1 gap-8 mt-8 max-w-4xl mx-auto">
-            <NewsFeed news={news} isLoading={isNewsLoading} />
          </div>
       </div>
     );

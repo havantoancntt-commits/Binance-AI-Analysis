@@ -43,15 +43,6 @@ a  };
   keyTakeaways: string[];
 }
 
-export interface NewsArticle {
-  id: string;
-  title: string;
-  source: string;
-  publishedOn: number;
-  url: string;
-  imageUrl: string;
-}
-
 export enum AppStatus {
   Idle,
   Loading,
@@ -94,6 +85,16 @@ export interface DelistingInfo {
 export interface DelistingUpdate {
     delistings: DelistingInfo[];
     sources: GroundingChunk[];
+}
+
+// FIX: Added missing NewsArticle interface.
+export interface NewsArticle {
+  id: string;
+  title: string;
+  source: string;
+  publishedOn: number;
+  url: string;
+  imageUrl: string;
 }
 
 
