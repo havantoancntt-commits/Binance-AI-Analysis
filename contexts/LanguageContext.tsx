@@ -35,6 +35,13 @@ const enTranslations = {
   "chart.ref.resistance": "Resistance {{index}}",
   "chart.ref.takeProfit": "Take Profit {{index}}",
   "chart.ref.stopLoss": "Stop Loss",
+  "chart.button.getInsight": "AI Insight",
+  "chart.button.showPanel": "Show Panel",
+  "chart.button.hidePanel": "Hide Panel",
+  "chart.insight.title": "AI Chart Insight",
+  "chart.insight.snapshot": "Chart Snapshot",
+  "chart.insight.analysis": "AI Analysis",
+  "chart.insight.error": "Sorry, an error occurred while analyzing the chart image. Please try again.",
   "ticker.loading": "Loading data...",
   "ticker.change24h": "24h",
   "analysis.title": "Strategy Dashboard",
@@ -150,7 +157,17 @@ const enTranslations = {
   "support.accountName": "Account Name:",
   "support.accountNumber": "Account Number:",
   "support.copyTitle": "Copy account number",
-  "support.copied": "Copied!"
+  "support.copied": "Copied!",
+  "delisting.title": "Delisting Watchlist",
+  "delisting.subtitle": "Recent delisting & suspension announcements.",
+  "delisting.menuButton": "Delisting Watch",
+  "delisting.table.coin": "Coin",
+  "delisting.table.exchange": "Exchange",
+  "delisting.table.reason": "Reason",
+  "delisting.table.status": "Status",
+  "delisting.empty": "No recent delisting announcements found in the last 30 days.",
+  "delisting.error.generic": "Failed to load delisting data.",
+  "delisting.sourcesTitle": "Sources from Google Search"
 };
 
 const viTranslations = {
@@ -186,6 +203,13 @@ const viTranslations = {
   "chart.ref.resistance": "Kháng cự {{index}}",
   "chart.ref.takeProfit": "Chốt lời {{index}}",
   "chart.ref.stopLoss": "Cắt lỗ",
+  "chart.button.getInsight": "Phân tích AI",
+  "chart.button.showPanel": "Hiện Panel",
+  "chart.button.hidePanel": "Ẩn Panel",
+  "chart.insight.title": "Phân tích Biểu đồ bằng AI",
+  "chart.insight.snapshot": "Ảnh chụp Biểu đồ",
+  "chart.insight.analysis": "Phân tích từ AI",
+  "chart.insight.error": "Rất tiếc, đã có lỗi xảy ra khi phân tích hình ảnh biểu đồ. Vui lòng thử lại.",
   "ticker.loading": "Đang tải dữ liệu...",
   "ticker.change24h": "24h",
   "analysis.title": "Bảng Điều Khiển Chiến Lược",
@@ -301,7 +325,17 @@ const viTranslations = {
   "support.accountName": "Chủ tài khoản:",
   "support.accountNumber": "Số tài khoản:",
   "support.copyTitle": "Sao chép số tài khoản",
-  "support.copied": "Đã sao chép!"
+  "support.copied": "Đã sao chép!",
+  "delisting.title": "Danh sách Hủy niêm yết",
+  "delisting.subtitle": "Các thông báo hủy niêm yết & tạm ngưng gần đây.",
+  "delisting.menuButton": "Theo dõi Hủy niêm yết",
+  "delisting.table.coin": "Coin",
+  "delisting.table.exchange": "Sàn",
+  "delisting.table.reason": "Lý do",
+  "delisting.table.status": "Trạng thái",
+  "delisting.empty": "Không tìm thấy thông báo hủy niêm yết nào trong 30 ngày qua.",
+  "delisting.error.generic": "Không thể tải dữ liệu hủy niêm yết.",
+  "delisting.sourcesTitle": "Nguồn từ Google Search"
 };
 
 const translationsData: Record<Locale, Record<string, string>> = {

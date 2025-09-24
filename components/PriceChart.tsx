@@ -1,8 +1,56 @@
-import React, { useRef, useEffect, useMemo } from 'react';
+import React, { useRef, useMemo, useState } from 'react';
 import { ComposedChart, Area, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, ReferenceArea, Scatter, Cell, Label } from 'recharts';
 import type { PriceDataPoint, AnalysisResult, TickerData, ChartTimeframe } from '../types';
 import Ticker from './Ticker';
 import { useTranslation } from '../hooks/useTranslation';
+import { SparklesIcon, EyeIcon, EyeSlashIcon } from './Icons';
+
+declare var html2canvas: any;
+
+// A simple markdown-to-HTML converter for the AI response
+const formatAIResponse = (text: string) => {
+    return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+        .replace(/\n/g, '<br />') // Newlines
+        .replace(/(\*|\-)\s/g, '<br />&bull; '); // List items
+};
+
+const ChartInsightModal: React.FC<{ isOpen: boolean; onClose: () => void; chartImage: string | null; insight: string; isLoading: boolean; t: (key: string) => string; }> = ({ isOpen, onClose, chartImage, insight, isLoading, t }) => {
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={onClose}>
+            <div className="glassmorphism aurora-card rounded-2xl w-full max-w-4xl max-h-[90vh] flex flex-col relative animate-fade-in-up" style={{animationDuration: '0.4s'}} onClick={e => e.stopPropagation()}>
+                <header className="p-4 border-b border-[var(--border-color)] flex justify-between items-center flex-shrink-0">
+                    <h3 className="text-lg font-bold text-gray-100 flex items-center gap-2">
+                        <SparklesIcon className="w-6 h-6 text-teal-300" />
+                        {t('chart.insight.title')}
+                    </h3>
+                    <button onClick={onClose} className="p-2 text-gray-400 rounded-full hover:bg-gray-700 hover:text-white">&times;</button>
+                </header>
+                <main className="p-6 overflow-y-auto flex-grow grid grid-cols-1 md:grid-cols-2 gap-6 no-scrollbar">
+                    <div className="flex flex-col gap-2">
+                        <h4 className="font-semibold text-gray-400 text-sm">{t('chart.insight.snapshot')}</h4>
+                        {chartImage ? <img src={chartImage} alt="Chart Snapshot" className="rounded-lg border border-violet-500/30" /> : <div className="shimmer-bg rounded-lg aspect-video"></div>}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <h4 className="font-semibold text-gray-400 text-sm">{t('chart.insight.analysis')}</h4>
+                        {isLoading ? (
+                             <div className="space-y-3 pt-2">
+                                <div className="h-4 bg-gray-700/50 rounded w-full shimmer-bg"></div>
+                                <div className="h-4 bg-gray-700/50 rounded w-5/6 shimmer-bg"></div>
+                                <div className="h-4 bg-gray-700/50 rounded w-full shimmer-bg"></div>
+                             </div>
+                        ) : (
+                            <div className="text-sm text-gray-300 leading-relaxed bg-gray-900/50 p-4 rounded-lg flex-grow" dangerouslySetInnerHTML={{ __html: formatAIResponse(insight) }}></div>
+                        )}
+                    </div>
+                </main>
+            </div>
+        </div>
+    );
+};
+
 
 const formatLargeNumber = (num: number) => {
     if (num >= 1_000_000_000) return `${(num / 1_000_000_000).toFixed(2)}B`;
@@ -59,17 +107,52 @@ interface PriceChartProps {
   tickerData: TickerData | null;
   coinPair: string;
   activeTimeframe: ChartTimeframe;
+  isPanelOpen: boolean;
   onTimeframeChange: (timeframe: ChartTimeframe) => void;
+  onTogglePanel: () => void;
 }
 
-const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData, coinPair, activeTimeframe, onTimeframeChange }) => {
+const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData, coinPair, activeTimeframe, isPanelOpen, onTimeframeChange, onTogglePanel }) => {
   const { t } = useTranslation();
+  const chartRef = useRef<HTMLDivElement>(null);
+  const [insightState, setInsightState] = useState({ isOpen: false, chartImage: null as string | null, insight: '', isLoading: false });
 
   const timeframes: {label: string, value: ChartTimeframe}[] = [
       { label: t('chart.timeframe.7d'), value: '7D'},
       { label: t('chart.timeframe.3m'), value: '3M'},
       { label: t('chart.timeframe.1y'), value: '1Y'},
   ];
+
+  const handleGetInsight = async () => {
+    if (!chartRef.current) return;
+    setInsightState({ isOpen: true, chartImage: null, insight: '', isLoading: true });
+    
+    try {
+        const canvas = await html2canvas(chartRef.current, {
+            backgroundColor: 'rgb(8, 5, 12)',
+            useCORS: true,
+            scale: 1,
+        });
+        const imageData = canvas.toDataURL('image/jpeg', 0.8).split(',')[1]; // Get base64 part
+        setInsightState(s => ({ ...s, chartImage: canvas.toDataURL('image/jpeg', 0.8) }));
+
+        const response = await fetch('/api/interpret-chart', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageData }),
+        });
+
+        if (!response.ok) {
+            throw new Error(await response.text());
+        }
+        const { analysis } = await response.json();
+        setInsightState(s => ({ ...s, insight: analysis, isLoading: false }));
+
+    } catch (error) {
+        console.error("Chart insight error:", error);
+        setInsightState(s => ({ ...s, insight: t('chart.insight.error'), isLoading: false }));
+    }
+  };
 
   const processedData = useMemo(() => {
     if (!priceData || priceData.length === 0) return [];
@@ -166,17 +249,34 @@ const PriceChart: React.FC<PriceChartProps> = ({ priceData, analysis, tickerData
   }
 
   return (
-    <div className="glassmorphism p-4 rounded-xl h-full w-full flex flex-col relative aurora-card">
+    <div className="glassmorphism p-4 rounded-xl h-full w-full flex flex-col relative aurora-card" ref={chartRef}>
+        <ChartInsightModal 
+            isOpen={insightState.isOpen} 
+            onClose={() => setInsightState({ isOpen: false, chartImage: null, insight: '', isLoading: false })}
+            chartImage={insightState.chartImage}
+            insight={insightState.insight}
+            isLoading={insightState.isLoading}
+            t={t}
+        />
         <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-2">
             <div className="w-full sm:w-auto">
                 <Ticker coinPair={coinPair} tickerData={tickerData} />
             </div>
-             <div className="bg-gray-900/60 p-1 rounded-lg flex items-center self-end sm:self-center flex-shrink-0">
-                {timeframes.map(tf => (
-                    <button key={tf.value} onClick={() => onTimeframeChange(tf.value)} className={`px-3 py-1 text-xs font-bold rounded-md transition-colors duration-200 ${activeTimeframe === tf.value ? 'bg-gradient-to-r from-teal-500 to-violet-500 text-white shadow-md' : 'text-gray-400 hover:bg-gray-700/50'}`}>
-                        {tf.label}
-                    </button>
-                ))}
+            <div className="flex items-center gap-2 self-end sm:self-center flex-shrink-0">
+                 <button onClick={handleGetInsight} disabled={insightState.isLoading} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-colors duration-200 bg-gray-900/60 text-teal-300 hover:bg-gray-700/80 disabled:opacity-50 disabled:cursor-wait shimmer-button">
+                    <SparklesIcon className="w-4 h-4" /> {t('chart.button.getInsight')}
+                 </button>
+                 <button onClick={onTogglePanel} className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-colors duration-200 bg-gray-900/60 text-violet-300 hover:bg-gray-700/80">
+                    {isPanelOpen ? <EyeSlashIcon className="w-4 h-4"/> : <EyeIcon className="w-4 h-4"/>}
+                    {isPanelOpen ? t('chart.button.hidePanel') : t('chart.button.showPanel')}
+                 </button>
+                 <div className="bg-gray-900/60 p-1 rounded-lg flex items-center">
+                    {timeframes.map(tf => (
+                        <button key={tf.value} onClick={() => onTimeframeChange(tf.value)} className={`px-3 py-1 text-xs font-bold rounded-md transition-colors duration-200 ${activeTimeframe === tf.value ? 'bg-gradient-to-r from-teal-500 to-violet-500 text-white shadow-md' : 'text-gray-400 hover:bg-gray-700/50'}`}>
+                            {tf.label}
+                        </button>
+                    ))}
+                </div>
             </div>
         </div>
         <div className="flex-grow w-full h-full min-h-[300px]">

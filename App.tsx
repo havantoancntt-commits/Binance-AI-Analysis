@@ -32,6 +32,7 @@ const initialState: AppState = {
   isAnalysisLoading: false,
   error: null,
   analysisCache: {},
+  isPanelOpen: false,
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -67,6 +68,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         analysis: action.payload.analysis,
         isAnalysisLoading: false,
         analysisCache: { ...state.analysisCache, [action.payload.coin]: action.payload.analysis },
+        isPanelOpen: true,
       };
     case 'USE_CACHED_ANALYSIS':
       return {
@@ -86,11 +88,14 @@ function appReducer(state: AppState, action: AppAction): AppState {
         priceData3M: [],
         priceData1Y: [],
         isAnalysisLoading: false,
+        isPanelOpen: false,
       };
     case 'UPDATE_TICKER':
       return { ...state, tickerData: action.payload };
     case 'SET_COIN_INPUT':
       return { ...state, coinInput: action.payload, error: state.status === AppStatus.Error ? null : state.error };
+    case 'TOGGLE_ANALYSIS_PANEL':
+      return { ...state, isPanelOpen: !state.isPanelOpen };
     case 'RESET':
       return {
         ...initialState,
@@ -104,7 +109,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const { status, coinInput, analyzedCoin, priceData7D, priceData3M, priceData1Y, chartTimeframe, analysis, tickerData, isAnalysisLoading, error, analysisCache } = state;
+  const { status, coinInput, analyzedCoin, priceData7D, priceData3M, priceData1Y, chartTimeframe, analysis, tickerData, isAnalysisLoading, error, isPanelOpen } = state;
   const { t, locale } = useTranslation();
   
   const [news, setNews] = useState<NewsArticle[]>([]);
@@ -234,6 +239,11 @@ const App: React.FC = () => {
     dispatch({ type: 'SET_CHART_TIMEFRAME', payload: tf });
   }, []);
 
+  const handleTogglePanel = useCallback(() => {
+    dispatch({ type: 'TOGGLE_ANALYSIS_PANEL' });
+  }, []);
+
+
   const renderContent = () => {
     if (status === AppStatus.Loading && !analysis) {
       return <DashboardSkeleton />;
@@ -255,20 +265,24 @@ const App: React.FC = () => {
     
     if (analyzedCoin && (analysis || isAnalysisLoading)) {
       return (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 animate-fade-in-up">
-          <div className="lg:col-span-7 h-[450px] sm:h-[500px] lg:h-[600px] opacity-0 animate-fade-in-up stagger-delay-1" style={{animationFillMode: 'forwards'}}>
-            <PriceChart 
-              priceData={chartData} 
-              analysis={analysis} 
-              tickerData={tickerData} 
-              coinPair={analyzedCoin}
-              activeTimeframe={chartTimeframe}
-              onTimeframeChange={handleTimeframeChange}
-            />
-          </div>
-          <div className="lg:col-span-5 flex flex-col gap-8 opacity-0 animate-fade-in-up stagger-delay-2" style={{animationFillMode: 'forwards'}}>
-            <AnalysisDisplay isLoading={isAnalysisLoading && !analysis} analysis={analysis} coinPair={analyzedCoin} />
-          </div>
+        <div className="relative h-[600px] animate-fade-in-up">
+            <div className="absolute inset-0 opacity-0 animate-fade-in-up stagger-delay-1" style={{animationFillMode: 'forwards'}}>
+                 <PriceChart 
+                    priceData={chartData} 
+                    analysis={analysis} 
+                    tickerData={tickerData} 
+                    coinPair={analyzedCoin}
+                    activeTimeframe={chartTimeframe}
+                    isPanelOpen={isPanelOpen}
+                    onTimeframeChange={handleTimeframeChange}
+                    onTogglePanel={handleTogglePanel}
+                />
+            </div>
+             <div className={`absolute top-0 right-0 h-full w-full lg:w-5/12 transition-transform duration-500 ease-in-out ${isPanelOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-[calc(100%+2rem)]'} ${isPanelOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
+                <div className={`h-full w-full transition-opacity duration-300 ease-in-out ${isPanelOpen ? 'opacity-100' : 'opacity-0'}`}>
+                    <AnalysisDisplay isLoading={isAnalysisLoading && !analysis} analysis={analysis} coinPair={analyzedCoin} />
+                </div>
+            </div>
         </div>
       );
     }

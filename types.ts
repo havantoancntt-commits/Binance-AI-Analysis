@@ -1,4 +1,5 @@
 
+
 export interface PriceDataPoint {
   date: string;
   price: number;
@@ -37,7 +38,7 @@ export interface AnalysisResult {
   detailedAnalysis: {
     bullCase: string;
     bearCase: string;
-  };
+a  };
   marketSentiment: 'Extreme Fear' | 'Fear' | 'Neutral' | 'Greed' | 'Extreme Greed';
   keyTakeaways: string[];
 }
@@ -82,6 +83,20 @@ export type Locale = 'vi' | 'en';
 
 export type ChartTimeframe = '7D' | '3M' | '1Y';
 
+export interface DelistingInfo {
+    coin: string;
+    exchange: string;
+    reason: string;
+    status: string;
+    sourceUrl: string;
+}
+
+export interface DelistingUpdate {
+    delistings: DelistingInfo[];
+    sources: GroundingChunk[];
+}
+
+
 // Centralized state and action types for the application
 export interface AppState {
   status: AppStatus;
@@ -96,6 +111,7 @@ export interface AppState {
   isAnalysisLoading: boolean; // For primary AI analysis
   error: string | null;
   analysisCache: Record<string, AnalysisResult>;
+  isPanelOpen: boolean;
 }
 
 export type AppAction =
@@ -107,4 +123,5 @@ export type AppAction =
   | { type: 'FETCH_ERROR'; payload: string }
   | { type: 'UPDATE_TICKER'; payload: TickerData | null }
   | { type: 'SET_COIN_INPUT'; payload: string }
+  | { type: 'TOGGLE_ANALYSIS_PANEL' }
   | { type: 'RESET' };

@@ -363,7 +363,7 @@ const AnalysisDisplay: React.FC<AnalysisDisplayProps> = ({ analysis, coinPair, i
   }, [activeTab]);
   
   return (
-    <div className="glassmorphism aurora-card rounded-xl animate-fade-in-up w-full h-full flex flex-col">
+    <div className="rounded-xl w-full h-full flex flex-col backdrop-blur-2xl bg-[rgba(12,8,18,0.7)] border border-[rgba(139,92,246,0.2)] shadow-2xl shadow-black/40">
       <div className="flex-grow flex flex-col">
         <header className="p-4 sm:p-6 flex flex-col sm:flex-row justify-between items-start gap-4">
             <div>

@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { useTranslation } from '../hooks/useTranslation';
 import { 
     Squares2X2Icon, XMarkIcon, Cog6ToothIcon, BinanceIcon, ArrowUpRightIcon, 
-    CheckBadgeIcon, ClipboardIcon, CheckIcon, CpuChipIcon 
+    CheckBadgeIcon, ClipboardIcon, CheckIcon, CpuChipIcon, ArchiveBoxXMarkIcon 
 } from './Icons';
+import DelistingWatchlist from './DelistingWatchlist';
+
 
 // Internal Component: BinanceReferral
 const BinanceReferral: React.FC = () => {
@@ -125,19 +127,35 @@ const SupportProject: React.FC = () => {
     );
 };
 
+type ActiveModal = 'main' | 'delisting' | null;
 
 const FloatingActionMenu: React.FC = () => {
-    const [isOpen, setIsOpen] = useState(false);
+    const [activeModal, setActiveModal] = useState<ActiveModal>(null);
     const { t, locale, setLocale } = useTranslation();
 
-    const openModal = () => setIsOpen(true);
-    const closeModal = () => setIsOpen(false);
+    const closeModal = () => setActiveModal(null);
+
+    const renderModalContent = () => {
+        switch (activeModal) {
+            case 'delisting':
+                return <DelistingWatchlist />;
+            case 'main':
+                return (
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <BinanceReferral />
+                        <SupportProject />
+                    </div>
+                );
+            default:
+                return null;
+        }
+    }
 
     return (
         <>
             <div className="fixed bottom-6 left-6 z-[100]">
                 <button
-                    onClick={openModal}
+                    onClick={() => setActiveModal('main')}
                     className="p-4 bg-gradient-to-r from-teal-500 to-violet-600 text-white rounded-full shadow-lg hover:scale-110 hover:shadow-violet-500/40 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[rgb(var(--background-rgb))] focus:ring-teal-400 transition-all duration-200 animate-pulse-shadow"
                     aria-label={t('utilities.menu.label')}
                 >
@@ -145,7 +163,7 @@ const FloatingActionMenu: React.FC = () => {
                 </button>
             </div>
             
-            {isOpen && (
+            {activeModal && (
                 <div 
                     className="fixed inset-0 bg-black/80 backdrop-blur-md z-[101] flex items-center justify-center p-4 animate-fade-in-up" 
                     style={{animationDuration: '0.4s'}}
@@ -169,30 +187,35 @@ const FloatingActionMenu: React.FC = () => {
                         </header>
                         
                         <main className="p-6 overflow-y-auto flex-grow no-scrollbar">
-                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                <BinanceReferral />
-                                <SupportProject />
-                            </div>
+                             {renderModalContent()}
                         </main>
 
-                         <footer className="p-4 border-t border-[var(--border-color)] flex-shrink-0">
-                            <div className="flex items-center justify-center gap-4">
-                                <div className="flex items-center gap-2">
-                                    <Cog6ToothIcon className="w-5 h-5 text-gray-400"/>
-                                    <div className="flex space-x-1 bg-gray-900/50 p-1 rounded-lg border border-[var(--border-color)]">
-                                        <button
-                                            onClick={() => setLocale('vi')}
-                                            className={`px-4 py-1 text-xs font-bold rounded-md transition-colors ${locale === 'vi' ? 'bg-gradient-to-r from-teal-500 to-violet-500 text-white' : 'hover:bg-gray-700 text-gray-300'}`}
-                                        >
-                                            VN
-                                        </button>
-                                        <button
-                                            onClick={() => setLocale('en')}
-                                            className={`px-4 py-1 text-xs font-bold rounded-md transition-colors ${locale === 'en' ? 'bg-gradient-to-r from-teal-500 to-violet-500 text-white' : 'hover:bg-gray-700 text-gray-300'}`}
-                                        >
-                                            EN
-                                        </button>
-                                    </div>
+                         <footer className="p-4 border-t border-[var(--border-color)] flex items-center justify-between flex-shrink-0">
+                            {/* Delisting Watchlist Button */}
+                            <button 
+                                onClick={() => setActiveModal(activeModal === 'delisting' ? 'main' : 'delisting')} 
+                                className={`flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg border transition-colors duration-200 ${activeModal === 'delisting' ? 'bg-rose-500/20 border-rose-500/50 text-rose-300' : 'bg-gray-800/80 border-gray-700 text-gray-300 hover:bg-gray-700/80'}`}
+                            >
+                                <ArchiveBoxXMarkIcon className="w-5 h-5" />
+                                {t('delisting.menuButton')}
+                            </button>
+
+                            {/* Language Switcher */}
+                            <div className="flex items-center gap-2">
+                                <Cog6ToothIcon className="w-5 h-5 text-gray-400"/>
+                                <div className="flex space-x-1 bg-gray-900/50 p-1 rounded-lg border border-[var(--border-color)]">
+                                    <button
+                                        onClick={() => setLocale('vi')}
+                                        className={`px-4 py-1 text-xs font-bold rounded-md transition-colors ${locale === 'vi' ? 'bg-gradient-to-r from-teal-500 to-violet-500 text-white' : 'hover:bg-gray-700 text-gray-300'}`}
+                                    >
+                                        VN
+                                    </button>
+                                    <button
+                                        onClick={() => setLocale('en')}
+                                        className={`px-4 py-1 text-xs font-bold rounded-md transition-colors ${locale === 'en' ? 'bg-gradient-to-r from-teal-500 to-violet-500 text-white' : 'hover:bg-gray-700 text-gray-300'}`}
+                                    >
+                                        EN
+                                    </button>
                                 </div>
                             </div>
                         </footer>
