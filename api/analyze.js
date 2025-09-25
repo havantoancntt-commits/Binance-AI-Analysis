@@ -185,6 +185,7 @@ export default async function handler(request, response) {
                 responseSchema: analysisSchema,
                 temperature: 0.2, 
                 topK: 5,
+                thinkingConfig: { thinkingBudget: 0 },
             }
         });
 
