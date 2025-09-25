@@ -3,7 +3,6 @@ import type { AppState, AppAction, ChartTimeframe } from './types';
 import { AppStatus } from './types';
 import { fetchAIAnalysis } from './services/geminiService';
 import { fetchHistoricalData } from './services/binanceService';
-import { fetchNews } from './services/newsService';
 import { useTranslation } from './hooks/useTranslation';
 
 import PriceChart from './components/PriceChart';
@@ -13,8 +12,6 @@ import MotivationalTicker from './components/MotivationalTicker';
 import FloatingActionMenu from './components/FloatingActionMenu';
 import Chatbot from './components/Chatbot';
 import Logo from './components/Logo';
-import NewsFeed from './components/NewsFeed';
-import DelistingWatchlist from './components/DelistingWatchlist';
 import DashboardSkeleton from './components/DashboardSkeleton';
 
 import { COIN_PAIRS } from './constants';
@@ -33,9 +30,7 @@ const initialState: AppState = {
   isAnalysisLoading: false,
   error: null,
   analysisCache: {},
-  isPanelOpen: false, // Re-purposed to always be true on success on desktop
-  news: [],
-  isNewsLoading: true,
+  isPanelOpen: true, 
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -52,8 +47,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         priceData3M: [],
         priceData1Y: [],
         tickerData: null,
-        news: [],
-        isNewsLoading: true,
         isAnalysisLoading: true,
         chartTimeframe: '3M',
       };
@@ -92,7 +85,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
         priceData7D: [],
         priceData3M: [],
         priceData1Y: [],
-        news: [],
         isAnalysisLoading: false,
         isPanelOpen: false,
       };
@@ -102,10 +94,6 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, coinInput: action.payload, error: state.status === AppStatus.Error ? null : state.error };
     case 'TOGGLE_ANALYSIS_PANEL':
       return { ...state, isPanelOpen: !state.isPanelOpen };
-    case 'SET_NEWS_LOADING':
-      return { ...state, isNewsLoading: true };
-    case 'SET_NEWS':
-      return { ...state, news: action.payload, isNewsLoading: false };
     case 'RESET':
       return {
         ...initialState,
@@ -119,7 +107,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const { status, coinInput, analyzedCoin, priceData7D, priceData3M, priceData1Y, chartTimeframe, analysis, tickerData, isAnalysisLoading, error, isPanelOpen, news, isNewsLoading } = state;
+  const { status, coinInput, analyzedCoin, priceData7D, priceData3M, priceData1Y, chartTimeframe, analysis, tickerData, isAnalysisLoading, error, isPanelOpen } = state;
   const { t, locale } = useTranslation();
   
   const inputRef = useRef<HTMLInputElement>(null);
@@ -138,6 +126,7 @@ const App: React.FC = () => {
         ]);
 
         if (isCancelled) return;
+        // FIX: Corrected typo from priceDataD to priceData7D
         dispatch({ type: 'SET_ALL_PRICE_DATA', payload: { priceData7D, priceData3M, priceData1Y } });
         
         const aiAnalysis = await fetchAIAnalysis(analyzedCoin, { priceData1Y, priceData3M, priceData7D }, locale);
@@ -188,23 +177,6 @@ const App: React.FC = () => {
     };
   }, [analyzedCoin]);
 
-  // News fetcher
-  useEffect(() => {
-    if (!analyzedCoin) return;
-    const baseCoin = analyzedCoin.split('/')[0];
-    let isCancelled = false;
-    
-    const loadNews = async () => {
-      dispatch({ type: 'SET_NEWS_LOADING' });
-      const newsData = await fetchNews(baseCoin);
-      if (!isCancelled) {
-        dispatch({ type: 'SET_NEWS', payload: newsData });
-      }
-    };
-    loadNews();
-    return () => { isCancelled = true; };
-  }, [analyzedCoin]);
-  
   const handleAnalysisRequest = useCallback((coin: string) => {
     if (!coin) return;
     const formattedCoin = coin.trim().toUpperCase().replace(/[^A-Z0-9/]/g, '');
@@ -280,10 +252,10 @@ const App: React.FC = () => {
 
     if (status === AppStatus.Success && analyzedCoin) {
       return (
-        <div className="space-y-8 animate-fade-in-up">
+        <div className="animate-fade-in-up">
           {/* Main Dashboard Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[600px]">
-            <div className="lg:col-span-7 h-full">
+            <div className={`transition-all duration-500 ease-in-out h-full ${isPanelOpen ? 'lg:col-span-8' : 'lg:col-span-12'}`}>
               <PriceChart 
                 priceData={chartData} 
                 analysis={analysis} 
@@ -295,15 +267,11 @@ const App: React.FC = () => {
                 onTogglePanel={handleTogglePanel}
               />
             </div>
-            <div className="lg:col-span-5 h-full">
-              <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
-            </div>
-          </div>
-
-          {/* Secondary Info Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[500px]">
-             <NewsFeed news={news} isLoading={isNewsLoading} />
-             <DelistingWatchlist />
+            {isPanelOpen && (
+              <div className="lg:col-span-4 h-full animate-fade-in-up">
+                <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
+              </div>
+            )}
           </div>
         </div>
       );

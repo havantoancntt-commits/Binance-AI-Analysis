@@ -25,18 +25,14 @@ const PriceChartSkeleton: React.FC = () => (
 );
 
 const DashboardSkeleton: React.FC = () => (
-    <div className="space-y-8 animate-pulse" aria-label="Đang tải bảng điều khiển">
+    <div className="animate-pulse" aria-label="Đang tải bảng điều khiển">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[600px]">
-            <div className="lg:col-span-7 h-full">
+            <div className="lg:col-span-8 h-full">
                 <PriceChartSkeleton />
             </div>
-            <div className="lg:col-span-5 h-full">
+            <div className="lg:col-span-4 h-full">
                 <AnalysisDisplaySkeleton />
             </div>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[500px]">
-            <Box className="h-full w-full" />
-            <Box className="h-full w-full" />
         </div>
     </div>
 );

@@ -1,5 +1,3 @@
-
-
 export interface PriceDataPoint {
   date: string;
   price: number;
@@ -43,6 +41,16 @@ export interface AnalysisResult {
   keyTakeaways: string[];
 }
 
+// FIX: Added missing NewsArticle type
+export interface NewsArticle {
+  id: string | number;
+  title: string;
+  source: string;
+  publishedOn: number;
+  url: string;
+  imageUrl: string;
+}
+
 export enum AppStatus {
   Idle,
   Loading,
@@ -56,6 +64,22 @@ export interface TickerData {
   changePercent: string;
   isPositive: boolean;
 }
+
+// FIX: Added missing DelistingInfo type
+export interface DelistingInfo {
+  coin: string;
+  exchange: string;
+  reason: string;
+  status: string;
+  sourceUrl: string;
+}
+
+// FIX: Added missing DelistingUpdate type
+export interface DelistingUpdate {
+  delistings: DelistingInfo[];
+  sources: GroundingChunk[];
+}
+
 
 export interface GroundingChunk {
   web: {
@@ -74,28 +98,6 @@ export type Locale = 'vi' | 'en';
 
 export type ChartTimeframe = '7D' | '3M' | '1Y';
 
-export interface DelistingInfo {
-    coin: string;
-    exchange: string;
-    reason: string;
-    status: string;
-    sourceUrl: string;
-}
-
-export interface DelistingUpdate {
-    delistings: DelistingInfo[];
-    sources: GroundingChunk[];
-}
-
-export interface NewsArticle {
-  id: string;
-  title: string;
-  source: string;
-  publishedOn: number;
-  url: string;
-  imageUrl: string;
-}
-
 // Centralized state and action types for the application
 export interface AppState {
   status: AppStatus;
@@ -111,8 +113,6 @@ export interface AppState {
   error: string | null;
   analysisCache: Record<string, AnalysisResult>;
   isPanelOpen: boolean;
-  news: NewsArticle[];
-  isNewsLoading: boolean;
 }
 
 export type AppAction =
@@ -125,6 +125,4 @@ export type AppAction =
   | { type: 'UPDATE_TICKER'; payload: TickerData | null }
   | { type: 'SET_COIN_INPUT'; payload: string }
   | { type: 'TOGGLE_ANALYSIS_PANEL' }
-  | { type: 'SET_NEWS_LOADING' }
-  | { type: 'SET_NEWS'; payload: NewsArticle[] }
   | { type: 'RESET' };

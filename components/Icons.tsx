@@ -66,12 +66,6 @@ export const DocumentArrowDownIcon: React.FC<React.SVGProps<SVGSVGElement>> = (p
     </svg>
 );
 
-export const NewspaperIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5h-1.5m-1.5 0h-3m-1.5 0h-3m-1.5 0h-3.375c-.621 0-1.125.504-1.125 1.125V18a2.25 2.25 0 0 0 2.25 2.25" />
-    </svg>
-);
-
 export const PhotoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
         <path strokeLinecap="round" strokeLinejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 0 0 1.5-1.5V6a1.5 1.5 0 0 0-1.5-1.5H3.75A1.5 1.5 0 0 0 2.25 6v12a1.5 1.5 0 0 0 1.5 1.5Zm10.5-11.25h.008v.008h-.008V8.25Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
@@ -81,6 +75,13 @@ export const PhotoIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 export const XCircleIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+  </svg>
+);
+
+// FIX: Added missing ArchiveBoxXMarkIcon
+export const ArchiveBoxXMarkIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0-3-3m3 3 3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125Z" />
   </svg>
 );
 
@@ -132,12 +133,6 @@ export const PencilSquareIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props)
   </svg>
 );
 
-export const ArchiveBoxXMarkIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="m20.25 7.5-.625 10.632a2.25 2.25 0 0 1-2.247 2.118H6.622a2.25 2.25 0 0 1-2.247-2.118L3.75 7.5m6.563 4.5 3.187-3.188m0 0L10.313 8.813m3.437 3.437-3.187 3.188m3.187-3.188L13.75 8.813m-3.437 3.437 3.187 3.188m-3.187-3.188L6.875 8.813m3.437 3.437L6.875 15.688m9.875-8.188h-15.75" />
-  </svg>
-);
-
 export const BinanceIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}>
     <path d="M16.624 12.12L12 7.498l-4.625 4.624 2.25 2.25L12 11.999l2.375 2.375 2.25-2.25zM12 2.25l4.625 4.624-2.25 2.25L12 4.501 9.625 6.874l-2.25-2.25L12 2.25zm0 19.5l-4.625-4.624 2.25-2.25L12 19.5l2.375-2.375 2.25 2.25L12 21.75zm-7.375-7.375l2.25-2.25L4.5 9.75l2.375-2.375-2.25-2.25v9.25zm14.75 0v-9.25l-2.25 2.25L17.125 9.75l2.25 2.25-2.25 2.25z"/>
@@ -179,6 +174,13 @@ export const Cog6ToothIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) =>
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h3m-6.75 3.75.9-6.94a2.25 2.25 0 0 1 2.13-1.81h3.44a2.25 2.25 0 0 1 2.13 1.81l.9 6.94m-12.75 0h12.75m-12.75 0-.9 6.94a2.25 2.25 0 0 0 2.13 2.69h8.54a2.25 2.25 0 0 0 2.13-2.69l-.9-6.94M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
   </svg>
+);
+
+// FIX: Added missing NewspaperIcon
+export const NewspaperIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z" />
+    </svg>
 );
 
 export const PaperAirplaneIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (

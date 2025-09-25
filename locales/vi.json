@@ -151,16 +151,5 @@
   "support.accountName": "Chủ tài khoản:",
   "support.accountNumber": "Số tài khoản:",
   "support.copyTitle": "Sao chép số tài khoản",
-  "support.copied": "Đã sao chép!",
-  "news.title": "Tin Tức Mới Nhất",
-  "news.empty": "Không tìm thấy tin tức gần đây cho tài sản này.",
-  "delisting.title": "Danh sách Theo dõi Hủy niêm yết",
-  "delisting.subtitle": "Các thông báo hủy niêm yết & tạm ngưng gần đây.",
-  "delisting.table.coin": "Coin",
-  "delisting.table.exchange": "Sàn",
-  "delisting.table.reason": "Lý do",
-  "delisting.table.status": "Trạng thái",
-  "delisting.empty": "Không tìm thấy thông báo hủy niêm yết nào trong 30 ngày qua.",
-  "delisting.error.generic": "Không thể tải dữ liệu hủy niêm yết.",
-  "delisting.sourcesTitle": "Nguồn từ Google Search"
+  "support.copied": "Đã sao chép!"
 }

@@ -151,16 +151,5 @@
   "support.accountName": "Account Name:",
   "support.accountNumber": "Account Number:",
   "support.copyTitle": "Copy account number",
-  "support.copied": "Copied!",
-  "news.title": "Latest News",
-  "news.empty": "No recent news found for this asset.",
-  "delisting.title": "Delisting Watchlist",
-  "delisting.subtitle": "Recent delisting & suspension announcements.",
-  "delisting.table.coin": "Coin",
-  "delisting.table.exchange": "Exchange",
-  "delisting.table.reason": "Reason",
-  "delisting.table.status": "Status",
-  "delisting.empty": "No recent delisting announcements found in the last 30 days.",
-  "delisting.error.generic": "Failed to load delisting data.",
-  "delisting.sourcesTitle": "Sources from Google Search"
+  "support.copied": "Copied!"
 }

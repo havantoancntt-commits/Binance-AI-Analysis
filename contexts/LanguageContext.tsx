@@ -155,18 +155,7 @@ const enTranslations = {
   "support.accountName": "Account Name:",
   "support.accountNumber": "Account Number:",
   "support.copyTitle": "Copy account number",
-  "support.copied": "Copied!",
-  "news.title": "Latest News",
-  "news.empty": "No recent news found for this asset.",
-  "delisting.title": "Delisting Watchlist",
-  "delisting.subtitle": "Recent delisting & suspension announcements.",
-  "delisting.table.coin": "Coin",
-  "delisting.table.exchange": "Exchange",
-  "delisting.table.reason": "Reason",
-  "delisting.table.status": "Status",
-  "delisting.empty": "No recent delisting announcements found in the last 30 days.",
-  "delisting.error.generic": "Failed to load delisting data.",
-  "delisting.sourcesTitle": "Sources from Google Search"
+  "support.copied": "Copied!"
 };
 
 const viTranslations = {
@@ -322,18 +311,7 @@ const viTranslations = {
   "support.accountName": "Chủ tài khoản:",
   "support.accountNumber": "Số tài khoản:",
   "support.copyTitle": "Sao chép số tài khoản",
-  "support.copied": "Đã sao chép!",
-  "news.title": "Tin Tức Mới Nhất",
-  "news.empty": "Không tìm thấy tin tức gần đây cho tài sản này.",
-  "delisting.title": "Danh sách Theo dõi Hủy niêm yết",
-  "delisting.subtitle": "Các thông báo hủy niêm yết & tạm ngưng gần đây.",
-  "delisting.table.coin": "Coin",
-  "delisting.table.exchange": "Sàn",
-  "delisting.table.reason": "Lý do",
-  "delisting.table.status": "Trạng thái",
-  "delisting.empty": "Không tìm thấy thông báo hủy niêm yết nào trong 30 ngày qua.",
-  "delisting.error.generic": "Không thể tải dữ liệu hủy niêm yết.",
-  "delisting.sourcesTitle": "Nguồn từ Google Search"
+  "support.copied": "Đã sao chép!"
 };
 
 const translationsData: Record<Locale, Record<string, string>> = {
