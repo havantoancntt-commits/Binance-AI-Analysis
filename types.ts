@@ -38,7 +38,7 @@ export interface AnalysisResult {
   detailedAnalysis: {
     bullCase: string;
     bearCase: string;
-a  };
+  };
   marketSentiment: 'Extreme Fear' | 'Fear' | 'Neutral' | 'Greed' | 'Extreme Greed';
   keyTakeaways: string[];
 }
@@ -87,7 +87,6 @@ export interface DelistingUpdate {
     sources: GroundingChunk[];
 }
 
-// FIX: Added missing NewsArticle interface.
 export interface NewsArticle {
   id: string;
   title: string;
@@ -96,7 +95,6 @@ export interface NewsArticle {
   url: string;
   imageUrl: string;
 }
-
 
 // Centralized state and action types for the application
 export interface AppState {
@@ -113,6 +111,8 @@ export interface AppState {
   error: string | null;
   analysisCache: Record<string, AnalysisResult>;
   isPanelOpen: boolean;
+  news: NewsArticle[];
+  isNewsLoading: boolean;
 }
 
 export type AppAction =
@@ -125,4 +125,6 @@ export type AppAction =
   | { type: 'UPDATE_TICKER'; payload: TickerData | null }
   | { type: 'SET_COIN_INPUT'; payload: string }
   | { type: 'TOGGLE_ANALYSIS_PANEL' }
+  | { type: 'SET_NEWS_LOADING' }
+  | { type: 'SET_NEWS'; payload: NewsArticle[] }
   | { type: 'RESET' };

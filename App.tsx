@@ -3,6 +3,7 @@ import type { AppState, AppAction, ChartTimeframe } from './types';
 import { AppStatus } from './types';
 import { fetchAIAnalysis } from './services/geminiService';
 import { fetchHistoricalData } from './services/binanceService';
+import { fetchNews } from './services/newsService';
 import { useTranslation } from './hooks/useTranslation';
 
 import PriceChart from './components/PriceChart';
@@ -12,6 +13,9 @@ import MotivationalTicker from './components/MotivationalTicker';
 import FloatingActionMenu from './components/FloatingActionMenu';
 import Chatbot from './components/Chatbot';
 import Logo from './components/Logo';
+import NewsFeed from './components/NewsFeed';
+import DelistingWatchlist from './components/DelistingWatchlist';
+import DashboardSkeleton from './components/DashboardSkeleton';
 
 import { COIN_PAIRS } from './constants';
 import { XCircleIcon, ArrowPathIcon, CpuChipIcon } from './components/Icons';
@@ -29,7 +33,9 @@ const initialState: AppState = {
   isAnalysisLoading: false,
   error: null,
   analysisCache: {},
-  isPanelOpen: false,
+  isPanelOpen: false, // Re-purposed to always be true on success on desktop
+  news: [],
+  isNewsLoading: true,
 };
 
 function appReducer(state: AppState, action: AppAction): AppState {
@@ -46,6 +52,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
         priceData3M: [],
         priceData1Y: [],
         tickerData: null,
+        news: [],
+        isNewsLoading: true,
         isAnalysisLoading: true,
         chartTimeframe: '3M',
       };
@@ -84,6 +92,7 @@ function appReducer(state: AppState, action: AppAction): AppState {
         priceData7D: [],
         priceData3M: [],
         priceData1Y: [],
+        news: [],
         isAnalysisLoading: false,
         isPanelOpen: false,
       };
@@ -93,6 +102,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, coinInput: action.payload, error: state.status === AppStatus.Error ? null : state.error };
     case 'TOGGLE_ANALYSIS_PANEL':
       return { ...state, isPanelOpen: !state.isPanelOpen };
+    case 'SET_NEWS_LOADING':
+      return { ...state, isNewsLoading: true };
+    case 'SET_NEWS':
+      return { ...state, news: action.payload, isNewsLoading: false };
     case 'RESET':
       return {
         ...initialState,
@@ -106,11 +119,10 @@ function appReducer(state: AppState, action: AppAction): AppState {
 
 const App: React.FC = () => {
   const [state, dispatch] = useReducer(appReducer, initialState);
-  const { status, coinInput, analyzedCoin, priceData7D, priceData3M, priceData1Y, chartTimeframe, analysis, tickerData, isAnalysisLoading, error, isPanelOpen } = state;
+  const { status, coinInput, analyzedCoin, priceData7D, priceData3M, priceData1Y, chartTimeframe, analysis, tickerData, isAnalysisLoading, error, isPanelOpen, news, isNewsLoading } = state;
   const { t, locale } = useTranslation();
   
   const inputRef = useRef<HTMLInputElement>(null);
-  const mainContentRef = useRef<HTMLDivElement>(null);
   
   // Main analysis logic
   useEffect(() => {
@@ -119,8 +131,6 @@ const App: React.FC = () => {
 
     const analyzeCoin = async () => {
       try {
-        mainContentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        
         const [priceData1Y, priceData3M, priceData7D] = await Promise.all([
             fetchHistoricalData(analyzedCoin, '1Y'),
             fetchHistoricalData(analyzedCoin, '3M'),
@@ -177,6 +187,23 @@ const App: React.FC = () => {
         if (ws) { ws.onclose = null; ws.close(); }
     };
   }, [analyzedCoin]);
+
+  // News fetcher
+  useEffect(() => {
+    if (!analyzedCoin) return;
+    const baseCoin = analyzedCoin.split('/')[0];
+    let isCancelled = false;
+    
+    const loadNews = async () => {
+      dispatch({ type: 'SET_NEWS_LOADING' });
+      const newsData = await fetchNews(baseCoin);
+      if (!isCancelled) {
+        dispatch({ type: 'SET_NEWS', payload: newsData });
+      }
+    };
+    loadNews();
+    return () => { isCancelled = true; };
+  }, [analyzedCoin]);
   
   const handleAnalysisRequest = useCallback((coin: string) => {
     if (!coin) return;
@@ -219,8 +246,20 @@ const App: React.FC = () => {
     dispatch({ type: 'TOGGLE_ANALYSIS_PANEL' });
   }, []);
 
-
   const renderContent = () => {
+    if (status === AppStatus.Idle) {
+      return (
+        <div className="animate-fade-in-up">
+           <div className="flex flex-col items-center text-center p-4 sm:p-8 mt-4 sm:mt-8">
+              <Logo className="w-20 h-20" />
+              <h2 className="text-3xl sm:text-4xl font-bold text-gray-100 mt-6">{t('dashboard.welcome.title')}</h2>
+              <p className="text-gray-400 mt-2 max-w-lg mx-auto">{t('dashboard.welcome.subtitle')}</p>
+              <MotivationalTicker />
+           </div>
+        </div>
+      );
+    }
+
     if (status === AppStatus.Error && error) {
       return (
         <div className="flex justify-center items-center py-10 animate-fade-in-up">
@@ -235,40 +274,42 @@ const App: React.FC = () => {
       );
     }
     
-    if (analyzedCoin) {
+    if (status === AppStatus.Loading) {
+      return <DashboardSkeleton />;
+    }
+
+    if (status === AppStatus.Success && analyzedCoin) {
       return (
-        <div className="relative h-[600px] animate-fade-in-up">
-            <div className="absolute inset-0 opacity-0 animate-fade-in-up stagger-delay-1" style={{animationFillMode: 'forwards'}}>
-                 <PriceChart 
-                    priceData={chartData} 
-                    analysis={analysis} 
-                    tickerData={tickerData} 
-                    coinPair={analyzedCoin}
-                    activeTimeframe={chartTimeframe}
-                    isPanelOpen={isPanelOpen}
-                    onTimeframeChange={handleTimeframeChange}
-                    onTogglePanel={handleTogglePanel}
-                />
+        <div className="space-y-8 animate-fade-in-up">
+          {/* Main Dashboard Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-[600px]">
+            <div className="lg:col-span-7 h-full">
+              <PriceChart 
+                priceData={chartData} 
+                analysis={analysis} 
+                tickerData={tickerData} 
+                coinPair={analyzedCoin}
+                activeTimeframe={chartTimeframe}
+                isPanelOpen={isPanelOpen}
+                onTimeframeChange={handleTimeframeChange}
+                onTogglePanel={handleTogglePanel}
+              />
             </div>
-             <div className={`absolute top-0 right-0 h-full w-full lg:w-5/12 transition-transform duration-500 ease-in-out ${isPanelOpen ? 'translate-x-0' : 'translate-x-full lg:translate-x-[calc(100%+2rem)]'} ${isPanelOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}>
-                <div className={`h-full w-full transition-opacity duration-300 ease-in-out ${isPanelOpen ? 'opacity-100' : 'opacity-0'}`}>
-                    <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
-                </div>
+            <div className="lg:col-span-5 h-full">
+              <AnalysisDisplay isLoading={isAnalysisLoading} analysis={analysis} coinPair={analyzedCoin} />
             </div>
+          </div>
+
+          {/* Secondary Info Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-[500px]">
+             <NewsFeed news={news} isLoading={isNewsLoading} />
+             <DelistingWatchlist />
+          </div>
         </div>
       );
     }
-    
-    return (
-      <div className="animate-fade-in-up">
-         <div className="flex flex-col items-center text-center p-4 sm:p-8 mt-4 sm:mt-8">
-            <Logo className="w-20 h-20" />
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-100 mt-6">{t('dashboard.welcome.title')}</h2>
-            <p className="text-gray-400 mt-2 max-w-lg mx-auto">{t('dashboard.welcome.subtitle')}</p>
-            <MotivationalTicker />
-         </div>
-      </div>
-    );
+
+    return null; // Should not be reached
   };
 
   return (
@@ -346,7 +387,7 @@ const App: React.FC = () => {
             </div>
         </div>
         
-        <div ref={mainContentRef} className="mt-8">
+        <div className="mt-8">
           {renderContent()}
         </div>
         

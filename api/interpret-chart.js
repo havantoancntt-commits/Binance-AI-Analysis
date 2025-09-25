@@ -47,6 +47,7 @@ export default async function handler(request, response) {
 
         const analysisText = geminiResponse.text.trim();
         
+        response.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate=7200');
         return response.status(200).json({ analysis: analysisText });
 
     } catch (error) {
